@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/custom_app_bar.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -28,13 +30,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     try {
-      // TODO: call your backend endpoint to change password
-      await Future.delayed(const Duration(milliseconds: 600));
+      await context.read<AuthProvider>().changePassword(
+        currentPassword: _current.text,
+        newPassword: _new.text,
+      );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password changed')),
+        const SnackBar(content: Text('Password changed successfully')),
       );
       Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

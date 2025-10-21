@@ -63,6 +63,19 @@ class UserViewSet(viewsets.ModelViewSet):
         ctx["request"] = self.request
         return ctx
 
+    @action(detail=False, methods=["post"], url_path="change-password")
+    def change_password(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(old_password):
+            return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password changed successfully"})
+
     @action(detail=False, methods=["get", "patch"], url_path="me", parser_classes=[MultiPartParser, FormParser, JSONParser])
     def me(self, request):
         user = request.user

@@ -225,24 +225,49 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   Future<void> toggleLike(int postId) async {
+    // Update in main posts list
     final index = _posts.indexWhere((p) => p.id == postId);
-    if (index == -1) return;
-
-    final post = _posts[index];
+    Post? post;
+    
+    if (index != -1) {
+      post = _posts[index];
+    } else if (_postDetails.containsKey(postId)) {
+      post = _postDetails[postId];
+    }
+    
+    if (post == null) return;
+    
     final liked = post.isLiked;
-
-    // optimistic update
-    _posts[index] = post.copyWith(
+    final updatedPost = post.copyWith(
       isLiked: !liked,
       likesCount: liked ? post.likesCount - 1 : post.likesCount + 1,
+      comments: post.comments, // Preserve existing comments
     );
+
+    // Update both main list and detail cache
+    if (index != -1) {
+      _posts[index] = updatedPost;
+    }
+    if (_postDetails.containsKey(postId)) {
+      // Preserve all existing post details while updating like status
+      final existingPostDetail = _postDetails[postId]!;
+      _postDetails[postId] = existingPostDetail.copyWith(
+        isLiked: !liked,
+        likesCount: liked ? existingPostDetail.likesCount - 1 : existingPostDetail.likesCount + 1,
+      );
+    }
     notifyListeners();
 
     try {
       await _service.likePost(postId);
     } catch (e) {
-      // revert on error
-      _posts[index] = post;
+      // Revert on error
+      if (index != -1) {
+        _posts[index] = post;
+      }
+      if (_postDetails.containsKey(postId)) {
+        _postDetails[postId] = post;
+      }
       notifyListeners();
     }
   }

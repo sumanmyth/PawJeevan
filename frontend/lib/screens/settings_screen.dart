@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../providers/settings_provider.dart';
 import '../widgets/custom_app_bar.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
+import 'send_feedback_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -178,26 +177,11 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _sendFeedback(BuildContext context) async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'support@pawjeevan.com',
-      query: Uri(queryParameters: {
-        'subject': 'PawJeevan Feedback',
-        'body': 'Hi PawJeevan team,\n\n',
-      }).query,
+  void _sendFeedback(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SendFeedbackScreen()),
     );
-
-    final ok = await canLaunchUrl(uri);
-    if (!ok) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No email application found')),
-        );
-      }
-      return;
-    }
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 

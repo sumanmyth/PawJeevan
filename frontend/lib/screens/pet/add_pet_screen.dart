@@ -90,6 +90,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     try {
       final petProvider = Provider.of<PetProvider>(context, listen: false);
       bool ok;
+      // Always use multipart form data
       if (_pickedImage != null) {
         if (kIsWeb) {
           final bytes = await _pickedImage!.readAsBytes();
@@ -105,7 +106,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
           );
         }
       } else {
-        ok = await petProvider.addPet(pet);
+        // Even without image, use multipart to match Django's expected format
+        ok = await petProvider.addPetWithImage(pet);
       }
 
       if (!mounted) return;

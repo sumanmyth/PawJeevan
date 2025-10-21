@@ -74,7 +74,8 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
                   context.read<PetProvider>().loadPets();
                 }
               },
-              backgroundColor: Colors.purple,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               child: const Icon(Icons.add),
             )
           : null,
@@ -88,16 +89,24 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_outline, size: 64, color: Colors.grey[400]),
+            Icon(
+              Icons.lock_outline,
+              size: 64,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.4),
+            ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Sign in required',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               'Please log in to manage your pets.',
-              style: TextStyle(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
             ),
           ],
         ),
@@ -112,12 +121,24 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.4),
+            ),
             const SizedBox(height: 12),
-            Text(error, textAlign: TextAlign.center),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: retry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -133,20 +154,24 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.pets, size: 80, color: Colors.grey[300]),
+            Icon(
+              Icons.pets,
+              size: 80,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+            ),
             const SizedBox(height: 16),
             Text(
               'No pets yet',
-              style: TextStyle(
-                fontSize: 20,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Add your first pet to get started!',
-              style: TextStyle(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -162,8 +187,8 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Add Pet'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
@@ -196,7 +221,7 @@ class _PetCard extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   image: pet.photo != null
                       ? DecorationImage(
@@ -206,7 +231,7 @@ class _PetCard extends StatelessWidget {
                       : null,
                 ),
                 child: pet.photo == null
-                    ? const Icon(Icons.pets, size: 40, color: Colors.purple)
+                    ? Icon(Icons.pets, size: 40, color: Theme.of(context).colorScheme.primary)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -214,12 +239,19 @@ class _PetCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(pet.name,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      pet.name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('${pet.breed} • ${pet.petType}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                    Text(
+                      '${pet.breed} • ${pet.petType}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -234,7 +266,10 @@ class _PetCard extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                ),
                 onSelected: (value) async {
                   if (value == 'edit') {
                     final result = await Navigator.push(
@@ -248,11 +283,33 @@ class _PetCard extends StatelessWidget {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: const Text('Delete Pet'),
-                        content: Text('Are you sure you want to delete ${pet.name}?'),
+                        title: Text(
+                          'Delete Pet',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        content: Text(
+                          'Are you sure you want to delete ${pet.name}?',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -267,9 +324,17 @@ class _PetCard extends StatelessWidget {
                     }
                   }
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -289,15 +354,24 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.grey[700]),
+          Icon(
+            icon,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );

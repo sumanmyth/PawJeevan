@@ -22,6 +22,7 @@ class ApiConstants {
   static const String login = '/api/users/login/';
   static const String register = '/api/users/register/';
   static const String profile = '/api/users/profiles/me/';
+  static const String changePassword = '/api/users/profiles/change-password/';
   
   // Pet endpoints
   static const String pets = '/api/users/pets/';

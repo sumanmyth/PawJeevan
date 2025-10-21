@@ -81,6 +81,22 @@ class AuthService {
     throw Exception('Failed to fetch profile');
   }
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final resp = await _api.post(
+      ApiConstants.changePassword,
+      data: {
+        'old_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
+    if (resp.statusCode != 200) {
+      throw Exception(resp.data?['message'] ?? 'Failed to change password');
+    }
+  }
+
   Future<User> updateProfile({
     String? firstName,
     String? lastName,

@@ -195,21 +195,21 @@ class _PetDetailScreenState extends State<PetDetailScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: Color(0x1A000000),
+                              color: Theme.of(context).shadowColor.withOpacity(0.1),
                               blurRadius: 8,
-                              offset: Offset(0, 2),
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
                         child: TabBar(
                           controller: _tabController,
-                          labelColor: Colors.purple,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorColor: Colors.purple,
+                          labelColor: Theme.of(context).colorScheme.primary,
+                          unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          indicatorColor: Theme.of(context).colorScheme.primary,
                           tabs: const [
                             Tab(text: 'Info'),
                             Tab(text: 'Vaccinations'),
@@ -240,8 +240,8 @@ class _PetDetailScreenState extends State<PetDetailScreen>
     return Container(
       width: 90,
       height: 90,
-      decoration: BoxDecoration(
-        color: Colors.purple.shade50,
+        decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         image: url != null
             ? DecorationImage(
@@ -251,7 +251,7 @@ class _PetDetailScreenState extends State<PetDetailScreen>
             : null,
       ),
       child: url == null
-          ? const Icon(Icons.pets, size: 40, color: Colors.purple)
+          ? Icon(Icons.pets, size: 40, color: Theme.of(context).colorScheme.primary)
           : null,
     );
   }
@@ -270,7 +270,9 @@ class _PetDetailScreenState extends State<PetDetailScreen>
         const SizedBox(height: 6),
         Text(
           '${_pet.breed} • ${_pet.petType} • ${_pet.gender}',
-          style: TextStyle(color: Colors.grey[700]),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          ),
         ),
         const SizedBox(height: 6),
         Wrap(
@@ -291,15 +293,15 @@ class _PetDetailScreenState extends State<PetDetailScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.grey[700]),
+          Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 4),
-          Text(text, style: TextStyle(color: Colors.grey[800])),
+          Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
@@ -358,7 +360,7 @@ class _PetDetailScreenState extends State<PetDetailScreen>
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ListTile(
-              leading: const Icon(Icons.vaccines, color: Colors.purple),
+              leading: Icon(Icons.vaccines, color: Theme.of(context).colorScheme.primary),
               title: Text(v.vaccineName),
               subtitle: Text(
                 'Date: ${_fmtDate(v.vaccinationDate)}'
