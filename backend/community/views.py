@@ -160,6 +160,26 @@ class GroupViewSet(viewsets.ModelViewSet):
         group.members.remove(request.user)
         return Response({'status': 'left', 'members_count': group.members.count()})
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my(self, request):
+        """Return groups the current user is a member of."""
+        groups = Group.objects.filter(members=request.user, is_active=True).order_by('-created_at')
+        serializer = self.get_serializer(groups, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
+    def discover(self, request):
+        """Return groups the user is not a member of (discoverable groups).
+
+        If the user is anonymous, return all active groups.
+        """
+        if request.user.is_authenticated:
+            qs = Group.objects.filter(is_active=True).exclude(members=request.user).order_by('-created_at')
+        else:
+            qs = Group.objects.filter(is_active=True).order_by('-created_at')
+        serializer = self.get_serializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
 
 class GroupPostViewSet(viewsets.ModelViewSet):
     queryset = GroupPost.objects.all().order_by('-created_at')

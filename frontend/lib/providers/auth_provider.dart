@@ -48,7 +48,7 @@ class AuthProvider extends ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = e.toString();
-      throw e;
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

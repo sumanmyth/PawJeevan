@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'home_tab.dart';
-import 'store_tab.dart';
-import 'ai_tab.dart';
-import 'community_tab.dart';
-import 'profile_tab.dart';
+import 'tabs/home_tab.dart';
+import 'tabs/store_tab.dart';
+import 'tabs/ai_tab.dart';
+import 'tabs/community_tab.dart';
+import 'tabs/profile_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,10 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Each tab manages its own (curved) custom app bar; keep body clean here
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
-      ),
+      body: _tabs[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),

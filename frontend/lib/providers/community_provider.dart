@@ -29,16 +29,10 @@ class CommunityProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Fetching posts...');
       final newPosts = await _service.getPosts();
-      print('Fetched ${newPosts.length} posts');
-      if (newPosts.isEmpty && _posts.isNotEmpty) {
-        print('Warning: Received empty posts list while we had existing posts');
-      }
       _posts = newPosts;
       _error = null;
     } catch (e) {
-      print('Error fetching posts: $e');
       _error = e.toString();
       // Restore previous posts on error
       _posts = previousPosts;
@@ -177,48 +171,39 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   Future<bool> deletePost(int postId) async {
-    print('Provider: Starting delete operation for post $postId');
     _error = null;  // Reset any previous error
     try {
-      print('Provider: Calling community service deletePost');
+      // Find the post's author before deleting
+      int? authorId;
       try {
-        await _service.deletePost(postId);
-        print('Provider: API call completed successfully');
-      } catch (serviceError) {
-        print('Provider: Service error during delete: $serviceError');
-        _error = serviceError.toString();
-        notifyListeners();
-        return false;
+        final post = _posts.firstWhere((p) => p.id == postId);
+        authorId = post.author;
+      } catch (e) {
+        // Post not found in local cache
       }
       
-      print('Provider: Updating local state');
-      try {
-        final beforeCount = _posts.length;
-        _posts.removeWhere((p) => p.id == postId);
-        final afterCount = _posts.length;
-        print('Provider: Posts count before: $beforeCount, after: $afterCount');
-        
-        if (beforeCount == afterCount) {
-          print('Provider: Warning - post was not found in list');
-        }
-        
-        if (_postDetails.containsKey(postId)) {
-          _postDetails.remove(postId);
-          print('Provider: Removed from details cache');
-        }
-        
-        print('Provider: Notifying listeners of state change');
-        notifyListeners();
-        return true;
-      } catch (stateError) {
-        print('Provider: Error updating state: $stateError');
-        _error = 'Post deleted but UI update failed: $stateError';
-        notifyListeners();
-        return true; // Still return true as delete succeeded
+      await _service.deletePost(postId);
+      
+      // Update main posts list
+      _posts.removeWhere((p) => p.id == postId);
+      
+      // Update user's cached posts if available
+      if (authorId != null && _userPosts.containsKey(authorId)) {
+        _userPosts[authorId]?.removeWhere((p) => p.id == postId);
       }
+      
+      // Remove from post details cache
+      _postDetails.remove(postId);
+      
+      // Refresh user data to update post count
+      if (authorId != null) {
+        await getUser(authorId, force: true);
+      }
+      
+      notifyListeners();
+      return true;
     } catch (e) {
-      print('Provider: Unexpected error: $e');
-      _error = 'Unexpected error: $e';
+      _error = e.toString();
       notifyListeners();
       return false;
     }
