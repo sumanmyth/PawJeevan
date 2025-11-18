@@ -4,7 +4,7 @@ Admin interface for Community app
 from django.contrib import admin
 from .models import (
     Post, Comment, Group, GroupPost, GroupMessage, Event,
-    AdoptionListing, LostFoundReport, Conversation, Message
+    LostFoundReport
 )
 
 
@@ -53,31 +53,8 @@ class EventAdmin(admin.ModelAdmin):
     search_fields = ['title', 'location']
 
 
-@admin.register(AdoptionListing)
-class AdoptionListingAdmin(admin.ModelAdmin):
-    list_display = ['pet_name', 'pet_type', 'breed', 'poster', 'status', 'location', 'created_at']
-    list_filter = ['pet_type', 'status', 'created_at']
-    search_fields = ['pet_name', 'breed', 'location']
-
-
 @admin.register(LostFoundReport)
 class LostFoundReportAdmin(admin.ModelAdmin):
     list_display = ['pet_name', 'pet_type', 'report_type', 'status', 'location', 'date_lost_found']
     list_filter = ['report_type', 'status', 'pet_type']
     search_fields = ['pet_name', 'location']
-
-
-@admin.register(Conversation)
-class ConversationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'is_group', 'name', 'created_at']
-    list_filter = ['is_group', 'created_at']
-
-
-@admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ['sender', 'conversation', 'content_preview', 'is_read', 'created_at']
-    list_filter = ['is_read', 'created_at']
-    search_fields = ['content', 'sender__username']
-    
-    def content_preview(self, obj):
-        return obj.content[:50]

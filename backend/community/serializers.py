@@ -5,7 +5,7 @@ from users.serializers import AbsoluteURLImageField
 from users.models import User
 from .models import (
     Post, Comment, Group, GroupPost, GroupMessage, Event,
-    AdoptionListing, LostFoundReport, Conversation, Message
+    LostFoundReport
 )
 
 def build_abs_url(request, path):
@@ -249,16 +249,6 @@ class EventSerializer(serializers.ModelSerializer):
         return False
 
 
-class AdoptionListingSerializer(serializers.ModelSerializer):
-    poster_username = serializers.CharField(source='poster.username', read_only=True)
-    photo = AbsoluteURLImageField(required=False, allow_null=True)
-
-    class Meta:
-        model = AdoptionListing
-        fields = '__all__'
-        read_only_fields = ['poster', 'created_at', 'updated_at']
-
-
 class LostFoundReportSerializer(serializers.ModelSerializer):
     reporter_username = serializers.CharField(source='reporter.username', read_only=True)
     photo = AbsoluteURLImageField(required=False, allow_null=True)
@@ -267,45 +257,3 @@ class LostFoundReportSerializer(serializers.ModelSerializer):
         model = LostFoundReport
         fields = '__all__'
         read_only_fields = ['reporter', 'created_at', 'updated_at']
-
-
-class MessageSerializer(serializers.ModelSerializer):
-    sender_username = serializers.CharField(source='sender.username', read_only=True)
-    sender_avatar = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Message
-        fields = '__all__'
-        read_only_fields = ['sender', 'created_at']
-
-    def get_sender_avatar(self, obj):
-        req = self.context.get('request')
-        if obj.sender and obj.sender.avatar:
-            return build_abs_url(req, obj.sender.avatar.url)
-        return None
-
-
-class ConversationSerializer(serializers.ModelSerializer):
-    participants_data = serializers.SerializerMethodField()
-    last_message = serializers.SerializerMethodField()
-    unread_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Conversation
-        fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
-
-    def get_participants_data(self, obj):
-        from users.serializers import UserSerializer
-        return UserSerializer(obj.participants.all(), many=True, context=self.context).data
-
-    def get_last_message(self, obj):
-        last = obj.messages.last()
-        return MessageSerializer(last, context=self.context).data if last else None
-
-    def get_unread_count(self, obj):
-        req = self.context.get('request')
-        user = getattr(req, 'user', None)
-        if user and user.is_authenticated:
-            return obj.messages.filter(is_read=False).exclude(sender=user).count()
-        return 0

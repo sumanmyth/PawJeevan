@@ -2,7 +2,7 @@ from rest_framework import serializers
 from users.serializers import AbsoluteURLImageField  # reuse absolute URL field
 from .models import (
     Category, Brand, Product, ProductImage, Review,
-    Cart, CartItem, Order, OrderItem, Wishlist
+    Cart, CartItem, Order, OrderItem, Wishlist, AdoptionListing
 )
 
 
@@ -126,3 +126,13 @@ class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
         fields = "__all__"
+
+
+class AdoptionListingSerializer(serializers.ModelSerializer):
+    poster_username = serializers.CharField(source='poster.username', read_only=True)
+    photo = AbsoluteURLImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = AdoptionListing
+        fields = '__all__'
+        read_only_fields = ['poster', 'created_at', 'updated_at']

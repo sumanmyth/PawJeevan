@@ -10,13 +10,12 @@ from datetime import timedelta
 
 from .models import (
     Post, Comment, Group, GroupPost, GroupMessage, Event,
-    AdoptionListing, LostFoundReport, Conversation, Message
+    LostFoundReport
 )
 from .serializers import (
     PostSerializer, PostListSerializer, CommentSerializer,
     GroupSerializer, GroupPostSerializer, GroupMessageSerializer, EventSerializer,
-    AdoptionListingSerializer, LostFoundReportSerializer,
-    ConversationSerializer, MessageSerializer
+    LostFoundReportSerializer
 )
 from users.models import User, Notification
 from users.serializers import UserSerializer
@@ -325,29 +324,6 @@ class EventViewSet(viewsets.ModelViewSet):
         return Response({'status': 'not attending', 'attendees_count': event.attendees.count()})
 
 
-class AdoptionListingViewSet(viewsets.ModelViewSet):
-    queryset = AdoptionListing.objects.all().order_by('-created_at')
-    serializer_class = AdoptionListingSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['pet_type', 'status', 'location']
-    search_fields = ['title', 'pet_name', 'breed', 'description']
-
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx['request'] = self.request
-        return ctx
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if not self.request.query_params.get('status'):
-            qs = qs.filter(status='available')
-        return qs
-
-    def perform_create(self, serializer):
-        serializer.save(poster=self.request.user)
-
-
 class LostFoundReportViewSet(viewsets.ModelViewSet):
     queryset = LostFoundReport.objects.all().order_by('-created_at')
     serializer_class = LostFoundReportSerializer
@@ -383,48 +359,3 @@ class LostFoundReportViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)
-
-
-class ConversationViewSet(viewsets.ModelViewSet):
-    queryset = Conversation.objects.all().order_by('-updated_at')
-    serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Conversation.objects.filter(participants=self.request.user).order_by('-updated_at')
-
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx['request'] = self.request
-        return ctx
-
-    def create(self, request, *args, **kwargs):
-        participant_ids = request.data.get('participant_ids', [])
-        if not participant_ids:
-            return Response({'error': 'participant_ids required'}, status=400)
-
-        convo = Conversation.objects.create()
-        convo.participants.add(request.user)
-        convo.participants.add(*participant_ids)
-        ser = self.get_serializer(convo)
-        return Response(ser.data, status=201)
-
-    @action(detail=True, methods=['post'])
-    def send_message(self, request, pk=None):
-        convo = self.get_object()
-        content = request.data.get('content', '').strip()
-        if not content:
-            return Response({'error': 'content required'}, status=400)
-
-        msg = Message.objects.create(
-            conversation=convo, sender=request.user, content=content
-        )
-        convo.save()  # updates updated_at
-        return Response(MessageSerializer(msg, context={'request': request}).data, status=201)
-
-    @action(detail=True, methods=['get'])
-    def messages(self, request, pk=None):
-        convo = self.get_object()
-        msgs = convo.messages.all()
-        msgs.exclude(sender=request.user).update(is_read=True)
-        return Response(MessageSerializer(msgs, many=True, context={'request': request}).data)

@@ -9,12 +9,13 @@ import uuid
 
 from .models import (
     Category, Brand, Product, Review,
-    Cart, CartItem, Order, OrderItem, Wishlist
+    Cart, CartItem, Order, OrderItem, Wishlist, AdoptionListing
 )
 from .serializers import (
     CategorySerializer, BrandSerializer,
     ProductSerializer, ProductListSerializer, ReviewSerializer,
-    CartSerializer, CartItemSerializer, OrderSerializer, WishlistSerializer
+    CartSerializer, CartItemSerializer, OrderSerializer, WishlistSerializer,
+    AdoptionListingSerializer
 )
 
 
@@ -345,3 +346,26 @@ class WishlistViewSet(viewsets.ViewSet):
 
         ser = WishlistSerializer(wishlist, context={"request": request})
         return Response({"action": action, "wishlist": ser.data})
+
+
+class AdoptionListingViewSet(viewsets.ModelViewSet):
+    queryset = AdoptionListing.objects.all().order_by('-created_at')
+    serializer_class = AdoptionListingSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['pet_type', 'status', 'location']
+    search_fields = ['title', 'pet_name', 'breed', 'description']
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.query_params.get('status'):
+            qs = qs.filter(status='available')
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(poster=self.request.user)
