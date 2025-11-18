@@ -37,7 +37,8 @@ class CommunityProvider extends ChangeNotifier {
           params['ordering'] = '-created_at';
           break;
         case FeedFilter.trending:
-          params['ordering'] = '-likes_count';
+          // Use trending ordering which sorts by likes + comments
+          params['ordering'] = '-trending';
           break;
         case FeedFilter.followed:
           params['following'] = 'true';
@@ -307,7 +308,7 @@ class CommunityProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return [];
+      rethrow; // Re-throw the error so the UI can handle locked profiles
     }
   }
 
@@ -322,7 +323,7 @@ class CommunityProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return [];
+      rethrow; // Re-throw the error so the UI can handle locked profiles
     }
   }
 

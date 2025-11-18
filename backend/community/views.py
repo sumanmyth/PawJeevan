@@ -4,18 +4,21 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Q, F
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import (
-    Post, Comment, Group, GroupPost, Event,
+    Post, Comment, Group, GroupPost, GroupMessage, Event,
     AdoptionListing, LostFoundReport, Conversation, Message
 )
 from .serializers import (
     PostSerializer, PostListSerializer, CommentSerializer,
-    GroupSerializer, GroupPostSerializer, EventSerializer,
+    GroupSerializer, GroupPostSerializer, GroupMessageSerializer, EventSerializer,
     AdoptionListingSerializer, LostFoundReportSerializer,
     ConversationSerializer, MessageSerializer
 )
-from users.models import User
+from users.models import User, Notification
 from users.serializers import UserSerializer
 
 
@@ -38,16 +41,41 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Show all public posts by default
-        qs = Post.objects.filter(is_public=True).order_by('-created_at')
+        qs = Post.objects.filter(is_public=True)
         
         # Optional filters
         author_id = self.request.query_params.get('author')
         if author_id:
+            # Check if the author's profile is locked
+            try:
+                author = User.objects.get(id=author_id)
+                # If profile is locked and requesting user is not the owner, return empty queryset
+                if author.is_profile_locked and (not self.request.user.is_authenticated or author.id != self.request.user.id):
+                    return Post.objects.none()
+            except User.DoesNotExist:
+                pass
+            
             qs = qs.filter(author_id=author_id)
         
         if self.request.query_params.get('following') == 'true' and self.request.user.is_authenticated:
             following = self.request.user.following.all()
             qs = qs.filter(author__in=following)
+        
+        # Handle ordering
+        ordering = self.request.query_params.get('ordering', '-created_at')
+        
+        if ordering == '-trending':
+            # Calculate engagement score for all posts
+            two_days_ago = timezone.now() - timedelta(days=2)
+            
+            qs = qs.annotate(
+                likes_total=Count('likes', distinct=True),
+                comments_total=Count('comments', distinct=True),
+                engagement_score=F('likes_total') + F('comments_total'),
+                is_recent=Q(created_at__gte=two_days_ago)
+            ).order_by('-is_recent', '-engagement_score', '-created_at')
+        else:
+            qs = qs.order_by(ordering)
             
         return qs
 
@@ -140,16 +168,32 @@ class GroupViewSet(viewsets.ModelViewSet):
         return ctx
 
     def perform_create(self, serializer):
-        group = serializer.save(creator=self.request.user)
+        group = serializer.save(creator=self.request.user, is_active=True)
         group.members.add(self.request.user)
         group.moderators.add(self.request.user)
+
+    def perform_update(self, serializer):
+        # Ensure the group stays active when updated
+        serializer.save(is_active=True)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def join(self, request, slug=None):
         group = self.get_object()
         if group.is_private:
-            return Response({'error': 'This is a private group'}, status=400)
+            # Check if join key is provided and correct
+            join_key = request.data.get('join_key', '')
+            if not join_key or join_key != group.join_key:
+                return Response({'error': 'Invalid join key for private group'}, status=400)
         group.members.add(request.user)
+        
+        # Create a system message announcing the user joined
+        GroupMessage.objects.create(
+            group=group,
+            sender=request.user,
+            content=f"{request.user.username} joined the group",
+            is_system_message=True
+        )
+        
         return Response({'status': 'joined', 'members_count': group.members.count()})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -157,13 +201,29 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         if group.creator == request.user:
             return Response({'error': 'Creator cannot leave the group'}, status=400)
+        
+        # Create a system message announcing the user left
+        GroupMessage.objects.create(
+            group=group,
+            sender=request.user,
+            content=f"{request.user.username} left the group",
+            is_system_message=True
+        )
+        
         group.members.remove(request.user)
         return Response({'status': 'left', 'members_count': group.members.count()})
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
-        """Return groups the current user is a member of."""
-        groups = Group.objects.filter(members=request.user, is_active=True).order_by('-created_at')
+        """Return groups created by the current user."""
+        groups = Group.objects.filter(creator=request.user, is_active=True).order_by('-created_at')
+        serializer = self.get_serializer(groups, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def joined(self, request):
+        """Return groups the current user has joined (is a member of but did not create)."""
+        groups = Group.objects.filter(members=request.user, is_active=True).exclude(creator=request.user).order_by('-created_at')
         serializer = self.get_serializer(groups, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -179,6 +239,30 @@ class GroupViewSet(viewsets.ModelViewSet):
             qs = Group.objects.filter(is_active=True).order_by('-created_at')
         serializer = self.get_serializer(qs, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated])
+    def messages(self, request, slug=None):
+        """Get or post messages for a group."""
+        from .serializers import GroupMessageSerializer
+        from .models import GroupMessage
+        
+        group = self.get_object()
+        
+        # Check if user is a member
+        if not group.members.filter(id=request.user.id).exists():
+            return Response({'error': 'You must be a member to access group messages'}, status=403)
+        
+        if request.method == 'GET':
+            messages = GroupMessage.objects.filter(group=group).order_by('created_at')
+            serializer = GroupMessageSerializer(messages, many=True, context={'request': request})
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            serializer = GroupMessageSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(group=group, sender=request.user)
+                return Response(serializer.data, status=201)
+            return Response(serializer.errors, status=400)
 
 
 class GroupPostViewSet(viewsets.ModelViewSet):
@@ -219,7 +303,19 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         if event.max_attendees and event.attendees.count() >= event.max_attendees:
             return Response({'error': 'Event is full'}, status=400)
+        
+        # Add user to attendees
         event.attendees.add(request.user)
+        
+        # Create notification for joining the event
+        Notification.objects.create(
+            user=request.user,
+            notification_type='event_joined',
+            title=f'You joined "{event.title}"',
+            message=f'You are now attending {event.title} on {event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}. We will remind you before the event starts.',
+            action_url=f'/events/{event.id}/'
+        )
+        
         return Response({'status': 'attending', 'attendees_count': event.attendees.count()})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -267,8 +363,22 @@ class LostFoundReportViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.query_params.get('status'):
+        
+        # Don't filter during update/delete operations
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return qs
+        
+        status_param = self.request.query_params.get('status')
+        
+        # If status is explicitly set to empty string, return all statuses
+        # If status is not provided at all, default to showing only active reports
+        # If status is provided with a value, filterset_fields will handle it
+        if status_param is None:
             qs = qs.filter(status='active')
+        elif status_param == '':
+            # Return all statuses (no filter)
+            pass
+            
         return qs
 
     def perform_create(self, serializer):

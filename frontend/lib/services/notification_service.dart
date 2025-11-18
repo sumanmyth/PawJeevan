@@ -32,5 +32,9 @@ class NotificationService {
     );
   }
 
+  Future<void> deleteNotification(int notificationId) async {
+    await _api.delete('${ApiConstants.notifications}$notificationId/');
+  }
+
   // Note: Local push notifications have been removed. Only in-app notifications are supported.
 }

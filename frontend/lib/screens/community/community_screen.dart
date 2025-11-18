@@ -6,7 +6,7 @@ import '../../widgets/custom_app_bar.dart';
 import 'posts/create_post_screen.dart';
 import 'groups/create_group_screen.dart';
 import 'events/create_event_screen.dart';
-import 'posts/create_lost_found_screen.dart';
+import 'lost_found/create_lost_found_screen.dart';
 import 'user_search_screen.dart';
 import 'community_config.dart';
 import 'tabs/feed_tab.dart';
@@ -24,6 +24,9 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
+  VoidCallback? _refreshGroupsCallback;
+  VoidCallback? _refreshEventsCallback;
+  VoidCallback? _refreshLostFoundCallback;
 
   @override
   void initState() {
@@ -90,6 +93,15 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         // Add a small delay before fetching posts to ensure server processing
         await Future.delayed(const Duration(milliseconds: 500));
         await context.read<CommunityProvider>().fetchPosts();
+      } else if (_currentTabIndex == 1) {
+        // Refresh groups tab using callback
+        _refreshGroupsCallback?.call();
+      } else if (_currentTabIndex == 2) {
+        // Refresh events tab using callback
+        _refreshEventsCallback?.call();
+      } else if (_currentTabIndex == 3) {
+        // Refresh lost & found tab using callback
+        _refreshLostFoundCallback?.call();
       }
     }
   }
@@ -177,11 +189,23 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                   case '/feed':
                     return const FeedTab();
                   case '/groups':
-                    return const GroupsTab();
+                    return GroupsTab(
+                      onRefreshCallbackRegistered: (callback) {
+                        _refreshGroupsCallback = callback;
+                      },
+                    );
                   case '/events':
-                    return const EventsTab();
+                    return EventsTab(
+                      onRefreshCallbackRegistered: (callback) {
+                        _refreshEventsCallback = callback;
+                      },
+                    );
                   case '/lost-found':
-                    return const LostFoundTab();
+                    return LostFoundTab(
+                      onRefreshCallbackRegistered: (callback) {
+                        _refreshLostFoundCallback = callback;
+                      },
+                    );
                   default:
                     return const SizedBox.shrink();
                 }

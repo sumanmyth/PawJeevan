@@ -13,4 +13,12 @@ class UserService {
     }
     throw Exception('Failed to search users');
   }
+
+  Future<User> updateProfile(Map<String, dynamic> data) async {
+    final resp = await _api.patch('${ApiConstants.users}me/', data: data);
+    if (resp.statusCode == 200) {
+      return User.fromJson(resp.data);
+    }
+    throw Exception('Failed to update profile');
+  }
 }

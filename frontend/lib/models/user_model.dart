@@ -11,6 +11,7 @@ class User {
   final String? bio;
   final String? location;
   final bool isVerified;
+  final bool isProfileLocked;
   final int followersCount;
   final int followingCount;
   final bool isFollowing;
@@ -27,6 +28,7 @@ class User {
     this.bio,
     this.location,
     this.isVerified = false,
+    this.isProfileLocked = false,
     this.followersCount = 0,
     this.followingCount = 0,
     this.isFollowing = false,
@@ -54,6 +56,7 @@ class User {
       bio: json['bio'],
       location: json['location'],
       isVerified: json['is_verified'] ?? false,
+      isProfileLocked: json['is_profile_locked'] ?? false,
       followersCount: json['followers_count'] ?? 0,
       followingCount: json['following_count'] ?? 0,
       isFollowing: json['is_following'] ?? false,
@@ -73,6 +76,7 @@ class User {
       'bio': bio,
       'location': location,
       'is_verified': isVerified,
+      'is_profile_locked': isProfileLocked,
       'followers_count': followersCount,
       'following_count': followingCount,
       'is_following': isFollowing,

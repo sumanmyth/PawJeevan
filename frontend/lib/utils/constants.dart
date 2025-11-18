@@ -39,6 +39,8 @@ class ApiConstants {
   static const String posts = '/api/community/posts/';
   static const String comments = '/api/community/comments/';
   static const String groups = '/api/community/groups/';
+  static const String events = '/api/community/events/';
+  static const String lostFound = '/api/community/lost-found/';
   
   // AI endpoints
   static const String breedDetection = '/api/ai/breed-detection/';

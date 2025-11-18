@@ -86,6 +86,7 @@ class Group(models.Model):
     # Settings
     is_private = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    join_key = models.CharField(max_length=100, blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,9 +97,37 @@ class Group(models.Model):
     def __str__(self):
         return self.name
     
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.is_private and not self.join_key:
+            raise ValidationError('Join key is required for private groups.')
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+    
     @property
     def members_count(self):
         return self.members.count()
+
+
+class GroupMessage(models.Model):
+    """
+    Messages in groups
+    """
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='group_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_messages')
+    content = models.TextField()
+    is_system_message = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Message from {self.sender.username} in {self.group.name}"
 
 
 class GroupPost(models.Model):

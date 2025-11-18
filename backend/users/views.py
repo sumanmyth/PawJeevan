@@ -109,6 +109,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def followers(self, request, pk=None):
         user = self.get_object()
+        
+        # Check if profile is locked and requesting user is not the owner
+        if user.is_profile_locked and user != request.user:
+            return Response(
+                {"error": "This user's profile is locked. Followers list is private."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         followers = user.followers.all()
         page = self.paginate_queryset(followers)
         if page is not None:
@@ -120,6 +128,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def following(self, request, pk=None):
         user = self.get_object()
+        
+        # Check if profile is locked and requesting user is not the owner
+        if user.is_profile_locked and user != request.user:
+            return Response(
+                {"error": "This user's profile is locked. Following list is private."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         following = user.following.all()
         page = self.paginate_queryset(following)
         if page is not None:

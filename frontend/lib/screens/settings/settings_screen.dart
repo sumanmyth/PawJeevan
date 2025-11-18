@@ -44,6 +44,43 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          const _Header(title: 'Privacy'),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              children: [
+                SwitchListTile.adaptive(
+                  value: settings.profileLocked,
+                  onChanged: (v) async {
+                    try {
+                      await context.read<SettingsProvider>().setProfileLocked(v);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(v 
+                              ? 'Profile locked. Your posts, followers, and following are now private.' 
+                              : 'Profile unlocked. Your posts, followers, and following are now public.'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to update: $e')),
+                        );
+                      }
+                    }
+                  },
+                  title: const Text('Lock Profile'),
+                  subtitle: const Text('Hide posts, followers, and following from others'),
+                  secondary: const Icon(Icons.lock_outline, color: Colors.purple),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           const _Header(title: 'App Settings'),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -334,6 +334,67 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildPostsList(BuildContext context, List<Post> posts) {
+    final community = context.watch<CommunityProvider>();
+    final user = community.user(widget.userId);
+    final currentUser = context.read<AuthProvider>().user;
+    final isOwnProfile = currentUser?.id == widget.userId;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Check if profile is locked and user is not the owner
+    if (user != null && user.isProfileLocked && !isOwnProfile) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDark 
+                  ? Colors.purple.shade900.withOpacity(0.3) 
+                  : Colors.purple.shade50,
+                border: Border.all(
+                  color: isDark 
+                    ? Colors.purple.shade300.withOpacity(0.3) 
+                    : Colors.purple.shade200,
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                Icons.lock_outline, 
+                size: 64, 
+                color: isDark 
+                  ? Colors.purple.shade200 
+                  : Colors.purple.shade400,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Profile Locked',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: isDark 
+                  ? Colors.purple.shade200 
+                  : Colors.purple.shade800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This user\'s posts are private',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark 
+                  ? Colors.purple.shade300.withOpacity(0.8) 
+                  : Colors.purple.shade600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
     if (posts.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(40),

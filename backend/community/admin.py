@@ -3,7 +3,7 @@ Admin interface for Community app
 """
 from django.contrib import admin
 from .models import (
-    Post, Comment, Group, GroupPost, Event,
+    Post, Comment, Group, GroupPost, GroupMessage, Event,
     AdoptionListing, LostFoundReport, Conversation, Message
 )
 
@@ -34,6 +34,16 @@ class GroupAdmin(admin.ModelAdmin):
     list_filter = ['group_type', 'is_private', 'is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(GroupMessage)
+class GroupMessageAdmin(admin.ModelAdmin):
+    list_display = ['sender', 'group', 'content_preview', 'created_at']
+    list_filter = ['created_at', 'group']
+    search_fields = ['content', 'sender__username', 'group__name']
+    
+    def content_preview(self, obj):
+        return obj.content[:50]
 
 
 @admin.register(Event)

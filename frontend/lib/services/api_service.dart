@@ -1,8 +1,28 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/constants.dart';
+import '../models/group_model.dart';
 
 class ApiService {
+  static Future<List<Group>> fetchGroups() async {
+    final dio = Dio();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await dio.get(
+      '${ApiConstants.baseUrl}${ApiConstants.groups}',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+    final data = response.data;
+    if (data is List) {
+      return data.map<Group>((g) => Group.fromJson(g)).toList();
+    } else if (data is Map && data['results'] is List) {
+      return (data['results'] as List).map<Group>((g) => Group.fromJson(g)).toList();
+    }
+    return [];
+  }
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   
@@ -16,20 +36,26 @@ class ApiService {
         throw Exception('Authentication token not found');
       }
 
-      final formData = FormData.fromMap({
-        'name': groupData['name'],
-        'description': groupData['description'],
-        'group_type': groupData['group_type'],
-        'is_private': groupData['is_private'],
-      });
+      final formData = FormData();
+      formData.fields.add(MapEntry('name', groupData['name']));
+      formData.fields.add(MapEntry('description', groupData['description']));
+      formData.fields.add(MapEntry('group_type', groupData['group_type']));
+      formData.fields.add(MapEntry('is_private', groupData['is_private'].toString()));
+      formData.fields.add(MapEntry('slug', groupData['slug']));
+      
+      if (groupData['join_key'] != null && groupData['join_key'].toString().isNotEmpty) {
+        formData.fields.add(MapEntry('join_key', groupData['join_key']));
+      }
 
-      if (groupData['cover_image'] != null) {
+      if (groupData['cover_image'] != null && groupData['cover_image'] is XFile) {
+        final XFile imageFile = groupData['cover_image'];
+        final bytes = await imageFile.readAsBytes();
         formData.files.add(
           MapEntry(
             'cover_image',
-            await MultipartFile.fromFile(
-              groupData['cover_image'],
-              filename: 'cover_image.jpg',
+            MultipartFile.fromBytes(
+              bytes,
+              filename: imageFile.name,
             ),
           ),
         );
@@ -49,6 +75,114 @@ class ApiService {
     } on DioException catch (e) {
       throw Exception('Failed to create group: ${e.response?.data ?? e.message}');
     }
+  }
+
+  static Future<void> deleteGroup(String slug) async {
+    final dio = Dio();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    await dio.delete(
+      '${ApiConstants.baseUrl}${ApiConstants.groups}$slug/',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
+
+  static Future<Map<String, dynamic>> updateGroup(String slug, Map<String, dynamic> groupData) async {
+    try {
+      final dio = Dio();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final formData = FormData();
+      formData.fields.add(MapEntry('name', groupData['name']));
+      formData.fields.add(MapEntry('description', groupData['description']));
+      formData.fields.add(MapEntry('group_type', groupData['group_type']));
+      formData.fields.add(MapEntry('is_private', groupData['is_private'].toString()));
+      formData.fields.add(MapEntry('is_active', groupData['is_active'].toString()));
+      
+      if (groupData['join_key'] != null && groupData['join_key'].toString().isNotEmpty) {
+        formData.fields.add(MapEntry('join_key', groupData['join_key']));
+      }
+
+      if (groupData['cover_image'] != null && groupData['cover_image'] is XFile) {
+        final XFile imageFile = groupData['cover_image'];
+        final bytes = await imageFile.readAsBytes();
+        formData.files.add(
+          MapEntry(
+            'cover_image',
+            MultipartFile.fromBytes(
+              bytes,
+              filename: imageFile.name,
+            ),
+          ),
+        );
+      }
+
+      final response = await dio.put(
+        '${ApiConstants.baseUrl}${ApiConstants.groups}$slug/',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception('Failed to update group: ${e.response?.data ?? e.message}');
+    }
+  }
+
+  static Future<void> joinGroup(String slug, {String? joinKey}) async {
+    final dio = Dio();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    final data = <String, dynamic>{};
+    if (joinKey != null && joinKey.isNotEmpty) {
+      data['join_key'] = joinKey;
+    }
+
+    await dio.post(
+      '${ApiConstants.baseUrl}${ApiConstants.groups}$slug/join/',
+      data: data,
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
+
+  static Future<void> leaveGroup(String slug) async {
+    final dio = Dio();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    await dio.post(
+      '${ApiConstants.baseUrl}${ApiConstants.groups}$slug/leave/',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
   }
 
   late String? _refreshToken;

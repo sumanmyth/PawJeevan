@@ -18,6 +18,9 @@ class User(AbstractUser):
     location = models.CharField(max_length=100, blank=True)
     is_verified = models.BooleanField(default=False)
     
+    # Privacy settings
+    is_profile_locked = models.BooleanField(default=False)
+    
     # Social features - users can follow each other
     followers = models.ManyToManyField(
         'self', 
@@ -197,6 +200,9 @@ class Notification(models.Model):
         ('community', 'Community Activity'),
         ('message', 'New Message'),
         ('follow', 'New Follower'),
+        ('event_joined', 'Event Joined'),
+        ('event_starting', 'Event Starting Soon'),
+        ('event_ended', 'Event Ended'),
         ('system', 'System'),
     )
 

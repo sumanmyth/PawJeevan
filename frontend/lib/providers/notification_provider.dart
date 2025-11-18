@@ -57,6 +57,18 @@ class NotificationProvider extends ChangeNotifier {
     _unreadCount = _notifications.where((n) => !n.isRead).length;
   }
 
+  Future<void> deleteNotification(int notificationId) async {
+    try {
+      await _service.deleteNotification(notificationId);
+      _notifications.removeWhere((n) => n.id == notificationId);
+      _updateUnreadCount();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting notification: $e');
+      rethrow;
+    }
+  }
+
   void addNotification(NotificationModel notification) {
     _notifications.insert(0, notification);
     if (!notification.isRead) {

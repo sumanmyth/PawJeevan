@@ -63,6 +63,8 @@ class _FeedTabState extends State<FeedTab> {
   }
 
   Widget _buildFilterChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -70,44 +72,83 @@ class _FeedTabState extends State<FeedTab> {
         children: [
           FilterChip(
             selected: _currentFilter == FeedFilter.recent,
-            label: const Text('Recent'),
-            avatar: const Icon(Icons.access_time),
+            label: Text(
+              'Recent',
+              style: TextStyle(
+                color: _currentFilter == FeedFilter.recent
+                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                    : (isDark ? Colors.white : Colors.purple.shade700),
+              ),
+            ),
+            avatar: Icon(
+              Icons.access_time,
+              color: _currentFilter == FeedFilter.recent
+                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+            ),
             onSelected: (selected) {
               setState(() {
                 _currentFilter = FeedFilter.recent;
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: Colors.purple.shade100,
-            checkmarkColor: Colors.purple,
+            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            backgroundColor: isDark ? Colors.grey.shade800 : null,
+            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
           ),
           const SizedBox(width: 8),
           FilterChip(
             selected: _currentFilter == FeedFilter.trending,
-            label: const Text('Trending'),
-            avatar: const Icon(Icons.trending_up),
+            label: Text(
+              'Trending',
+              style: TextStyle(
+                color: _currentFilter == FeedFilter.trending
+                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                    : (isDark ? Colors.white : Colors.purple.shade700),
+              ),
+            ),
+            avatar: Icon(
+              Icons.trending_up,
+              color: _currentFilter == FeedFilter.trending
+                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+            ),
             onSelected: (selected) {
               setState(() {
                 _currentFilter = FeedFilter.trending;
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: Colors.purple.shade100,
-            checkmarkColor: Colors.purple,
+            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            backgroundColor: isDark ? Colors.grey.shade800 : null,
+            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
           ),
           const SizedBox(width: 8),
           FilterChip(
             selected: _currentFilter == FeedFilter.followed,
-            label: const Text('Following'),
-            avatar: const Icon(Icons.people),
+            label: Text(
+              'Following',
+              style: TextStyle(
+                color: _currentFilter == FeedFilter.followed
+                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                    : (isDark ? Colors.white : Colors.purple.shade700),
+              ),
+            ),
+            avatar: Icon(
+              Icons.people,
+              color: _currentFilter == FeedFilter.followed
+                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
+                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+            ),
             onSelected: (selected) {
               setState(() {
                 _currentFilter = FeedFilter.followed;
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: Colors.purple.shade100,
-            checkmarkColor: Colors.purple,
+            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            backgroundColor: isDark ? Colors.grey.shade800 : null,
+            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
           ),
         ],
       ),
@@ -116,6 +157,8 @@ class _FeedTabState extends State<FeedTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Consumer<CommunityProvider>(
       builder: (_, provider, __) {
         Widget mainContent;
@@ -128,7 +171,12 @@ class _FeedTabState extends State<FeedTab> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Error: ${provider.error}'),
+                  Text(
+                    'Error: ${provider.error}',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade200 : Colors.red.shade700,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.fetchPosts(filter: _currentFilter),
@@ -138,7 +186,14 @@ class _FeedTabState extends State<FeedTab> {
               ),
             );
           } else {
-            mainContent = const Center(child: Text('No posts yet. Be the first!'));
+            mainContent = Center(
+              child: Text(
+                'No posts yet. Be the first!',
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                ),
+              ),
+            );
           }
         } else {
           mainContent = ListView.builder(

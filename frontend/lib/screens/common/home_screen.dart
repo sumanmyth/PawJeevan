@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/notification_icon.dart';
+import '../notifications/notifications_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

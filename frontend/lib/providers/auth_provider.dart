@@ -31,6 +31,8 @@ class AuthProvider extends ChangeNotifier {
         try {
           // Try to get user profile
           _user = await _auth.getProfile();
+          // Save user ID for future use
+          await prefs.setInt('user_id', _user!.id);
           _error = null;
         } catch (e) {
           print('Failed to get profile: $e');
@@ -53,6 +55,7 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
+    await prefs.remove('user_id');
     await _api.clearTokens();
   }
 
@@ -91,6 +94,7 @@ class AuthProvider extends ChangeNotifier {
       // Set logged in state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
+      await prefs.setInt('user_id', _user!.id);
 
       _error = null;
       _isLoading = false;
@@ -142,6 +146,7 @@ class AuthProvider extends ChangeNotifier {
       // Set logged in state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
+      await prefs.setInt('user_id', _user!.id);
 
       _error = null;
       _isLoading = false;

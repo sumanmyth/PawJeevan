@@ -23,6 +23,7 @@ class FollowListScreen extends StatefulWidget {
 class _FollowListScreenState extends State<FollowListScreen> {
   bool _isLoading = true;
   List<User> _users = [];
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     final community = context.read<CommunityProvider>();
@@ -46,9 +48,16 @@ class _FollowListScreenState extends State<FollowListScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load ${widget.title.toLowerCase()}: $e')),
-        );
+        final errorText = e.toString();
+        // Check if it's a locked profile error
+        if (errorText.contains('locked') || errorText.contains('private') || errorText.contains('403')) {
+          _errorMessage = 'This profile is locked.\n${widget.isFollowers ? 'Followers' : 'Following'} list is private.';
+        } else {
+          _errorMessage = 'Failed to load ${widget.title.toLowerCase()}';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       }
     } finally {
       if (mounted) {
@@ -69,13 +78,14 @@ class _FollowListScreenState extends State<FollowListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.title),
-            Text(
-              '${_users.length} ${widget.title.toLowerCase()}',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+            if (_errorMessage == null)
+              Text(
+                '${_users.length} ${widget.title.toLowerCase()}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                ),
               ),
-            ),
           ],
         ),
         elevation: 0,
@@ -83,7 +93,62 @@ class _FollowListScreenState extends State<FollowListScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDark 
+                              ? Colors.purple.shade900.withOpacity(0.3) 
+                              : Colors.purple.shade50,
+                            border: Border.all(
+                              color: isDark 
+                                ? Colors.purple.shade300.withOpacity(0.3) 
+                                : Colors.purple.shade200,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.lock_outline,
+                            size: 64,
+                            color: isDark 
+                              ? Colors.purple.shade200 
+                              : Colors.purple.shade400,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Profile Locked',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                            color: isDark 
+                              ? Colors.purple.shade200 
+                              : Colors.purple.shade800,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark 
+                              ? Colors.purple.shade300.withOpacity(0.8) 
+                              : Colors.purple.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
               onRefresh: _loadData,
               child: _users.isEmpty
                   ? Center(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/loading_overlay.dart';
@@ -16,9 +16,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _joinKeyController = TextEditingController();
   String _selectedType = 'breed';
   bool _isPrivate = false;
-  File? _coverImage;
+  XFile? _coverImage;
+  Uint8List? _imageBytes;
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
@@ -26,8 +28,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _coverImage = File(pickedFile.path);
+        _coverImage = pickedFile;
+        _imageBytes = bytes;
       });
     }
   }
@@ -40,15 +44,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     });
 
     try {
-      final formData = {
-        'name': _nameController.text,
+      final groupName = _nameController.text.trim();
+      final slug = groupName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-|- 0$'), '');
+      final formData = <String, dynamic>{
+        'name': groupName,
         'description': _descriptionController.text,
         'group_type': _selectedType,
         'is_private': _isPrivate,
+        'slug': slug,
       };
 
+      // Join key is required for private groups
+      if (_isPrivate) {
+        if (_joinKeyController.text.trim().isEmpty) {
+          throw Exception('Join key is required for private groups');
+        }
+        formData['join_key'] = _joinKeyController.text.trim();
+      }
+
       if (_coverImage != null) {
-        formData['cover_image'] = _coverImage!.path;
+        formData['cover_image'] = _coverImage!;
       }
 
       await ApiService.createGroup(formData);
@@ -78,11 +93,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _joinKeyController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Create Group',
@@ -102,17 +120,21 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   child: Container(
                     height: 200,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
-                      image: _coverImage != null
+                      image: _imageBytes != null
                           ? DecorationImage(
-                              image: FileImage(_coverImage!),
+                              image: MemoryImage(_imageBytes!),
                               fit: BoxFit.cover,
                             )
                           : null,
                     ),
-                    child: _coverImage == null
-                        ? const Icon(Icons.add_photo_alternate, size: 50)
+                    child: _imageBytes == null
+                        ? Icon(
+                            Icons.add_photo_alternate, 
+                            size: 50,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          )
                         : null,
                   ),
                 ),
@@ -175,16 +197,34 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     });
                   },
                 ),
+                if (_isPrivate) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _joinKeyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Join Key *',
+                      hintText: 'Enter a key for users to join this private group',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (_isPrivate && (value == null || value.isEmpty)) {
+                        return 'Join key is required for private groups';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _createGroup,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
                   ),
                   child: const Text(
                     'Create Group',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
               ],

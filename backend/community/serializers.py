@@ -4,7 +4,7 @@ from django.utils import timezone
 from users.serializers import AbsoluteURLImageField
 from users.models import User
 from .models import (
-    Post, Comment, Group, GroupPost, Event,
+    Post, Comment, Group, GroupPost, GroupMessage, Event,
     AdoptionListing, LostFoundReport, Conversation, Message
 )
 
@@ -151,6 +151,30 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = '__all__'
         read_only_fields = ['creator', 'members', 'moderators', 'created_at', 'updated_at']
+    
+    def get_fields(self):
+        fields = super().get_fields()
+        # Make slug read-only on update, but writable on create
+        if self.instance is not None:
+            fields['slug'].read_only = True
+        return fields
+
+    def validate(self, data):
+        """Validate that join_key is provided for private groups."""
+        is_private = data.get('is_private', False)
+        join_key = data.get('join_key', '')
+        
+        # If updating, check the instance values
+        if self.instance:
+            is_private = data.get('is_private', self.instance.is_private)
+            join_key = data.get('join_key', self.instance.join_key)
+        
+        if is_private and not join_key:
+            raise serializers.ValidationError({
+                'join_key': 'Join key is required for private groups.'
+            })
+        
+        return data
 
     def get_members_count(self, obj):
         return obj.members.count()
@@ -161,6 +185,23 @@ class GroupSerializer(serializers.ModelSerializer):
         if user and user.is_authenticated:
             return obj.members.filter(id=user.id).exists()
         return False
+
+
+class GroupMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+    sender_id = serializers.IntegerField(source='sender.id', read_only=True)
+    sender_avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GroupMessage
+        fields = ['id', 'sender_id', 'sender_name', 'sender_avatar', 'content', 'is_system_message', 'created_at']
+        read_only_fields = ['sender', 'created_at']
+    
+    def get_sender_avatar(self, obj):
+        req = self.context.get('request')
+        if obj.sender and obj.sender.avatar:
+            return build_abs_url(req, obj.sender.avatar.url)
+        return None
 
 
 class GroupPostSerializer(serializers.ModelSerializer):
@@ -181,6 +222,7 @@ class GroupPostSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     organizer_username = serializers.CharField(source='organizer.username', read_only=True)
+    organizer_avatar = serializers.SerializerMethodField()
     group_name = serializers.CharField(source='group.name', read_only=True)
     attendees_count = serializers.SerializerMethodField()
     is_attending = serializers.SerializerMethodField()
@@ -189,6 +231,12 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
         read_only_fields = ['organizer', 'attendees', 'created_at', 'updated_at']
+
+    def get_organizer_avatar(self, obj):
+        req = self.context.get('request')
+        if obj.organizer and obj.organizer.avatar:
+            return build_abs_url(req, obj.organizer.avatar.url)
+        return None
 
     def get_attendees_count(self, obj):
         return obj.attendees.count()
