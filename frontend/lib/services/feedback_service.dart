@@ -7,7 +7,7 @@ class FeedbackService {
   }) async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'pawjeevan@gmail.com',
+      path: 'pawjeevan0@gmail.com',
       query: _encodeQueryParameters({
         'subject': 'PawJeevan Feedback: $subject',
         'body': message,

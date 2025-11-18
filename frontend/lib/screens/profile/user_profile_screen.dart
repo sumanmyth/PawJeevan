@@ -6,7 +6,7 @@ import '../../models/post_model.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../posts/post_detail_screen.dart';
+import '../community/posts/post_detail_screen.dart';
 import '../community/follow_list_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {

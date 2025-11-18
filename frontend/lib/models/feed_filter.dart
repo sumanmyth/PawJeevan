@@ -1,0 +1,1 @@
+enum FeedFilter { recent, trending, followed }

@@ -24,13 +24,7 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
-                SwitchListTile.adaptive(
-                  value: settings.pushNotifications,
-                  onChanged: (v) => context.read<SettingsProvider>().setPushNotifications(v),
-                  title: const Text('Push Notifications'),
-                  subtitle: const Text('Receive general notifications'),
-                ),
-                const Divider(height: 1),
+
                 SwitchListTile.adaptive(
                   value: settings.promoNotifications,
                   onChanged: (v) => context.read<SettingsProvider>().setPromoNotifications(v),

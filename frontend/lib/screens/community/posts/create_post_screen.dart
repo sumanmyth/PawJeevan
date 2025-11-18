@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../../providers/community_provider.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../../providers/community_provider.dart';
+import '../../../widgets/custom_app_bar.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});

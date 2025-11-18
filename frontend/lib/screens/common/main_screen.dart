@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'tabs/home_tab.dart';
-import 'tabs/store_tab.dart';
-import 'tabs/ai_tab.dart';
-import 'tabs/community_tab.dart';
-import 'tabs/profile_tab.dart';
+import '../tabs/home_tab.dart';
+import '../tabs/store_tab.dart';
+import '../tabs/ai_tab.dart';
+import '../community/community_screen.dart';
+import '../tabs/profile_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,12 +15,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final _tabs = const [
-    HomeTab(),
-    StoreTab(),
-    AiTab(),
-    CommunityTab(),
-    ProfileTab(),
+  final _tabs = [
+    const HomeTab(),
+    const StoreTab(),
+    const AiTab(),
+    const CommunityScreen(),
+    const ProfileTab(),
   ];
 
   @override

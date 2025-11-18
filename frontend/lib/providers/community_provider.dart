@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/post_model.dart';
 import '../models/user_model.dart';
+import '../models/feed_filter.dart';
 import '../services/community_service.dart';
 import '../services/auth_service.dart';
 
@@ -20,7 +21,7 @@ class CommunityProvider extends ChangeNotifier {
 
   User? user(int id) => _users[id];
 
-  Future<void> fetchPosts() async {
+  Future<void> fetchPosts({FeedFilter filter = FeedFilter.recent}) async {
     if (_isLoading) return; // Prevent multiple simultaneous fetches
     
     final previousPosts = List<Post>.from(_posts); // Keep a copy of current posts
@@ -29,7 +30,21 @@ class CommunityProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final newPosts = await _service.getPosts();
+      Map<String, String> params = {};
+      
+      switch (filter) {
+        case FeedFilter.recent:
+          params['ordering'] = '-created_at';
+          break;
+        case FeedFilter.trending:
+          params['ordering'] = '-likes_count';
+          break;
+        case FeedFilter.followed:
+          params['following'] = 'true';
+          break;
+      }
+
+      final newPosts = await _service.getPosts(params: params);
       _posts = newPosts;
       _error = null;
     } catch (e) {

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _auth = AuthService();
+  final ApiService _api = ApiService();
 
   User? _user;
   bool _isLoading = false;
@@ -17,19 +19,41 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> initialize() async {
     try {
-      await ApiService().loadToken();
-      if (ApiService().hasToken) {
-        final me = await _auth.getProfile();
-        _user = me;
-        _error = null;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final refreshToken = prefs.getString('refresh_token');
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+      if (token != null && refreshToken != null && isLoggedIn) {
+        // Restore the tokens
+        await _api.saveToken(token, refreshToken: refreshToken);
+        
+        try {
+          // Try to get user profile
+          _user = await _auth.getProfile();
+          _error = null;
+        } catch (e) {
+          print('Failed to get profile: $e');
+          // If profile fetch fails, clear tokens and user
+          await _clearAuthState();
+        }
       } else {
-        _user = null;
+        await _clearAuthState();
       }
-    } catch (_) {
-      _user = null;
+    } catch (e) {
+      print('Auth initialization error: $e');
+      await _clearAuthState();
     } finally {
       notifyListeners();
     }
+  }
+
+  Future<void> _clearAuthState() async {
+    _user = null;
+    _error = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+    await _api.clearTokens();
   }
 
   Future<void> changePassword({
@@ -61,21 +85,34 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Login saves token internally
-      await _auth.login(email: email, password: password);
-      // Immediately refresh full profile (ensures avatar URL present)
-      final me = await _auth.getProfile();
-      _user = me;
+      // Login and get user data
+      _user = await _auth.login(email: email, password: password);
+      
+      // Set logged in state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
 
       _error = null;
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
+      print('Login error: $e');
+      await _clearAuthState();
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _clearAuthState();
+    } catch (e) {
+      print('Logout error: $e');
+    } finally {
+      notifyListeners();
     }
   }
 
@@ -92,8 +129,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Register saves token internally
-      await _auth.register(
+      // Register and get user data
+      _user = await _auth.register(
         username: username,
         email: email,
         password: password,
@@ -101,15 +138,18 @@ class AuthProvider extends ChangeNotifier {
         lastName: lastName,
         phone: phone,
       );
-      // Immediately refresh profile
-      final me = await _auth.getProfile();
-      _user = me;
+
+      // Set logged in state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
 
       _error = null;
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
+      print('Registration error: $e');
+      await _clearAuthState();
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -160,16 +200,6 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       return false;
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      await _auth.logout();
-    } finally {
-      _user = null;
-      _error = null;
-      notifyListeners();
     }
   }
 

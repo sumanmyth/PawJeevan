@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class HomeTab extends StatefulWidget {
@@ -11,18 +14,38 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  bool _showWelcome = true;
+  bool _showWelcome = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    _checkWelcomeStatus();
+  }
+
+  Future<void> _checkWelcomeStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownWelcome = prefs.getBool('has_shown_welcome') ?? false;
+    
+    if (!hasShownWelcome) {
+      // Only show welcome if it hasn't been shown before
       if (mounted) {
         setState(() {
-          _showWelcome = false;
+          _showWelcome = true;
         });
       }
-    });
+      
+      // Set the flag to true after showing welcome
+      await prefs.setBool('has_shown_welcome', true);
+      
+      // Hide the welcome message after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showWelcome = false;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -36,11 +59,49 @@ class _HomeTabState extends State<HomeTab> {
       appBar: CustomAppBar(
         title: 'PawJeevan',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications - Coming soon!')),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (notificationProvider.unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          notificationProvider.unreadCount <= 99 
+                              ? '${notificationProvider.unreadCount}' 
+                              : '99+',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),

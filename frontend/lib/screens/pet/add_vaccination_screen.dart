@@ -61,6 +61,7 @@ class _AddVaccinationScreenState extends State<AddVaccinationScreen> {
         notes: _notesController.text.trim(),       // '' allowed
       );
       await _service.addVaccination(widget.petId, v);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vaccination added')),

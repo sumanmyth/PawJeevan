@@ -7,14 +7,16 @@ import 'providers/store_provider.dart';
 import 'providers/pet_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/community_provider.dart';
+import 'providers/notification_provider.dart';
 
 // Services & Screens
 import 'services/api_service.dart';
-import 'screens/splash_screen.dart';
+import 'screens/common/splash_screen.dart';
 
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
   // Load any saved authentication token from storage before the app runs
   await ApiService().loadToken();
   runApp(const MyApp());
@@ -82,11 +84,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
         ChangeNotifierProvider(create: (_) => PetProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()..init()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()..loadNotifications()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (_, settings, __) {

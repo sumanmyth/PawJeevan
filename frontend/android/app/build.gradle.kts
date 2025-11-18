@@ -22,7 +22,7 @@ android {
     // Configure Java toolchain to use Java 21 for compilation when available
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(21))
         }
     }
 

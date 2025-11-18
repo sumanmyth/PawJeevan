@@ -8,10 +8,15 @@ import 'api_service.dart';
 class CommunityService {
   final ApiService _api = ApiService();
 
-  Future<List<Post>> getPosts({String? authorId}) async {
+  Future<List<Post>> getPosts({String? authorId, Map<String, String>? params}) async {
     print('Fetching posts from API...');
     try {
-      final resp = await _api.get(ApiConstants.posts, params: {'author': authorId});
+      final queryParams = params ?? {};
+      if (authorId != null) {
+        queryParams['author'] = authorId;
+      }
+      
+      final resp = await _api.get(ApiConstants.posts, params: queryParams);
       print('Got API response with status: ${resp.statusCode}');
       print('Response data type: ${resp.data.runtimeType}');
       print('Response data: ${resp.data}');

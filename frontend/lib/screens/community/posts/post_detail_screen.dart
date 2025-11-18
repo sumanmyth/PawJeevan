@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../models/post_model.dart';
-import '../../providers/community_provider.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../profile/user_profile_screen.dart';
+import '../../../models/post_model.dart';
+import '../../../providers/community_provider.dart';
+import '../../../widgets/custom_app_bar.dart';
+import '../../profile/user_profile_screen.dart';
 import 'edit_post_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {

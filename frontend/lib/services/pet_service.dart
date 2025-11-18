@@ -23,6 +23,14 @@ class PetService {
     return [];
   }
 
+  Future<PetModel> getPet(int petId) async {
+    final response = await _api.get('${ApiConstants.pets}$petId/');
+    if (response.statusCode == 200) {
+      return PetModel.fromJson(response.data);
+    }
+    throw Exception('Failed to get pet details');
+  }
+
   Future<PetModel> createPet(PetModel pet) async {
     final response = await _api.post(ApiConstants.pets, data: pet.toJson());
     if (response.statusCode == 201 || response.statusCode == 200) {

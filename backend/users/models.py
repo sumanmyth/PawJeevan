@@ -189,7 +189,7 @@ class Notification(models.Model):
     User notifications
     For reminders, updates, community activity, etc.
     """
-    NOTIFICATION_TYPES = [
+    NOTIFICATION_TYPES = (
         ('vaccination', 'Vaccination Reminder'),
         ('food_restock', 'Food Restock'),
         ('vet_checkup', 'Vet Checkup'),
@@ -198,23 +198,18 @@ class Notification(models.Model):
         ('message', 'New Message'),
         ('follow', 'New Follower'),
         ('system', 'System'),
-    ]
-    
-    user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='notifications'
     )
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     title = models.CharField(max_length=200)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     action_url = models.CharField(max_length=500, blank=True)
-    
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
-        return f"{self.title} - {self.user.username}"
+        return f"{self.notification_type} - {self.title} ({self.user.username})"

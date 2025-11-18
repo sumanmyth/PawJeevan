@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import 'auth/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
 import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -19,21 +20,48 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.initialize();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      
+      // Add a minimum splash screen duration
+      await Future.delayed(const Duration(seconds: 2));
 
-    await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
 
-    if (!mounted) return;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      if (isLoggedIn) {
+        // Try to initialize authentication
+        await authProvider.initialize();
+        
+        // If initialization failed, clear the logged in state
+        if (!authProvider.isAuthenticated) {
+          await prefs.setBool('isLoggedIn', false);
+        }
+      }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => authProvider.isAuthenticated
-            ? const MainScreen()
-            : const LoginScreen(),
-      ),
-    );
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => authProvider.isAuthenticated
+              ? const MainScreen()
+              : const LoginScreen(),
+        ),
+      );
+    } catch (e) {
+      print('Error during authentication check: $e');
+      if (!mounted) return;
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
+      );
+    }
   }
 
   @override
