@@ -1,28 +1,58 @@
-# --- Global ---
+# ==========================
+# GLOBAL / SYSTEM
+# ==========================
 .DS_Store
 .vscode/
 .idea/
 *.log
+Thumbs.db
+.history/
 
-# --- Python / Django (Backend) ---
+# ==========================
+# BACKEND (Python / Django)
+# ==========================
+# Virtual Environments
 backend/.venv/
 backend/venv/
-*.pyc
-__pycache__/
-backend/db.sqlite3
-backend/media/
-*.pot
-*.py[cod]
+.venv/
 
-# --- Flutter (Frontend) ---
+# Python Cache & Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database (Keep your data local, don't push it)
+*.sqlite3
+db.sqlite3
+
+# --- MEDIA CONFIGURATION ---
+# Ignore everything inside the media folder...
+backend/media/*
+
+# ...BUT do not ignore .gitkeep files (allows you to commit empty folders)
+!backend/media/.gitkeep
+!backend/media/**/.gitkeep
+
+# ==========================
+# FRONTEND (Flutter)
+# ==========================
+# Build artifacts (Heavy files)
 frontend/build/
+
+# Dart/Flutter tools & caches
 frontend/.dart_tool/
+frontend/.pub-cache/
+frontend/.pub/
+
+# Flutter plugins & generated files
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
-frontend/.pub-cache/
-frontend/pubspec.lock
 
-# --- Mac/Linux/Windows Metadata ---
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# Android/iOS specific generated files
+frontend/android/.gradle
+frontend/android/local.properties
+frontend/ios/.generated/
+
+# IDE files inside frontend
+frontend/*.iml
+frontend/.idea/
