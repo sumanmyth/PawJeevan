@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../models/event_model.dart';
+import '../../../models/community/event_model.dart';
 import '../../../widgets/custom_app_bar.dart';
 
 class EventDetailScreen extends StatelessWidget {
@@ -27,25 +27,50 @@ class EventDetailScreen extends StatelessWidget {
           children: [
             // Cover Image
             if (event.coverImage != null && event.coverImage!.isNotEmpty)
-              Image.network(
-                event.coverImage!,
-                width: double.infinity,
-                height: 250,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 250,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.event, size: 80, color: Colors.grey),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenImage(
+                          imageUrl: event.coverImage!,
+                          eventTitle: event.title,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(
+                      event.coverImage!,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 250,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.event, size: 80, color: Colors.grey),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               )
             else
-              Container(
-                height: 250,
-                color: Colors.purple.withOpacity(0.1),
-                child: const Center(
-                  child: Icon(Icons.event, size: 80, color: Colors.purple),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    height: 250,
+                    color: Colors.purple.withOpacity(0.1),
+                    child: const Center(
+                      child: Icon(Icons.event, size: 80, color: Colors.purple),
+                    ),
+                  ),
                 ),
               ),
             
@@ -332,6 +357,57 @@ class EventDetailScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// Full Screen Image Viewer for Events
+class FullScreenImage extends StatelessWidget {
+  final String imageUrl;
+  final String eventTitle;
+
+  const FullScreenImage({
+    super.key,
+    required this.imageUrl,
+    required this.eventTitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(eventTitle),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

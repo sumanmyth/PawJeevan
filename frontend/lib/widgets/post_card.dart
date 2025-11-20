@@ -5,7 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../providers/community_provider.dart';
 import '../screens/community/posts/post_detail_screen.dart';
 import '../screens/profile/user_profile_screen.dart';
-import '../models/post_model.dart';
+import '../models/community/post_model.dart';
 import 'post_options_menu.dart';
 
 class PostCard extends StatelessWidget {

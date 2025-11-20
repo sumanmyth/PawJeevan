@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
-import '../../models/user_model.dart';
+import '../../models/user/user_model.dart';
 import '../profile/user_profile_screen.dart';
 
 class FollowListScreen extends StatefulWidget {
@@ -23,12 +23,37 @@ class FollowListScreen extends StatefulWidget {
 class _FollowListScreenState extends State<FollowListScreen> {
   bool _isLoading = true;
   List<User> _users = [];
+  List<User> _filteredUsers = [];
   String? _errorMessage;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener(_filterUsers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterUsers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredUsers = _users;
+      } else {
+        _filteredUsers = _users.where((user) {
+          return user.displayName.toLowerCase().contains(query) ||
+                 user.username.toLowerCase().contains(query) ||
+                 (user.bio?.toLowerCase().contains(query) ?? false);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -46,6 +71,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
       } else {
         _users = await community.getFollowing(widget.userId, force: true);
       }
+      _filteredUsers = _users;
     } catch (e) {
       if (mounted) {
         final errorText = e.toString();
@@ -74,20 +100,52 @@ class _FollowListScreenState extends State<FollowListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.title),
-            if (_errorMessage == null)
-              Text(
-                '${_users.length} ${widget.title.toLowerCase()}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
-                ),
+        title: _isSearching 
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.purple.shade900,
+                fontSize: 18,
               ),
-          ],
-        ),
+              decoration: InputDecoration(
+                hintText: 'Search ${widget.title.toLowerCase()}...',
+                hintStyle: TextStyle(
+                  color: isDark 
+                    ? Colors.white.withOpacity(0.6) 
+                    : Colors.purple.shade700.withOpacity(0.6),
+                ),
+                border: InputBorder.none,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.title),
+                if (_errorMessage == null)
+                  Text(
+                    '${_filteredUsers.length} ${widget.title.toLowerCase()}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                    ),
+                  ),
+              ],
+            ),
+        actions: [
+          if (_errorMessage == null && _users.isNotEmpty)
+            IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = !_isSearching;
+                  if (!_isSearching) {
+                    _searchController.clear();
+                  }
+                });
+              },
+            ),
+        ],
         elevation: 0,
         backgroundColor: isDark ? Colors.purple.shade900 : Colors.purple.shade50,
       ),
@@ -150,7 +208,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
                 )
               : RefreshIndicator(
               onRefresh: _loadData,
-              child: _users.isEmpty
+              child: _filteredUsers.isEmpty
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(32),
@@ -172,7 +230,9 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                 ),
                               ),
                               child: Icon(
-                                widget.isFollowers ? Icons.group_off : Icons.person_off,
+                                _searchController.text.isNotEmpty 
+                                  ? Icons.search_off
+                                  : widget.isFollowers ? Icons.group_off : Icons.person_off,
                                 size: 64,
                                 color: isDark 
                                   ? Colors.purple.shade200 
@@ -181,7 +241,9 @@ class _FollowListScreenState extends State<FollowListScreen> {
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'No ${widget.title.toLowerCase()} yet',
+                              _searchController.text.isNotEmpty 
+                                ? 'No results found'
+                                : 'No ${widget.title.toLowerCase()} yet',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
@@ -192,9 +254,11 @@ class _FollowListScreenState extends State<FollowListScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              widget.isFollowers 
-                                ? 'When other users follow you, they\'ll appear here'
-                                : 'When you follow other users, they\'ll appear here',
+                              _searchController.text.isNotEmpty 
+                                ? 'Try searching with different keywords'
+                                : widget.isFollowers 
+                                  ? 'When other users follow you, they\'ll appear here'
+                                  : 'When you follow other users, they\'ll appear here',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
@@ -208,9 +272,9 @@ class _FollowListScreenState extends State<FollowListScreen> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _users.length,
+                      itemCount: _filteredUsers.length,
                       itemBuilder: (context, index) {
-                        final user = _users[index];
+                        final user = _filteredUsers[index];
                         final isDark = Theme.of(context).brightness == Brightness.dark;
                         
                         return Padding(

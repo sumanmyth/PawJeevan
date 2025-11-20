@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../models/pet_model.dart';
+import '../models/pet/pet_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 

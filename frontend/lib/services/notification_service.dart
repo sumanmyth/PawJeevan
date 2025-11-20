@@ -1,4 +1,4 @@
-import '../models/notification_model.dart';
+import '../models/user/notification_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 

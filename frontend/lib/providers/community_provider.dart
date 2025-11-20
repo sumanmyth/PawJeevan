@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/post_model.dart';
-import '../models/user_model.dart';
-import '../models/feed_filter.dart';
+import '../models/community/post_model.dart';
+import '../models/user/user_model.dart';
+import '../models/common/feed_filter.dart';
 import '../services/community_service.dart';
 import '../services/auth_service.dart';
 
@@ -357,6 +357,79 @@ class CommunityProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> toggleCommentLike(int postId, int commentId) async {
+    print('CommunityProvider: toggleCommentLike called - postId: $postId, commentId: $commentId');
+    
+    // Always use post details for comment operations since posts list doesn't have full comments
+    Post? post = _postDetails[postId];
+    
+    if (post == null) {
+      print('CommunityProvider: Post not found in details, trying to fetch...');
+      await getPostDetail(postId, force: true);
+      post = _postDetails[postId];
+      if (post == null) {
+        print('CommunityProvider: Failed to fetch post details');
+        return;
+      }
+    }
+    
+    if (post.comments == null || post.comments!.isEmpty) {
+      print('CommunityProvider: Post has no comments!');
+      return;
+    }
+    
+    // Find and update the comment
+    final commentIndex = post.comments!.indexWhere((c) => c.id == commentId);
+    if (commentIndex == -1) {
+      print('CommunityProvider: Comment $commentId not found in post comments!');
+      print('CommunityProvider: Available comment IDs: ${post.comments!.map((c) => c.id).toList()}');
+      return;
+    }
+    
+    final comment = post.comments![commentIndex];
+    final liked = comment.isLiked;
+    print('CommunityProvider: Current like status: $liked, likes count: ${comment.likesCount}');
+    
+    final updatedComment = comment.copyWith(
+      isLiked: !liked,
+      likesCount: liked ? comment.likesCount - 1 : comment.likesCount + 1,
+    );
+    
+    // Update comments list
+    final updatedComments = List<Comment>.from(post.comments!);
+    updatedComments[commentIndex] = updatedComment;
+    
+    // Update post with new comments
+    final updatedPost = post.copyWith(comments: updatedComments);
+    
+    // Update post details
+    _postDetails[postId] = updatedPost;
+    
+    // Also update in posts list if it exists
+    final postIndex = _posts.indexWhere((p) => p.id == postId);
+    if (postIndex != -1) {
+      _posts[postIndex] = updatedPost;
+    }
+    
+    print('CommunityProvider: Updated post, calling notifyListeners');
+    notifyListeners();
+    
+    try {
+      print('CommunityProvider: Calling API to like comment');
+      await _service.likeComment(commentId);
+      print('CommunityProvider: API call successful');
+    } catch (e) {
+      print('CommunityProvider: API call failed: $e');
+      // Revert on error
+      _postDetails[postId] = post;
+      if (postIndex != -1) {
+        _posts[postIndex] = post;
+      }
+      notifyListeners();
+      _error = e.toString();
     }
   }
 }

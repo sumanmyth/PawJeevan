@@ -81,7 +81,7 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
 
     if (_dateLostFound == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select the date the pet was ${_reportType}')),
+        SnackBar(content: Text('Please select the date the pet was $_reportType')),
       );
       return;
     }
@@ -294,7 +294,7 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
 
                 // Pet Type
                 DropdownButtonFormField<String>(
-                  value: _petTypeController.text.isEmpty ? null : _petTypeController.text,
+                  initialValue: _petTypeController.text.isEmpty ? null : _petTypeController.text,
                   decoration: const InputDecoration(
                     labelText: 'Pet Type *',
                     border: OutlineInputBorder(),

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../../../models/event_model.dart';
+import '../../../models/community/event_model.dart';
 import '../events/event_detail_screen.dart';
 import '../events/edit_event_screen.dart';
 
@@ -107,8 +107,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
       // My Events (organized by me)
       endpoint = '${ApiConstants.baseUrl}${ApiConstants.events}?organizer=$_currentUserId';
     } else if (_currentTab == 1) {
-      // Discover Events (all upcoming events)
-      endpoint = '${ApiConstants.baseUrl}${ApiConstants.events}';
+      // Discover Events (exclude events organized by current user)
+      endpoint = '${ApiConstants.baseUrl}${ApiConstants.events}?exclude_organizer=$_currentUserId';
     } else if (_currentTab == 2) {
       // Joined Events (attending but not organizing)
       endpoint = '${ApiConstants.baseUrl}${ApiConstants.events}?attendee=$_currentUserId';
@@ -134,6 +134,9 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
     if (_currentTab == 0 && _currentUserId != null) {
       // My Events - only events organized by current user
       allEvents = allEvents.where((event) => event.organizerId == _currentUserId).toList();
+    } else if (_currentTab == 1 && _currentUserId != null) {
+      // Discover - exclude events organized by current user
+      allEvents = allEvents.where((event) => event.organizerId != _currentUserId).toList();
     } else if (_currentTab == 2 && _currentUserId != null) {
       // Joined Events - attending but not organizing
       allEvents = allEvents.where((event) => 

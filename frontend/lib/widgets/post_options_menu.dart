@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/post_model.dart';
+import '../models/community/post_model.dart';
 import '../providers/community_provider.dart';
 import '../screens/community/posts/edit_post_screen.dart';
 import '../services/community_service.dart';

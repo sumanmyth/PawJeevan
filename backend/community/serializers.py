@@ -20,12 +20,15 @@ class CommentSerializer(serializers.ModelSerializer):
     author_avatar = serializers.SerializerMethodField()
     replies = serializers.SerializerMethodField()
     is_current_user_author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = [
             'id', 'author', 'author_username', 'author_avatar',
-            'content', 'created_at', 'replies', 'is_current_user_author'
+            'content', 'created_at', 'replies', 'is_current_user_author',
+            'likes_count', 'is_liked'
         ]
         read_only_fields = ['author', 'created_at', 'updated_at']
 
@@ -43,6 +46,16 @@ class CommentSerializer(serializers.ModelSerializer):
         req = self.context.get('request')
         user = getattr(req, 'user', None)
         return user and user.is_authenticated and obj.author_id == user.id
+    
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+    
+    def get_is_liked(self, obj):
+        req = self.context.get('request')
+        user = getattr(req, 'user', None)
+        if user and user.is_authenticated:
+            return obj.likes.filter(id=user.id).exists()
+        return False
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -207,6 +220,8 @@ class GroupMessageSerializer(serializers.ModelSerializer):
 class GroupPostSerializer(serializers.ModelSerializer):
     author_username = serializers.CharField(source='author.username', read_only=True)
     author_avatar = serializers.SerializerMethodField()
+    author_id = serializers.IntegerField(source='author.id', read_only=True)
+    group_creator_id = serializers.IntegerField(source='group.creator.id', read_only=True)
 
     class Meta:
         model = GroupPost

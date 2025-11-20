@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/notification_model.dart';
+import '../models/user/notification_model.dart';
 import '../services/notification_service.dart';
 
 class NotificationProvider extends ChangeNotifier {

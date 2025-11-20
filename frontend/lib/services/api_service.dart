@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/constants.dart';
-import '../models/group_model.dart';
+import '../models/community/group_model.dart';
 
 class ApiService {
   static Future<List<Group>> fetchGroups() async {

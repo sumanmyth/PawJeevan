@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../models/lost_found_model.dart';
+import '../../../models/pet/lost_found_model.dart';
 import '../../../widgets/custom_app_bar.dart';
 
 class LostFoundDetailScreen extends StatelessWidget {
@@ -316,13 +316,13 @@ class LostFoundDetailScreen extends StatelessWidget {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.phone, color: Colors.green),
+                                  const Icon(Icons.phone, color: Colors.green),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Call Reporter',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w500,
@@ -339,7 +339,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.green),
+                                  const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.green),
                                 ],
                               ),
                             ),

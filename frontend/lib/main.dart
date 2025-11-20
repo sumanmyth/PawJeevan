@@ -46,9 +46,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFFE9D8FD),
+        indicatorColor: Color(0xFF6B46C1),
         backgroundColor: Colors.white,
         elevation: 2.0,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -73,9 +76,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFF2C2C2C),
+        indicatorColor: Color(0xFF6B46C1),
         backgroundColor: Color(0xFF1A1A1A),
         elevation: 2.0,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }

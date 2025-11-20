@@ -5,7 +5,7 @@ import '../../providers/pet_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'add_pet_screen.dart';
 import 'pet_detail_screen.dart';
-import '../../models/pet_model.dart';
+import '../../models/pet/pet_model.dart';
 import 'edit_pet_screen.dart';
 
 class MyPetsScreen extends StatefulWidget {

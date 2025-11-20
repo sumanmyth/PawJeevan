@@ -140,8 +140,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['post']
+    ordering_fields = ['created_at', 'likes']
+    ordering = ['created_at']
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -150,6 +152,32 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        
+        # Handle ordering for recent and trending
+        ordering = self.request.query_params.get('ordering', 'created_at')
+        
+        if ordering == '-trending':
+            # Calculate engagement score for comments
+            qs = qs.annotate(
+                likes_total=Count('likes', distinct=True),
+                engagement_score=F('likes_total')
+            ).order_by('-engagement_score', '-created_at')
+        else:
+            qs = qs.order_by(ordering)
+            
+        return qs
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def like(self, request, pk=None):
+        comment = self.get_object()
+        if comment.likes.filter(id=request.user.id).exists():
+            comment.likes.remove(request.user)
+            return Response({'status': 'unliked', 'likes_count': comment.likes.count()})
+        comment.likes.add(request.user)
+        return Response({'status': 'liked', 'likes_count': comment.likes.count()})
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -265,7 +293,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class GroupPostViewSet(viewsets.ModelViewSet):
-    queryset = GroupPost.objects.all().order_by('-created_at')
+    queryset = GroupPost.objects.all().order_by('-is_pinned', '-created_at')
     serializer_class = GroupPostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -279,6 +307,38 @@ class GroupPostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    @action(detail=True, methods=['post'])
+    def pin(self, request, pk=None):
+        post = self.get_object()
+        group = post.group
+        
+        # Check if user is group creator
+        if group.creator != request.user:
+            return Response(
+                {'error': 'Only group creator can pin posts'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        post.is_pinned = not post.is_pinned
+        post.save()
+        
+        return Response({
+            'is_pinned': post.is_pinned,
+            'message': 'Post pinned' if post.is_pinned else 'Post unpinned'
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        
+        # Only post author or group creator can delete
+        if post.author != request.user and post.group.creator != request.user:
+            return Response(
+                {'error': 'You do not have permission to delete this post'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        return super().destroy(request, *args, **kwargs)
+
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all().order_by('start_datetime')
@@ -288,6 +348,21 @@ class EventViewSet(viewsets.ModelViewSet):
     filterset_fields = ['event_type', 'organizer', 'group']
     search_fields = ['title', 'description', 'location']
     ordering_fields = ['start_datetime', 'created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by attendee if provided
+        attendee_id = self.request.query_params.get('attendee')
+        if attendee_id:
+            queryset = queryset.filter(attendees__id=attendee_id)
+        
+        # Exclude organizer's events if exclude_organizer is provided
+        exclude_organizer_id = self.request.query_params.get('exclude_organizer')
+        if exclude_organizer_id:
+            queryset = queryset.exclude(organizer__id=exclude_organizer_id)
+        
+        return queryset
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-import '../../models/notification_model.dart';
+import '../../models/user/notification_model.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 

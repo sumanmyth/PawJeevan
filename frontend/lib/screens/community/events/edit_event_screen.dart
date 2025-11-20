@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../../../utils/constants.dart';
-import '../../../models/event_model.dart';
+import '../../../models/community/event_model.dart';
 
 class EditEventScreen extends StatefulWidget {
   final Event event;
@@ -277,7 +277,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
                 // Event Type
                 DropdownButtonFormField<String>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Event Type *',
                     border: OutlineInputBorder(),

@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../../../utils/constants.dart';
-import '../../../models/lost_found_model.dart';
+import '../../../models/pet/lost_found_model.dart';
 
 class EditLostFoundScreen extends StatefulWidget {
   final LostFoundReport report;
@@ -293,7 +293,7 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
 
                 // Pet Type
                 DropdownButtonFormField<String>(
-                  value: _petTypeController.text.isEmpty ? null : _petTypeController.text,
+                  initialValue: _petTypeController.text.isEmpty ? null : _petTypeController.text,
                   decoration: const InputDecoration(
                     labelText: 'Pet Type *',
                     border: OutlineInputBorder(),

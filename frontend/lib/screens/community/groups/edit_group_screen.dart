@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/loading_overlay.dart';
-import '../../../models/group_model.dart';
+import '../../../models/community/group_model.dart';
 
 class EditGroupScreen extends StatefulWidget {
   final Group group;
@@ -184,7 +184,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Group Type',
                     border: OutlineInputBorder(),

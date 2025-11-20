@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../models/post_model.dart';
-import '../models/user_model.dart';
+import 'package:image_picker/image_picker.dart';
+import '../models/community/post_model.dart';
+import '../models/user/user_model.dart';
+import '../models/community/group_post_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 
@@ -196,6 +198,20 @@ class CommunityService {
     await _api.post('${ApiConstants.posts}$postId/like/');
   }
 
+  Future<void> likeComment(int commentId) async {
+    print('CommunityService: likeComment called for commentId: $commentId');
+    final endpoint = '${ApiConstants.comments}$commentId/like/';
+    print('CommunityService: Endpoint: $endpoint');
+    try {
+      final response = await _api.post(endpoint);
+      print('CommunityService: Response status: ${response.statusCode}');
+      print('CommunityService: Response data: ${response.data}');
+    } catch (e) {
+      print('CommunityService: Error liking comment: $e');
+      rethrow;
+    }
+  }
+
   Future<User> getUser(int userId) async {
     final resp = await _api.get('${ApiConstants.users}$userId/');
     return User.fromJson(resp.data);
@@ -304,6 +320,113 @@ class CommunityService {
       return [];
     } catch (e) {
       print('Error fetching following: $e');
+      rethrow;
+    }
+  }
+
+  // Group Post Methods
+  Future<List<GroupPost>> getGroupPosts(int groupId) async {
+    print('Fetching group posts for group $groupId');
+    try {
+      final resp = await _api.get(
+        ApiConstants.groupPosts,
+        params: {'group': groupId.toString()},
+      );
+      print('Group posts response: ${resp.data}');
+      
+      if (resp.statusCode == 200) {
+        final data = resp.data;
+        List<GroupPost> posts = [];
+        
+        if (data is Map && data['results'] is List) {
+          posts = (data['results'] as List)
+              .map((p) => GroupPost.fromJson(p))
+              .toList();
+        } else if (data is List) {
+          posts = data.map((p) => GroupPost.fromJson(p)).toList();
+        }
+        
+        print('Successfully parsed ${posts.length} group posts');
+        return posts;
+      }
+      
+      print('Unexpected response: ${resp.statusCode} - ${resp.data}');
+      throw Exception('Failed to fetch group posts: ${resp.statusCode}');
+    } catch (e) {
+      print('Error fetching group posts: $e');
+      rethrow;
+    }
+  }
+
+  Future<GroupPost> createGroupPost({
+    required int groupId,
+    required String content,
+    XFile? imageFile,
+  }) async {
+    print('Creating group post for group $groupId');
+    try {
+      FormData formData = FormData.fromMap({
+        'group': groupId,
+        'content': content,
+      });
+
+      if (imageFile != null) {
+        final bytes = await imageFile.readAsBytes();
+        formData.files.add(
+          MapEntry(
+            'image',
+            MultipartFile.fromBytes(
+              bytes,
+              filename: imageFile.name,
+            ),
+          ),
+        );
+      }
+
+      final resp = await _api.post(ApiConstants.groupPosts, data: formData);
+      print('Create group post response: ${resp.data}');
+      
+      if (resp.statusCode == 201 || resp.statusCode == 200) {
+        return GroupPost.fromJson(resp.data);
+      }
+      
+      throw Exception('Failed to create group post: ${resp.statusCode}');
+    } catch (e) {
+      print('Error creating group post: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteGroupPost(int postId) async {
+    print('Deleting group post $postId');
+    try {
+      final resp = await _api.delete('${ApiConstants.groupPosts}$postId/');
+      print('Delete group post response: ${resp.statusCode}');
+      
+      if (resp.statusCode == 204 || resp.statusCode == 200) {
+        return;
+      }
+      
+      throw Exception('Failed to delete group post: ${resp.statusCode}');
+    } catch (e) {
+      print('Error deleting group post: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> togglePinGroupPost(int postId) async {
+    print('Toggling pin for group post $postId');
+    try {
+      final resp = await _api.post('${ApiConstants.groupPosts}$postId/pin/');
+      print('Toggle pin response: ${resp.data}');
+      
+      if (resp.statusCode == 200) {
+        return resp.data['is_pinned'] ?? false;
+      }
+      
+      throw Exception('Failed to toggle pin: ${resp.statusCode}');
+    } catch (e) {
+      print('Error toggling pin: $e');
       rethrow;
     }
   }

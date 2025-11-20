@@ -4,8 +4,8 @@ import '../../../utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../../../services/api_service.dart';
-import '../../../models/group_model.dart';
-import '../groups/group_chat_screen.dart';
+import '../../../models/community/group_model.dart';
+import '../groups/group_details_screen.dart';
 import '../groups/edit_group_screen.dart';
 
 class GroupsTab extends StatefulWidget {
@@ -585,7 +585,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GroupChatScreen(group: group),
+                              builder: (context) => GroupDetailsScreen(group: group),
                             ),
                           );
                         }

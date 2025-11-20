@@ -1,0 +1,28 @@
+# --- Global ---
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# --- Python / Django (Backend) ---
+backend/.venv/
+backend/venv/
+*.pyc
+__pycache__/
+backend/db.sqlite3
+backend/media/
+*.pot
+*.py[cod]
+
+# --- Flutter (Frontend) ---
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/pubspec.lock
+
+# --- Mac/Linux/Windows Metadata ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini

@@ -107,9 +107,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   Future<void> _navigateToSearch() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const UserSearchScreen()),
+    showDialog(
+      context: context,
+      builder: (context) => const UserSearchDialog(),
     );
   }
 

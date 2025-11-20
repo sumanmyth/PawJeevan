@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../models/feed_filter.dart';
+import '../../../models/common/feed_filter.dart';
 import '../../../providers/community_provider.dart';
 import '../../../widgets/post_card.dart';
 

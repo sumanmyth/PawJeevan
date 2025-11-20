@@ -47,6 +47,9 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
     
+    # Engagement
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    
     # Nested comments (replies)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     
@@ -58,6 +61,10 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.id}"
+    
+    @property
+    def likes_count(self):
+        return self.likes.count()
 
 
 class Group(models.Model):

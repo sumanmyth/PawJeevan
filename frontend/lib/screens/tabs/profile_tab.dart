@@ -10,6 +10,7 @@ import '../auth/login_screen.dart';
 import '../pet/my_pets_screen.dart';
 import '../settings/settings_screen.dart';
 import '../profile/user_profile_screen.dart';
+import '../profile/wishlist_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -119,20 +120,53 @@ class _ProfileTabState extends State<ProfileTab> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                  colors: [
+                    Color(0xFF6B46C1),
+                    Color(0xFF9F7AEA),
+                    Color(0xFFB794F6),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x4D6B46C1), // Purple @ 30%
+                    color: const Color(0xFF6B46C1).withOpacity(0.3),
                     blurRadius: 20,
-                    offset: Offset(0, 10),
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: Column(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Background paw prints pattern
+                  const Positioned(
+                    right: -20,
+                    top: -20,
+                    child: Opacity(
+                      opacity: 0.1,
+                      child: Icon(
+                        Icons.pets,
+                        size: 120,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    right: 40,
+                    bottom: -30,
+                    child: Opacity(
+                      opacity: 0.08,
+                      child: Icon(
+                        Icons.pets,
+                        size: 100,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  // Main content
+                  Column(
                 children: [
                   Stack(
                     children: [
@@ -194,48 +228,58 @@ class _ProfileTabState extends State<ProfileTab> {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _StatItem(
-                        label: 'Posts',
-                        value: userPosts.length.toString(),
-                        onTap: user != null
-                            ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => UserProfileScreen(userId: user.id),
-                                  ),
-                                )
-                            : null,
+                      Expanded(
+                        child: _StatItem(
+                          label: 'Posts',
+                          value: userPosts.length.toString(),
+                          onTap: user != null
+                              ? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => UserProfileScreen(userId: user.id),
+                                    ),
+                                  )
+                              : null,
+                        ),
                       ),
-                      _StatItem(
-                        label: 'Followers',
-                        value: user?.followersCount.toString() ?? '0',
-                        onTap: user != null
-                            ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => UserProfileScreen(userId: user.id),
-                                  ),
-                                )
-                            : null,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatItem(
+                          label: 'Followers',
+                          value: user?.followersCount.toString() ?? '0',
+                          onTap: user != null
+                              ? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => UserProfileScreen(userId: user.id),
+                                    ),
+                                  )
+                              : null,
+                        ),
                       ),
-                      _StatItem(
-                        label: 'Following',
-                        value: user?.followingCount.toString() ?? '0',
-                        onTap: user != null
-                            ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => UserProfileScreen(userId: user.id),
-                                  ),
-                                )
-                            : null,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatItem(
+                          label: 'Following',
+                          value: user?.followingCount.toString() ?? '0',
+                          onTap: user != null
+                              ? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => UserProfileScreen(userId: user.id),
+                                    ),
+                                  )
+                              : null,
+                        ),
                       ),
                     ],
                   ),
+                ],
+              ),
                 ],
               ),
             ),
@@ -277,10 +321,13 @@ class _ProfileTabState extends State<ProfileTab> {
                       _MenuItem(
                         icon: Icons.favorite,
                         title: 'Wishlist',
-                        subtitle: 'Your favorite products',
+                        subtitle: 'Your favorite products and pets',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Wishlist - Coming soon!')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const WishlistScreen(),
+                            ),
                           );
                         },
                       ),
@@ -332,25 +379,36 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.5,
+          ),
+        ),
         child: Column(
           children: [
             Text(
               value,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               label,
               style: const TextStyle(
-                color: Color(0xCCFFFFFF),
-                fontSize: 14,
+                color: Color(0xE6FFFFFF),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
               ),
             ),
           ],

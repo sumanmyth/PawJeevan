@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../models/user_model.dart';
-import '../../models/post_model.dart';
+import '../../models/user/user_model.dart';
+import '../../models/community/post_model.dart';
 import '../../providers/community_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -44,10 +44,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     });
     
     final provider = context.read<CommunityProvider>();
+    final authProvider = context.read<AuthProvider>();
+    
     try {
-      // Get fresh user data
+      // Get fresh user data first
       await provider.getUser(widget.userId, force: true);
-      await provider.getUserPosts(widget.userId);
+      
+      // Check if profile is locked and if current user is not the owner
+      final user = provider.user(widget.userId);
+      final isOwnProfile = authProvider.user?.id == widget.userId;
+      
+      // Only load posts if profile is not locked or it's own profile
+      if (user != null && (!user.isProfileLocked || isOwnProfile)) {
+        await provider.getUserPosts(widget.userId);
+      }
       
       if (mounted) {
         setState(() {
@@ -69,8 +79,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final community = context.watch<CommunityProvider>();
+    final authProvider = context.watch<AuthProvider>();
     final user = community.user(widget.userId);
-    final userPosts = community.cachedUserPosts(widget.userId);
+    final isOwnProfile = authProvider.user?.id == widget.userId;
+    
+    // Only get cached posts if profile is not locked or it's own profile
+    final userPosts = (user != null && (!user.isProfileLocked || isOwnProfile))
+        ? community.cachedUserPosts(widget.userId)
+        : <Post>[];
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -86,7 +102,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Column(
                   children: [
                     _buildProfileHeader(context, user),
-                    const Divider(height: 1),
                     _buildPostsList(context, userPosts),
                   ],
                 ),
@@ -96,98 +111,148 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildProfileHeader(BuildContext context, User user) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Container(
-      padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [Colors.purple.shade900, Colors.purple.shade800]
-              : [Colors.purple.shade50, Colors.purple.shade100],
-        ),
-      ),
-      child: Column(
-        children: [
-          // Avatar
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade300, Colors.purple.shade500],
-              ),
-            ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.white,
-              backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-              child: user.avatarUrl == null
-                  ? Icon(Icons.person, size: 50, color: Colors.purple.shade300)
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Name and username
-          Text(
-            user.displayName,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.purple.shade900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '@${user.username}',
-            style: TextStyle(
-              fontSize: 16,
-              color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
-            ),
-          ),
-          
-          // Bio if available
-          if (user.bio != null && user.bio!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              user.bio!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.purple.shade100 : Colors.purple.shade800,
-              ),
-            ),
+          colors: [
+            Color(0xFF6B46C1),
+            Color(0xFF9F7AEA),
+            Color(0xFFB794F6),
           ],
-          
-          // Location if available
-          if (user.location != null && user.location!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Decorative paw patterns
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Icon(
+              Icons.pets,
+              size: 80,
+              color: Colors.white.withOpacity(0.1),
+            ),
+          ),
+          Positioned(
+            bottom: 30,
+            left: 30,
+            child: Icon(
+              Icons.pets,
+              size: 60,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+          Positioned(
+            top: 100,
+            left: 20,
+            child: Icon(
+              Icons.pets,
+              size: 40,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+          // Main content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                Icon(Icons.location_on, 
-                  size: 16, 
-                  color: isDark ? Colors.purple.shade300 : Colors.purple.shade600
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  user.location!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                // Avatar
+                GestureDetector(
+                  onTap: () {
+                    if (user.avatarUrl != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImage(
+                            imageUrl: user.avatarUrl!,
+                            tag: 'user_avatar_${user.id}',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Colors.purple.shade300, Colors.purple.shade500],
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                      child: user.avatarUrl == null
+                          ? const Icon(Icons.person, size: 50, color: Colors.white)
+                          : null,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ],
-          
-          const SizedBox(height: 20),
-          
-          // Stats row
-          Padding(
+                const SizedBox(height: 16),
+                
+                // Name and username
+                Text(
+                  user.displayName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '@${user.username}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                
+                // Bio if available
+                if (user.bio != null && user.bio!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    user.bio!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                  ),
+                ],
+                
+                // Location if available
+                if (user.location != null && user.location!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.location_on, 
+                        size: 16, 
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        user.location!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                const SizedBox(height: 20),
+                
+                // Stats row
+                Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -234,12 +299,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ],
             ),
           ),
-          
-          const SizedBox(height: 20),
-          
-          // Follow/Unfollow button - only show for other users
-          if (context.read<AuthProvider>().user?.id != user.id) ...[
-            SizedBox(
+                
+                const SizedBox(height: 20),
+                
+                // Follow/Unfollow button - only show for other users
+                if (context.read<AuthProvider>().user?.id != user.id) ...[
+                  SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
@@ -267,22 +332,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     }
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: user.isFollowing ? Colors.red : Colors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: user.isFollowing 
+                      ? Colors.red.shade400 
+                      : Colors.green.shade500,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                  icon: Icon(user.isFollowing ? Icons.person_remove : Icons.person_add),
+                  label: Text(
+                    user.isFollowing ? 'Unfollow' : 'Follow',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
-                icon: Icon(user.isFollowing ? Icons.person_remove : Icons.person_add),
-                label: Text(
-                  user.isFollowing ? 'Unfollow' : 'Follow',
-                  style: const TextStyle(fontSize: 16),
-                ),
               ),
+            ],
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -547,5 +618,101 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+}
 
+class FullScreenImage extends StatelessWidget {
+  final String imageUrl;
+  final String tag;
+
+  const FullScreenImage({
+    super.key,
+    required this.imageUrl,
+    required this.tag,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Interactive image viewer with zoom and pan
+          Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.white,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Failed to load image',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          error.toString(),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          // Close button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: Material(
+              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(30),
+              child: InkWell(
+                onTap: () => Navigator.pop(context),
+                borderRadius: BorderRadius.circular(30),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

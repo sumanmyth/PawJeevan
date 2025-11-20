@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../../../models/lost_found_model.dart';
+import '../../../models/pet/lost_found_model.dart';
 import '../lost_found/lost_found_detail_screen.dart';
 import '../lost_found/edit_lost_found_screen.dart';
 
@@ -248,7 +248,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating status: $e'),
-            duration: Duration(seconds: 5),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
