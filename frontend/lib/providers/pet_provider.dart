@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/pet_model.dart';
+import '../models/pet/pet_model.dart';
 import '../services/pet_service.dart';
 
 class PetProvider extends ChangeNotifier {

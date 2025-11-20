@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../models/pet_model.dart';
+import '../models/pet/pet_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 
@@ -21,6 +21,14 @@ class PetService {
       }
     }
     return [];
+  }
+
+  Future<PetModel> getPet(int petId) async {
+    final response = await _api.get('${ApiConstants.pets}$petId/');
+    if (response.statusCode == 200) {
+      return PetModel.fromJson(response.data);
+    }
+    throw Exception('Failed to get pet details');
   }
 
   Future<PetModel> createPet(PetModel pet) async {

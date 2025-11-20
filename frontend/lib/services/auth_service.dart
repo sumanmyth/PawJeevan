@@ -1,4 +1,4 @@
-import '../models/user_model.dart';
+import '../models/user/user_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 import 'package:dio/dio.dart';
@@ -6,7 +6,7 @@ import 'package:dio/dio.dart';
 class AuthService {
   final ApiService _api = ApiService();
 
-  Future<Map<String, dynamic>> register({
+  Future<User> register({
     required String username,
     required String email,
     required String password,
@@ -36,11 +36,7 @@ class AuthService {
       if (access != null) {
         await _api.saveToken(access, refreshToken: refresh);
       }
-      return {
-        'user': user,
-        'access': access,
-        'refresh': refresh,
-      };
+      return user;
     }
 
     throw Exception('Registration failed');
@@ -142,6 +138,6 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _api.clearToken();
+    await _api.clearTokens();
   }
 }

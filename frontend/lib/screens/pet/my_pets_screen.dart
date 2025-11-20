@@ -5,7 +5,7 @@ import '../../providers/pet_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'add_pet_screen.dart';
 import 'pet_detail_screen.dart';
-import '../../models/pet_model.dart';
+import '../../models/pet/pet_model.dart';
 import 'edit_pet_screen.dart';
 
 class MyPetsScreen extends StatefulWidget {
@@ -354,7 +354,7 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

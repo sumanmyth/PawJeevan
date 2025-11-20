@@ -7,14 +7,16 @@ import 'providers/store_provider.dart';
 import 'providers/pet_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/community_provider.dart';
+import 'providers/notification_provider.dart';
 
 // Services & Screens
 import 'services/api_service.dart';
-import 'screens/splash_screen.dart';
+import 'screens/common/splash_screen.dart';
 
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
   // Load any saved authentication token from storage before the app runs
   await ApiService().loadToken();
   runApp(const MyApp());
@@ -44,9 +46,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFFE9D8FD),
+        indicatorColor: Color(0xFF6B46C1),
         backgroundColor: Colors.white,
         elevation: 2.0,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -71,9 +76,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFF2C2C2C),
+        indicatorColor: Color(0xFF6B46C1),
         backgroundColor: Color(0xFF1A1A1A),
         elevation: 2.0,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -82,11 +90,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
         ChangeNotifierProvider(create: (_) => PetProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()..init()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()..loadNotifications()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (_, settings, __) {

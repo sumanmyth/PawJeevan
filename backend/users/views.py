@@ -1,4 +1,5 @@
-from rest_framework import viewsets, status, generics, permissions
+from rest_framework import viewsets, status, generics, permissions, filters
+from rest_framework.decorators import action
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
@@ -57,6 +58,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'first_name', 'last_name']
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -106,6 +109,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def followers(self, request, pk=None):
         user = self.get_object()
+        
+        # Check if profile is locked and requesting user is not the owner
+        if user.is_profile_locked and user != request.user:
+            return Response(
+                {"error": "This user's profile is locked. Followers list is private."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         followers = user.followers.all()
         page = self.paginate_queryset(followers)
         if page is not None:
@@ -117,6 +128,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def following(self, request, pk=None):
         user = self.get_object()
+        
+        # Check if profile is locked and requesting user is not the owner
+        if user.is_profile_locked and user != request.user:
+            return Response(
+                {"error": "This user's profile is locked. Following list is private."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         following = user.following.all()
         page = self.paginate_queryset(following)
         if page is not None:
@@ -133,8 +152,7 @@ class PetProfileViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return PetProfile.objects.all()
+        # Always filter by owner, even for staff users in the API
         return PetProfile.objects.filter(owner=self.request.user)
 
     def get_serializer_context(self):
@@ -152,7 +170,28 @@ class VaccinationRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return VaccinationRecord.objects.filter(pet__owner=self.request.user)
+        queryset = VaccinationRecord.objects.filter(pet__owner=self.request.user)
+        pet_id = self.request.query_params.get('pet', None)
+        if pet_id is not None:
+            queryset = queryset.filter(pet_id=pet_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        # Verify the pet belongs to the current user
+        pet_id = self.request.data.get('pet')
+        try:
+            pet = PetProfile.objects.get(id=pet_id, owner=self.request.user)
+            serializer.save(pet=pet)
+        except PetProfile.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only add vaccinations to your own pets.")
+
+    def perform_update(self, serializer):
+        # Ensure the vaccination record belongs to a pet owned by the current user
+        if not serializer.instance.pet.owner == self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only update vaccinations of your own pets.")
+        serializer.save()
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -164,6 +203,22 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
     queryset = MedicalRecord.objects.all()
     serializer_class = MedicalRecordSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = MedicalRecord.objects.filter(pet__owner=self.request.user)
+        pet_id = self.request.query_params.get('pet', None)
+        if pet_id is not None:
+            queryset = queryset.filter(pet_id=pet_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        pet_id = self.request.data.get('pet')
+        try:
+            pet = PetProfile.objects.get(id=pet_id, owner=self.request.user)
+            serializer.save(pet=pet)
+        except PetProfile.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only add medical records to your own pets.")
 
     def get_queryset(self):
         return MedicalRecord.objects.filter(pet__owner=self.request.user)
@@ -186,3 +241,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
         ctx = super().get_serializer_context()
         ctx["request"] = self.request
         return ctx
+        
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark a notification as read"""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'notification marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read"""
+        self.get_queryset().update(is_read=True)
+        return Response({'status': 'all notifications marked as read'})

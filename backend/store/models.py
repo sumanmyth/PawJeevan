@@ -330,3 +330,60 @@ class Wishlist(models.Model):
     
     def __str__(self):
         return f"Wishlist for {self.user.username}"
+
+
+class AdoptionListing(models.Model):
+    """
+    Pet adoption listings
+    Shelters or individuals can post pets for adoption
+    """
+    PET_TYPE_CHOICES = [
+        ('dog', 'Dog'),
+        ('cat', 'Cat'),
+        ('bird', 'Bird'),
+        ('fish', 'Fish'),
+        ('rabbit', 'Rabbit'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('pending', 'Adoption Pending'),
+        ('adopted', 'Adopted'),
+        ('closed', 'Closed'),
+    ]
+    
+    # Basic info
+    title = models.CharField(max_length=200)
+    pet_name = models.CharField(max_length=100)
+    pet_type = models.CharField(max_length=20, choices=PET_TYPE_CHOICES)
+    breed = models.CharField(max_length=100, blank=True)
+    age = models.IntegerField(help_text="Age in months")
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
+    
+    # Details
+    description = models.TextField()
+    health_status = models.TextField()
+    vaccination_status = models.TextField()
+    is_neutered = models.BooleanField(default=False)
+    
+    # Media
+    photo = models.ImageField(upload_to='adoption/', blank=True, null=True)
+    
+    # Contact
+    poster = models.ForeignKey(User, on_delete=models.CASCADE, related_name='adoption_listings')
+    contact_phone = models.CharField(max_length=15)
+    contact_email = models.EmailField()
+    location = models.CharField(max_length=200)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.pet_name} - {self.title}"

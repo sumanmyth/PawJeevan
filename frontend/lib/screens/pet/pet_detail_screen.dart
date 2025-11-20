@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/pet_model.dart';
+import '../../models/pet/pet_model.dart';
 import '../../providers/pet_provider.dart';
 import '../../services/pet_service.dart';
 import '../../widgets/custom_app_bar.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/post_model.dart';
-import '../models/user_model.dart';
+import '../models/community/post_model.dart';
+import '../models/user/user_model.dart';
+import '../models/common/feed_filter.dart';
 import '../services/community_service.dart';
 import '../services/auth_service.dart';
 
@@ -20,7 +21,7 @@ class CommunityProvider extends ChangeNotifier {
 
   User? user(int id) => _users[id];
 
-  Future<void> fetchPosts() async {
+  Future<void> fetchPosts({FeedFilter filter = FeedFilter.recent}) async {
     if (_isLoading) return; // Prevent multiple simultaneous fetches
     
     final previousPosts = List<Post>.from(_posts); // Keep a copy of current posts
@@ -29,16 +30,25 @@ class CommunityProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Fetching posts...');
-      final newPosts = await _service.getPosts();
-      print('Fetched ${newPosts.length} posts');
-      if (newPosts.isEmpty && _posts.isNotEmpty) {
-        print('Warning: Received empty posts list while we had existing posts');
+      Map<String, String> params = {};
+      
+      switch (filter) {
+        case FeedFilter.recent:
+          params['ordering'] = '-created_at';
+          break;
+        case FeedFilter.trending:
+          // Use trending ordering which sorts by likes + comments
+          params['ordering'] = '-trending';
+          break;
+        case FeedFilter.followed:
+          params['following'] = 'true';
+          break;
       }
+
+      final newPosts = await _service.getPosts(params: params);
       _posts = newPosts;
       _error = null;
     } catch (e) {
-      print('Error fetching posts: $e');
       _error = e.toString();
       // Restore previous posts on error
       _posts = previousPosts;
@@ -177,48 +187,39 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   Future<bool> deletePost(int postId) async {
-    print('Provider: Starting delete operation for post $postId');
     _error = null;  // Reset any previous error
     try {
-      print('Provider: Calling community service deletePost');
+      // Find the post's author before deleting
+      int? authorId;
       try {
-        await _service.deletePost(postId);
-        print('Provider: API call completed successfully');
-      } catch (serviceError) {
-        print('Provider: Service error during delete: $serviceError');
-        _error = serviceError.toString();
-        notifyListeners();
-        return false;
+        final post = _posts.firstWhere((p) => p.id == postId);
+        authorId = post.author;
+      } catch (e) {
+        // Post not found in local cache
       }
       
-      print('Provider: Updating local state');
-      try {
-        final beforeCount = _posts.length;
-        _posts.removeWhere((p) => p.id == postId);
-        final afterCount = _posts.length;
-        print('Provider: Posts count before: $beforeCount, after: $afterCount');
-        
-        if (beforeCount == afterCount) {
-          print('Provider: Warning - post was not found in list');
-        }
-        
-        if (_postDetails.containsKey(postId)) {
-          _postDetails.remove(postId);
-          print('Provider: Removed from details cache');
-        }
-        
-        print('Provider: Notifying listeners of state change');
-        notifyListeners();
-        return true;
-      } catch (stateError) {
-        print('Provider: Error updating state: $stateError');
-        _error = 'Post deleted but UI update failed: $stateError';
-        notifyListeners();
-        return true; // Still return true as delete succeeded
+      await _service.deletePost(postId);
+      
+      // Update main posts list
+      _posts.removeWhere((p) => p.id == postId);
+      
+      // Update user's cached posts if available
+      if (authorId != null && _userPosts.containsKey(authorId)) {
+        _userPosts[authorId]?.removeWhere((p) => p.id == postId);
       }
+      
+      // Remove from post details cache
+      _postDetails.remove(postId);
+      
+      // Refresh user data to update post count
+      if (authorId != null) {
+        await getUser(authorId, force: true);
+      }
+      
+      notifyListeners();
+      return true;
     } catch (e) {
-      print('Provider: Unexpected error: $e');
-      _error = 'Unexpected error: $e';
+      _error = e.toString();
       notifyListeners();
       return false;
     }
@@ -307,7 +308,7 @@ class CommunityProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return [];
+      rethrow; // Re-throw the error so the UI can handle locked profiles
     }
   }
 
@@ -322,7 +323,7 @@ class CommunityProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return [];
+      rethrow; // Re-throw the error so the UI can handle locked profiles
     }
   }
 
@@ -356,6 +357,79 @@ class CommunityProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> toggleCommentLike(int postId, int commentId) async {
+    print('CommunityProvider: toggleCommentLike called - postId: $postId, commentId: $commentId');
+    
+    // Always use post details for comment operations since posts list doesn't have full comments
+    Post? post = _postDetails[postId];
+    
+    if (post == null) {
+      print('CommunityProvider: Post not found in details, trying to fetch...');
+      await getPostDetail(postId, force: true);
+      post = _postDetails[postId];
+      if (post == null) {
+        print('CommunityProvider: Failed to fetch post details');
+        return;
+      }
+    }
+    
+    if (post.comments == null || post.comments!.isEmpty) {
+      print('CommunityProvider: Post has no comments!');
+      return;
+    }
+    
+    // Find and update the comment
+    final commentIndex = post.comments!.indexWhere((c) => c.id == commentId);
+    if (commentIndex == -1) {
+      print('CommunityProvider: Comment $commentId not found in post comments!');
+      print('CommunityProvider: Available comment IDs: ${post.comments!.map((c) => c.id).toList()}');
+      return;
+    }
+    
+    final comment = post.comments![commentIndex];
+    final liked = comment.isLiked;
+    print('CommunityProvider: Current like status: $liked, likes count: ${comment.likesCount}');
+    
+    final updatedComment = comment.copyWith(
+      isLiked: !liked,
+      likesCount: liked ? comment.likesCount - 1 : comment.likesCount + 1,
+    );
+    
+    // Update comments list
+    final updatedComments = List<Comment>.from(post.comments!);
+    updatedComments[commentIndex] = updatedComment;
+    
+    // Update post with new comments
+    final updatedPost = post.copyWith(comments: updatedComments);
+    
+    // Update post details
+    _postDetails[postId] = updatedPost;
+    
+    // Also update in posts list if it exists
+    final postIndex = _posts.indexWhere((p) => p.id == postId);
+    if (postIndex != -1) {
+      _posts[postIndex] = updatedPost;
+    }
+    
+    print('CommunityProvider: Updated post, calling notifyListeners');
+    notifyListeners();
+    
+    try {
+      print('CommunityProvider: Calling API to like comment');
+      await _service.likeComment(commentId);
+      print('CommunityProvider: API call successful');
+    } catch (e) {
+      print('CommunityProvider: API call failed: $e');
+      // Revert on error
+      _postDetails[postId] = post;
+      if (postIndex != -1) {
+        _posts[postIndex] = post;
+      }
+      notifyListeners();
+      _error = e.toString();
     }
   }
 }

@@ -4,7 +4,7 @@ Admin interface for Store app
 from django.contrib import admin
 from .models import (
     Category, Brand, Product, ProductImage, Review,
-    Cart, CartItem, Order, OrderItem, Wishlist
+    Cart, CartItem, Order, OrderItem, Wishlist, AdoptionListing
 )
 
 
@@ -68,3 +68,10 @@ class CartAdmin(admin.ModelAdmin):
 class WishlistAdmin(admin.ModelAdmin):
     list_display = ['user', 'created_at']
     search_fields = ['user__username']
+
+
+@admin.register(AdoptionListing)
+class AdoptionListingAdmin(admin.ModelAdmin):
+    list_display = ['pet_name', 'pet_type', 'breed', 'poster', 'status', 'location', 'created_at']
+    list_filter = ['pet_type', 'status', 'created_at']
+    search_fields = ['pet_name', 'breed', 'location']

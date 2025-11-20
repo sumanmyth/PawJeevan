@@ -4,18 +4,20 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Q, F
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import (
-    Post, Comment, Group, GroupPost, Event,
-    AdoptionListing, LostFoundReport, Conversation, Message
+    Post, Comment, Group, GroupPost, GroupMessage, Event,
+    LostFoundReport
 )
 from .serializers import (
     PostSerializer, PostListSerializer, CommentSerializer,
-    GroupSerializer, GroupPostSerializer, EventSerializer,
-    AdoptionListingSerializer, LostFoundReportSerializer,
-    ConversationSerializer, MessageSerializer
+    GroupSerializer, GroupPostSerializer, GroupMessageSerializer, EventSerializer,
+    LostFoundReportSerializer
 )
-from users.models import User
+from users.models import User, Notification
 from users.serializers import UserSerializer
 
 
@@ -38,16 +40,41 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Show all public posts by default
-        qs = Post.objects.filter(is_public=True).order_by('-created_at')
+        qs = Post.objects.filter(is_public=True)
         
         # Optional filters
         author_id = self.request.query_params.get('author')
         if author_id:
+            # Check if the author's profile is locked
+            try:
+                author = User.objects.get(id=author_id)
+                # If profile is locked and requesting user is not the owner, return empty queryset
+                if author.is_profile_locked and (not self.request.user.is_authenticated or author.id != self.request.user.id):
+                    return Post.objects.none()
+            except User.DoesNotExist:
+                pass
+            
             qs = qs.filter(author_id=author_id)
         
         if self.request.query_params.get('following') == 'true' and self.request.user.is_authenticated:
             following = self.request.user.following.all()
             qs = qs.filter(author__in=following)
+        
+        # Handle ordering
+        ordering = self.request.query_params.get('ordering', '-created_at')
+        
+        if ordering == '-trending':
+            # Calculate engagement score for all posts
+            two_days_ago = timezone.now() - timedelta(days=2)
+            
+            qs = qs.annotate(
+                likes_total=Count('likes', distinct=True),
+                comments_total=Count('comments', distinct=True),
+                engagement_score=F('likes_total') + F('comments_total'),
+                is_recent=Q(created_at__gte=two_days_ago)
+            ).order_by('-is_recent', '-engagement_score', '-created_at')
+        else:
+            qs = qs.order_by(ordering)
             
         return qs
 
@@ -113,8 +140,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['post']
+    ordering_fields = ['created_at', 'likes']
+    ordering = ['created_at']
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -123,6 +152,32 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        
+        # Handle ordering for recent and trending
+        ordering = self.request.query_params.get('ordering', 'created_at')
+        
+        if ordering == '-trending':
+            # Calculate engagement score for comments
+            qs = qs.annotate(
+                likes_total=Count('likes', distinct=True),
+                engagement_score=F('likes_total')
+            ).order_by('-engagement_score', '-created_at')
+        else:
+            qs = qs.order_by(ordering)
+            
+        return qs
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def like(self, request, pk=None):
+        comment = self.get_object()
+        if comment.likes.filter(id=request.user.id).exists():
+            comment.likes.remove(request.user)
+            return Response({'status': 'unliked', 'likes_count': comment.likes.count()})
+        comment.likes.add(request.user)
+        return Response({'status': 'liked', 'likes_count': comment.likes.count()})
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -140,16 +195,32 @@ class GroupViewSet(viewsets.ModelViewSet):
         return ctx
 
     def perform_create(self, serializer):
-        group = serializer.save(creator=self.request.user)
+        group = serializer.save(creator=self.request.user, is_active=True)
         group.members.add(self.request.user)
         group.moderators.add(self.request.user)
+
+    def perform_update(self, serializer):
+        # Ensure the group stays active when updated
+        serializer.save(is_active=True)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def join(self, request, slug=None):
         group = self.get_object()
         if group.is_private:
-            return Response({'error': 'This is a private group'}, status=400)
+            # Check if join key is provided and correct
+            join_key = request.data.get('join_key', '')
+            if not join_key or join_key != group.join_key:
+                return Response({'error': 'Invalid join key for private group'}, status=400)
         group.members.add(request.user)
+        
+        # Create a system message announcing the user joined
+        GroupMessage.objects.create(
+            group=group,
+            sender=request.user,
+            content=f"{request.user.username} joined the group",
+            is_system_message=True
+        )
+        
         return Response({'status': 'joined', 'members_count': group.members.count()})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -157,12 +228,72 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         if group.creator == request.user:
             return Response({'error': 'Creator cannot leave the group'}, status=400)
+        
+        # Create a system message announcing the user left
+        GroupMessage.objects.create(
+            group=group,
+            sender=request.user,
+            content=f"{request.user.username} left the group",
+            is_system_message=True
+        )
+        
         group.members.remove(request.user)
         return Response({'status': 'left', 'members_count': group.members.count()})
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my(self, request):
+        """Return groups created by the current user."""
+        groups = Group.objects.filter(creator=request.user, is_active=True).order_by('-created_at')
+        serializer = self.get_serializer(groups, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def joined(self, request):
+        """Return groups the current user has joined (is a member of but did not create)."""
+        groups = Group.objects.filter(members=request.user, is_active=True).exclude(creator=request.user).order_by('-created_at')
+        serializer = self.get_serializer(groups, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
+    def discover(self, request):
+        """Return groups the user is not a member of (discoverable groups).
+
+        If the user is anonymous, return all active groups.
+        """
+        if request.user.is_authenticated:
+            qs = Group.objects.filter(is_active=True).exclude(members=request.user).order_by('-created_at')
+        else:
+            qs = Group.objects.filter(is_active=True).order_by('-created_at')
+        serializer = self.get_serializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated])
+    def messages(self, request, slug=None):
+        """Get or post messages for a group."""
+        from .serializers import GroupMessageSerializer
+        from .models import GroupMessage
+        
+        group = self.get_object()
+        
+        # Check if user is a member
+        if not group.members.filter(id=request.user.id).exists():
+            return Response({'error': 'You must be a member to access group messages'}, status=403)
+        
+        if request.method == 'GET':
+            messages = GroupMessage.objects.filter(group=group).order_by('created_at')
+            serializer = GroupMessageSerializer(messages, many=True, context={'request': request})
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            serializer = GroupMessageSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(group=group, sender=request.user)
+                return Response(serializer.data, status=201)
+            return Response(serializer.errors, status=400)
+
 
 class GroupPostViewSet(viewsets.ModelViewSet):
-    queryset = GroupPost.objects.all().order_by('-created_at')
+    queryset = GroupPost.objects.all().order_by('-is_pinned', '-created_at')
     serializer_class = GroupPostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -176,6 +307,38 @@ class GroupPostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    @action(detail=True, methods=['post'])
+    def pin(self, request, pk=None):
+        post = self.get_object()
+        group = post.group
+        
+        # Check if user is group creator
+        if group.creator != request.user:
+            return Response(
+                {'error': 'Only group creator can pin posts'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        post.is_pinned = not post.is_pinned
+        post.save()
+        
+        return Response({
+            'is_pinned': post.is_pinned,
+            'message': 'Post pinned' if post.is_pinned else 'Post unpinned'
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        
+        # Only post author or group creator can delete
+        if post.author != request.user and post.group.creator != request.user:
+            return Response(
+                {'error': 'You do not have permission to delete this post'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        return super().destroy(request, *args, **kwargs)
+
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all().order_by('start_datetime')
@@ -185,6 +348,21 @@ class EventViewSet(viewsets.ModelViewSet):
     filterset_fields = ['event_type', 'organizer', 'group']
     search_fields = ['title', 'description', 'location']
     ordering_fields = ['start_datetime', 'created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by attendee if provided
+        attendee_id = self.request.query_params.get('attendee')
+        if attendee_id:
+            queryset = queryset.filter(attendees__id=attendee_id)
+        
+        # Exclude organizer's events if exclude_organizer is provided
+        exclude_organizer_id = self.request.query_params.get('exclude_organizer')
+        if exclude_organizer_id:
+            queryset = queryset.exclude(organizer__id=exclude_organizer_id)
+        
+        return queryset
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -199,7 +377,19 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         if event.max_attendees and event.attendees.count() >= event.max_attendees:
             return Response({'error': 'Event is full'}, status=400)
+        
+        # Add user to attendees
         event.attendees.add(request.user)
+        
+        # Create notification for joining the event
+        Notification.objects.create(
+            user=request.user,
+            notification_type='event_joined',
+            title=f'You joined "{event.title}"',
+            message=f'You are now attending {event.title} on {event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}. We will remind you before the event starts.',
+            action_url=f'/events/{event.id}/'
+        )
+        
         return Response({'status': 'attending', 'attendees_count': event.attendees.count()})
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -207,29 +397,6 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         event.attendees.remove(request.user)
         return Response({'status': 'not attending', 'attendees_count': event.attendees.count()})
-
-
-class AdoptionListingViewSet(viewsets.ModelViewSet):
-    queryset = AdoptionListing.objects.all().order_by('-created_at')
-    serializer_class = AdoptionListingSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['pet_type', 'status', 'location']
-    search_fields = ['title', 'pet_name', 'breed', 'description']
-
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx['request'] = self.request
-        return ctx
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if not self.request.query_params.get('status'):
-            qs = qs.filter(status='available')
-        return qs
-
-    def perform_create(self, serializer):
-        serializer.save(poster=self.request.user)
 
 
 class LostFoundReportViewSet(viewsets.ModelViewSet):
@@ -247,54 +414,23 @@ class LostFoundReportViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.query_params.get('status'):
+        
+        # Don't filter during update/delete operations
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return qs
+        
+        status_param = self.request.query_params.get('status')
+        
+        # If status is explicitly set to empty string, return all statuses
+        # If status is not provided at all, default to showing only active reports
+        # If status is provided with a value, filterset_fields will handle it
+        if status_param is None:
             qs = qs.filter(status='active')
+        elif status_param == '':
+            # Return all statuses (no filter)
+            pass
+            
         return qs
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)
-
-
-class ConversationViewSet(viewsets.ModelViewSet):
-    queryset = Conversation.objects.all().order_by('-updated_at')
-    serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Conversation.objects.filter(participants=self.request.user).order_by('-updated_at')
-
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx['request'] = self.request
-        return ctx
-
-    def create(self, request, *args, **kwargs):
-        participant_ids = request.data.get('participant_ids', [])
-        if not participant_ids:
-            return Response({'error': 'participant_ids required'}, status=400)
-
-        convo = Conversation.objects.create()
-        convo.participants.add(request.user)
-        convo.participants.add(*participant_ids)
-        ser = self.get_serializer(convo)
-        return Response(ser.data, status=201)
-
-    @action(detail=True, methods=['post'])
-    def send_message(self, request, pk=None):
-        convo = self.get_object()
-        content = request.data.get('content', '').strip()
-        if not content:
-            return Response({'error': 'content required'}, status=400)
-
-        msg = Message.objects.create(
-            conversation=convo, sender=request.user, content=content
-        )
-        convo.save()  # updates updated_at
-        return Response(MessageSerializer(msg, context={'request': request}).data, status=201)
-
-    @action(detail=True, methods=['get'])
-    def messages(self, request, pk=None):
-        convo = self.get_object()
-        msgs = convo.messages.all()
-        msgs.exclude(sender=request.user).update(is_read=True)
-        return Response(MessageSerializer(msgs, many=True, context={'request': request}).data)

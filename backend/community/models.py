@@ -1,5 +1,5 @@
 """
-Community models: Post, Comment, Group, Event, Message, AdoptionListing, LostFound
+Community models: Post, Comment, Group, Event, Message, LostFound
 """
 from django.db import models
 from users.models import User
@@ -47,6 +47,9 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
     
+    # Engagement
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    
     # Nested comments (replies)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     
@@ -58,6 +61,10 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.id}"
+    
+    @property
+    def likes_count(self):
+        return self.likes.count()
 
 
 class Group(models.Model):
@@ -86,6 +93,7 @@ class Group(models.Model):
     # Settings
     is_private = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    join_key = models.CharField(max_length=100, blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,9 +104,37 @@ class Group(models.Model):
     def __str__(self):
         return self.name
     
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.is_private and not self.join_key:
+            raise ValidationError('Join key is required for private groups.')
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+    
     @property
     def members_count(self):
         return self.members.count()
+
+
+class GroupMessage(models.Model):
+    """
+    Messages in groups
+    """
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='group_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_messages')
+    content = models.TextField()
+    is_system_message = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Message from {self.sender.username} in {self.group.name}"
 
 
 class GroupPost(models.Model):
@@ -174,63 +210,6 @@ class Event(models.Model):
         return self.attendees.count()
 
 
-class AdoptionListing(models.Model):
-    """
-    Pet adoption listings
-    Shelters or individuals can post pets for adoption
-    """
-    PET_TYPE_CHOICES = [
-        ('dog', 'Dog'),
-        ('cat', 'Cat'),
-        ('bird', 'Bird'),
-        ('fish', 'Fish'),
-        ('rabbit', 'Rabbit'),
-        ('other', 'Other'),
-    ]
-    
-    STATUS_CHOICES = [
-        ('available', 'Available'),
-        ('pending', 'Adoption Pending'),
-        ('adopted', 'Adopted'),
-        ('closed', 'Closed'),
-    ]
-    
-    # Basic info
-    title = models.CharField(max_length=200)
-    pet_name = models.CharField(max_length=100)
-    pet_type = models.CharField(max_length=20, choices=PET_TYPE_CHOICES)
-    breed = models.CharField(max_length=100, blank=True)
-    age = models.IntegerField(help_text="Age in months")
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
-    
-    # Details
-    description = models.TextField()
-    health_status = models.TextField()
-    vaccination_status = models.TextField()
-    is_neutered = models.BooleanField(default=False)
-    
-    # Media
-    photo = models.ImageField(upload_to='adoption/', blank=True, null=True)
-    
-    # Contact
-    poster = models.ForeignKey(User, on_delete=models.CASCADE, related_name='adoption_listings')
-    contact_phone = models.CharField(max_length=15)
-    contact_email = models.EmailField()
-    location = models.CharField(max_length=200)
-    
-    # Status
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.pet_name} - {self.title}"
-
-
 class LostFoundReport(models.Model):
     """
     Lost and found pet reports
@@ -279,49 +258,3 @@ class LostFoundReport(models.Model):
     
     def __str__(self):
         return f"{self.get_report_type_display()} - {self.pet_type}"
-
-
-class Conversation(models.Model):
-    """
-    Direct messaging conversations between users
-    """
-    participants = models.ManyToManyField(User, related_name='conversations')
-    
-    # Group chat
-    is_group = models.BooleanField(default=False)
-    name = models.CharField(max_length=200, blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-updated_at']
-    
-    def __str__(self):
-        if self.is_group:
-            return self.name
-        participants = list(self.participants.all()[:2])
-        return f"Conversation between {' and '.join([p.username for p in participants])}"
-
-
-class Message(models.Model):
-    """
-    Messages in conversations
-    """
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    content = models.TextField()
-    
-    # Media
-    image = models.ImageField(upload_to='messages/', blank=True, null=True)
-    
-    # Status
-    is_read = models.BooleanField(default=False)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['created_at']
-    
-    def __str__(self):
-        return f"Message from {self.sender.username}"

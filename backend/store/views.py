@@ -9,12 +9,13 @@ import uuid
 
 from .models import (
     Category, Brand, Product, Review,
-    Cart, CartItem, Order, OrderItem, Wishlist
+    Cart, CartItem, Order, OrderItem, Wishlist, AdoptionListing
 )
 from .serializers import (
     CategorySerializer, BrandSerializer,
     ProductSerializer, ProductListSerializer, ReviewSerializer,
-    CartSerializer, CartItemSerializer, OrderSerializer, WishlistSerializer
+    CartSerializer, CartItemSerializer, OrderSerializer, WishlistSerializer,
+    AdoptionListingSerializer
 )
 
 
@@ -345,3 +346,43 @@ class WishlistViewSet(viewsets.ViewSet):
 
         ser = WishlistSerializer(wishlist, context={"request": request})
         return Response({"action": action, "wishlist": ser.data})
+
+
+class AdoptionListingViewSet(viewsets.ModelViewSet):
+    queryset = AdoptionListing.objects.all().order_by('-created_at')
+    serializer_class = AdoptionListingSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['pet_type', 'location']  # Removed 'status' to handle it manually
+    search_fields = ['title', 'pet_name', 'breed', 'description']
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['request'] = self.request
+        return ctx
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        
+        # Only apply status filtering for list action
+        # For detail actions (retrieve, update, destroy), return all objects
+        if self.action != 'list':
+            return qs
+        
+        status_param = self.request.query_params.get('status')
+        
+        # Handle 'all' status to show all pets regardless of status
+        if status_param == 'all':
+            # Don't filter by status, return all
+            return qs
+        elif status_param is None:
+            # Default: only show available pets
+            qs = qs.filter(status='available')
+        else:
+            # Filter by specific status if provided
+            qs = qs.filter(status=status_param)
+        
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(poster=self.request.user)

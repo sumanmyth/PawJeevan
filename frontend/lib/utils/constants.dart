@@ -33,14 +33,21 @@ class ApiConstants {
   static const String products = '/api/store/products/';
   static const String categories = '/api/store/categories/';
   static const String cart = '/api/store/cart/';
+  static const String adoptions = '/api/store/adoptions/';
   
   // Community endpoints
   static const String users = '/api/users/profiles/';
   static const String posts = '/api/community/posts/';
   static const String comments = '/api/community/comments/';
   static const String groups = '/api/community/groups/';
+  static const String groupPosts = '/api/community/group-posts/';
+  static const String events = '/api/community/events/';
+  static const String lostFound = '/api/community/lost-found/';
   
   // AI endpoints
   static const String breedDetection = '/api/ai/breed-detection/';
   static const String chatbot = '/api/ai/chat-sessions/';
+  
+  // Notifications endpoint
+  static const String notifications = '/api/users/notifications/';
 }

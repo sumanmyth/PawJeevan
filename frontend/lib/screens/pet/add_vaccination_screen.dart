@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/pet_model.dart';
+import '../../models/pet/pet_model.dart';
 import '../../services/pet_service.dart';
 import '../../widgets/custom_app_bar.dart';
 
@@ -61,6 +61,7 @@ class _AddVaccinationScreenState extends State<AddVaccinationScreen> {
         notes: _notesController.text.trim(),       // '' allowed
       );
       await _service.addVaccination(widget.petId, v);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vaccination added')),

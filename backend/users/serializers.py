@@ -30,6 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id", "username", "email", "first_name", "last_name",
             "phone", "avatar", "bio", "location", "is_verified",
+            "is_profile_locked",
             "followers_count", "following_count", "is_following", "created_at",
         ]
         read_only_fields = ["id", "is_verified", "created_at"]
@@ -106,7 +107,9 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
+    type = serializers.CharField(source='notification_type')
+    
     class Meta:
         model = Notification
-        fields = "__all__"
+        fields = ['id', 'type', 'title', 'message', 'is_read', 'action_url', 'created_at']
         read_only_fields = ["id", "user", "created_at"]
