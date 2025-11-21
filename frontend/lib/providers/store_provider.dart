@@ -61,10 +61,12 @@ class StoreProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedPetType(String petType) {
+  void setSelectedPetType(String petType, {bool skipReload = false}) {
     _selectedPetType = petType;
     notifyListeners();
-    loadAdoptions();
+    if (!skipReload) {
+      loadAdoptions();
+    }
   }
 
   void setSearchQuery(String query) {

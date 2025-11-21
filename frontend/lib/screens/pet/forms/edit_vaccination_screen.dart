@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../models/pet/pet_model.dart';
-import '../../services/pet_service.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../../models/pet/pet_model.dart';
+import '../../../services/pet_service.dart';
+import '../../../widgets/custom_app_bar.dart';
 
 class EditVaccinationScreen extends StatefulWidget {
   final VaccinationModel vaccination;

@@ -49,38 +49,62 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   Widget? _buildFab() {
+    IconData icon;
+    VoidCallback onPressed;
+
     switch (_currentTabIndex) {
       case 0: // Feed
-        return FloatingActionButton(
-          onPressed: () => _navigateToCreateScreen(const CreatePostScreen()),
-          backgroundColor: Colors.purple,
-          tooltip: 'Create Post',
-          child: const Icon(Icons.add_comment),
-        );
+        icon = Icons.add_comment;
+        onPressed = () => _navigateToCreateScreen(const CreatePostScreen());
+        break;
       case 1: // Groups
-        return FloatingActionButton(
-          onPressed: () => _navigateToCreateScreen(const CreateGroupScreen()),
-          backgroundColor: Colors.purple,
-          tooltip: 'Create Group',
-          child: const Icon(Icons.group_add),
-        );
+        icon = Icons.group_add;
+        onPressed = () => _navigateToCreateScreen(const CreateGroupScreen());
+        break;
       case 2: // Events
-        return FloatingActionButton(
-          onPressed: () => _navigateToCreateScreen(const CreateEventScreen()),
-          backgroundColor: Colors.purple,
-          tooltip: 'Create Event',
-          child: const Icon(Icons.event),
-        );
+        icon = Icons.event;
+        onPressed = () => _navigateToCreateScreen(const CreateEventScreen());
+        break;
       case 3: // Lost & Found
-        return FloatingActionButton(
-          onPressed: () => _navigateToCreateScreen(const CreateLostFoundScreen()),
-          backgroundColor: Colors.purple,
-          tooltip: 'Create Report',
-          child: const Icon(Icons.add_alert),
-        );
+        icon = Icons.add_alert;
+        onPressed = () => _navigateToCreateScreen(const CreateLostFoundScreen());
+        break;
       default:
         return null;
     }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6B46C1).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _navigateToCreateScreen(Widget screen) async {

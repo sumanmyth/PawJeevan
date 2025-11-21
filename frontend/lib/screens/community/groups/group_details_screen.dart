@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/community/group_model.dart';
+import '../../../services/api_service.dart';
 import 'group_chat_tab.dart';
 import 'group_posts_tab.dart';
+import 'edit_group_screen.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final Group group;
+  final VoidCallback? onGroupChanged;
 
-  const GroupDetailsScreen({super.key, required this.group});
+  const GroupDetailsScreen({super.key, required this.group, this.onGroupChanged});
 
   @override
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
@@ -137,7 +140,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
+          height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: const BorderRadius.only(
@@ -146,10 +149,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
             ),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
+              // Header
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                      width: 1,
+                    ),
+                  ),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -167,54 +178,185 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                   ],
                 ),
               ),
-              if (widget.group.coverImage != null && widget.group.coverImage!.isNotEmpty)
-                Container(
-                  height: 280,
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.network(
-                      widget.group.coverImage!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 24),
+              
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Cover Image
+                      if (widget.group.coverImage != null && widget.group.coverImage!.isNotEmpty)
+                        Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.network(
+                              widget.group.coverImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.groups,
+                              size: 80,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Group Name
                       Text(
                         widget.group.name,
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 26,
                           fontWeight: FontWeight.w700,
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Info Cards
+                      _buildInfoCard(
+                        icon: Icons.groups_outlined,
+                        label: 'Members',
+                        value: '${widget.group.membersCount ?? 0}',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      _buildInfoCard(
+                        icon: widget.group.isPrivate ? Icons.lock_outline : Icons.public_outlined,
+                        label: 'Privacy',
+                        value: widget.group.isPrivate ? 'Private' : 'Public',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      _buildInfoCard(
+                        icon: Icons.category_outlined,
+                        label: 'Type',
+                        value: widget.group.groupTypeDisplay ?? _formatGroupType(widget.group.groupType),
+                        isDark: isDark,
+                      ),
+                      
+                      if (widget.group.isPrivate && widget.group.joinKey != null) ...[
+                        const SizedBox(height: 12),
+                        _buildInfoCard(
+                          icon: Icons.key_outlined,
+                          label: 'Join Key',
+                          value: widget.group.joinKey!,
+                          isDark: isDark,
+                          copyable: true,
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Description Section
                       Text(
-                        widget.group.description,
+                        'Description',
                         style: TextStyle(
-                          fontSize: 15,
-                          height: 1.5,
-                          color: isDark ? Colors.grey[400] : Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[850] : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                          ),
+                        ),
+                        child: Text(
+                          widget.group.description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.6,
+                            color: isDark ? Colors.grey[300] : Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                      
                       const SizedBox(height: 24),
+                      
+                      // Action Buttons
+                      if (widget.group.creatorId == _currentUserId) ...[
+                        // Admin options
+                        _buildActionButton(
+                          icon: Icons.edit_outlined,
+                          label: 'Manage Group',
+                          onTap: () async {
+                            Navigator.pop(context); // Close group info
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditGroupScreen(group: widget.group),
+                              ),
+                            );
+                            // If group was updated, go back to refresh the list
+                            if (result == true && mounted) {
+                              Navigator.pop(context);
+                            }
+                          },
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildActionButton(
+                          icon: Icons.delete_outline,
+                          label: 'Delete Group',
+                          onTap: () {
+                            _showDeleteConfirmation();
+                          },
+                          isDark: isDark,
+                          isDestructive: true,
+                        ),
+                      ] else ...[
+                        // Member options
+                        _buildActionButton(
+                          icon: Icons.exit_to_app_outlined,
+                          label: 'Leave Group',
+                          onTap: () {
+                            _showLeaveConfirmation();
+                          },
+                          isDark: isDark,
+                          isDestructive: true,
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -224,5 +366,251 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
         );
       },
     );
+  }
+  
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    bool copyable = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6750A4).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFF6750A4),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (copyable)
+            IconButton(
+              icon: Icon(
+                Icons.copy_outlined,
+                size: 20,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+              onPressed: () {
+                // TODO: Implement copy to clipboard
+              },
+            ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required bool isDark,
+    bool isDestructive = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[850] : Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDestructive
+                ? Colors.red.withOpacity(0.3)
+                : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isDestructive ? Colors.red : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              size: 22,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: isDestructive ? Colors.red : (isDark ? Colors.white : Colors.black),
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: isDestructive ? Colors.red : (isDark ? Colors.grey[600] : Colors.grey[400]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  String _formatGroupType(String type) {
+    return type.split('_').map((word) => 
+      word[0].toUpperCase() + word.substring(1).toLowerCase()
+    ).join(' ');
+  }
+  
+  void _showDeleteConfirmation() {
+    // Close the group info sheet first
+    Navigator.pop(context);
+    
+    // Then show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Group'),
+          content: Text(
+            'Are you sure you want to delete "${widget.group.name}"? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                _deleteGroup();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  void _showLeaveConfirmation() {
+    // Close the group info sheet first
+    Navigator.pop(context);
+    
+    // Then show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Leave Group'),
+          content: Text(
+            'Are you sure you want to leave "${widget.group.name}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                _leaveGroup();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Leave'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Future<void> _deleteGroup() async {
+    try {
+      await ApiService.deleteGroup(widget.group.slug);
+      
+      if (mounted) {
+        widget.onGroupChanged?.call(); // Trigger refresh
+        Navigator.pop(context, true); // Go back to groups list with result
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Group deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete group: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _leaveGroup() async {
+    try {
+      await ApiService.leaveGroup(widget.group.slug);
+      
+      if (mounted) {
+        widget.onGroupChanged?.call(); // Trigger refresh
+        Navigator.pop(context, true); // Go back to groups list with result
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Left group successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to leave group: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

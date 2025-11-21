@@ -7,11 +7,16 @@ import '../../services/pet_service.dart';
 import '../../widgets/custom_app_bar.dart';
 
 // Screens for add/edit flows
-import 'add_vaccination_screen.dart';
-import 'add_medical_record_screen.dart';
-import 'edit_pet_screen.dart';
-import 'edit_vaccination_screen.dart';
-import 'edit_medical_record_screen.dart';
+import 'forms/add_vaccination_screen.dart';
+import 'forms/add_medical_record_screen.dart';
+import 'forms/edit_pet_screen.dart';
+
+// Widgets
+import 'widgets/pet_header.dart';
+import 'widgets/pet_info_tab.dart';
+import 'widgets/vaccination_tab.dart';
+import 'widgets/medical_tab.dart';
+import 'widgets/gradient_fab.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final PetModel pet;
@@ -81,8 +86,6 @@ class _PetDetailScreenState extends State<PetDetailScreen>
       }
     }
   }
-
-  String _fmtDate(DateTime d) => d.toIso8601String().split('T')[0];
 
   @override
   void dispose() {
@@ -177,56 +180,25 @@ class _PetDetailScreenState extends State<PetDetailScreen>
                 )
               : Column(
                   children: [
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _petPhoto(_pet.photo),
-                          const SizedBox(width: 16),
-                          Expanded(child: _petHeaderInfo()),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Tabs
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    PetHeader(pet: _pet),
+                    _buildTabBar(),
+                    Expanded(
                       child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).shadowColor.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            PetInfoTab(pet: _pet),
+                            VaccinationTab(
+                              vaccinations: _vaccinations,
+                              onRefresh: _loadAll,
+                            ),
+                            MedicalTab(
+                              medicalRecords: _medicalRecords,
+                              onRefresh: _loadAll,
                             ),
                           ],
                         ),
-                        child: TabBar(
-                          controller: _tabController,
-                          labelColor: Theme.of(context).colorScheme.primary,
-                          unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                          indicatorColor: Theme.of(context).colorScheme.primary,
-                          tabs: const [
-                            Tab(text: 'Info'),
-                            Tab(text: 'Vaccinations'),
-                            Tab(text: 'Medical'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _infoTab(),
-                          _vaccinationTab(),
-                          _medicalTab(),
-                        ],
                       ),
                     ),
                   ],
@@ -235,327 +207,56 @@ class _PetDetailScreenState extends State<PetDetailScreen>
     );
   }
 
-  // Header Widgets
-  Widget _petPhoto(String? url) {
+  Widget _buildTabBar() {
     return Container(
-      width: 90,
-      height: 90,
-        decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        image: url != null
-            ? DecorationImage(
-                image: NetworkImage(url),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      child: url == null
-          ? Icon(Icons.pets, size: 40, color: Theme.of(context).colorScheme.primary)
-          : null,
-    );
-  }
-
-  Widget _petHeaderInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _pet.name,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: TabBar(
+        controller: _tabController,
+        labelColor: const Color(0xFF6B46C1),
+        unselectedLabelColor: Colors.grey[600],
+        indicatorColor: const Color(0xFF6B46C1),
+        indicatorWeight: 3,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
         ),
-        const SizedBox(height: 6),
-        Text(
-          '${_pet.breed} • ${_pet.petType} • ${_pet.gender}',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _chip(Icons.cake, '${_pet.age} yrs'),
-            _chip(Icons.monitor_weight, '${_pet.weight} kg'),
-            if (_pet.color != null && _pet.color!.isNotEmpty)
-              _chip(Icons.color_lens, _pet.color!),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _chip(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(text, style: Theme.of(context).textTheme.bodyMedium),
+        tabs: const [
+          Tab(text: 'Info'),
+          Tab(text: 'Vaccinations'),
+          Tab(text: 'Medical'),
         ],
-      ),
-    );
-  }
-
-  // Tabs
-
-  Widget _infoTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _kv('Name', _pet.name),
-        _kv('Species', _pet.petType),
-        _kv('Breed', _pet.breed),
-        _kv('Gender', _pet.gender),
-        _kv('Age', '${_pet.age} years'),
-        _kv('Weight', '${_pet.weight} kg'),
-        if (_pet.color != null && _pet.color!.isNotEmpty)
-          _kv('Color', _pet.color!),
-        if (_pet.medicalNotes != null && _pet.medicalNotes!.isNotEmpty)
-          _kv('Medical Notes', _pet.medicalNotes!),
-      ],
-    );
-  }
-
-  Widget _kv(String k, String v) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        title: Text(
-          k,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(v),
-      ),
-    );
-  }
-
-  Widget _vaccinationTab() {
-    if (_vaccinations.isEmpty) {
-      return _empty(
-        title: 'No vaccinations yet',
-        subtitle: 'Tap + to add a vaccination record',
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: _loadAll,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _vaccinations.length,
-        itemBuilder: (context, i) {
-          final v = _vaccinations[i];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              leading: Icon(Icons.vaccines, color: Theme.of(context).colorScheme.primary),
-              title: Text(v.vaccineName),
-              subtitle: Text(
-                'Date: ${_fmtDate(v.vaccinationDate)}'
-                '${v.nextDueDate != null ? '\nNext due: ${_fmtDate(v.nextDueDate!)}' : ''}'
-                '${v.veterinarian != null && v.veterinarian!.isNotEmpty ? '\nVet: ${v.veterinarian}' : ''}'
-                '${v.notes != null && v.notes!.isNotEmpty ? '\nNotes: ${v.notes}' : ''}',
-              ),
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    final ok = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            EditVaccinationScreen(vaccination: v),
-                      ),
-                    );
-                    if (ok == true) _loadAll();
-                  } else if (value == 'delete') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Delete Vaccination'),
-                        content: Text('Delete "${v.vaccineName}"?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      await _service.deleteVaccination(v.id!);
-                      _loadAll();
-                    }
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child:
-                        Text('Delete', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _medicalTab() {
-    if (_medicalRecords.isEmpty) {
-      return _empty(
-        title: 'No medical records yet',
-        subtitle: 'Tap + to add a medical record',
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: _loadAll,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _medicalRecords.length,
-        itemBuilder: (context, i) {
-          final m = _medicalRecords[i];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              leading: const Icon(Icons.medical_services, color: Colors.purple),
-              title: Text('${m.recordType.toUpperCase()} • ${m.title}'),
-              subtitle: Text(
-                'Date: ${_fmtDate(m.date)}'
-                '${m.veterinarian != null && m.veterinarian!.isNotEmpty ? '\nVet: ${m.veterinarian}' : ''}'
-                '${m.cost != null ? '\nCost: ${m.cost}' : ''}'
-                '${m.description.isNotEmpty ? '\n${m.description}' : ''}',
-              ),
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    final ok = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EditMedicalRecordScreen(record: m),
-                      ),
-                    );
-                    if (ok == true) _loadAll();
-                  } else if (value == 'delete') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Delete Medical Record'),
-                        content: Text('Delete "${m.title}"?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      await _service.deleteMedicalRecord(m.id!);
-                      _loadAll();
-                    }
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child:
-                        Text('Delete', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _empty({required String title, required String subtitle}) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.info_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: TextStyle(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }
 
   // FAB changes per tab
   Widget? _buildFab() {
+    VoidCallback? onPressed;
+    
     if (_currentTabIndex == 1) {
       // Vaccinations tab
-      return FloatingActionButton(
-        onPressed: () async {
-          final ok = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AddVaccinationScreen(petId: _pet.id!),
-            ),
-          );
-          if (ok == true) _loadAll();
-        },
-        backgroundColor: Colors.purple,
-        child: const Icon(Icons.add),
-      );
+      onPressed = () async {
+        final ok = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddVaccinationScreen(petId: _pet.id!),
+          ),
+        );
+        if (ok == true) _loadAll();
+      };
     } else if (_currentTabIndex == 2) {
       // Medical tab
-      return FloatingActionButton(
-        onPressed: () async {
-          final ok = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AddMedicalRecordScreen(petId: _pet.id!),
-            ),
-          );
-          if (ok == true) _loadAll();
-        },
-        backgroundColor: Colors.purple,
-        child: const Icon(Icons.add),
-      );
+      onPressed = () async {
+        final ok = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddMedicalRecordScreen(petId: _pet.id!),
+          ),
+        );
+        if (ok == true) _loadAll();
+      };
     }
-    return null;
+
+    return GradientFab(onPressed: onPressed);
   }
 }

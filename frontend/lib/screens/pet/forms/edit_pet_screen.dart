@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../../models/pet/pet_model.dart';
-import '../../providers/pet_provider.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../../models/pet/pet_model.dart';
+import '../../../providers/pet_provider.dart';
+import '../../../widgets/custom_app_bar.dart';
 
 class EditPetScreen extends StatefulWidget {
   final PetModel pet;

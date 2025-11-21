@@ -159,6 +159,7 @@ class GroupSerializer(serializers.ModelSerializer):
     creator_username = serializers.CharField(source='creator.username', read_only=True)
     members_count = serializers.SerializerMethodField()
     is_member = serializers.SerializerMethodField()
+    group_type_display = serializers.CharField(source='get_group_type_display', read_only=True)
 
     class Meta:
         model = Group

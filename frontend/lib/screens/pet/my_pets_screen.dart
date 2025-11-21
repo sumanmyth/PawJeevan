@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pet_provider.dart';
 import '../../widgets/custom_app_bar.dart';
-import 'add_pet_screen.dart';
+import 'forms/add_pet_screen.dart';
 import 'pet_detail_screen.dart';
 import '../../models/pet/pet_model.dart';
-import 'edit_pet_screen.dart';
+import 'forms/edit_pet_screen.dart';
 
 class MyPetsScreen extends StatefulWidget {
   const MyPetsScreen({super.key});
@@ -64,19 +64,45 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
                           },
                         ),
       floatingActionButton: auth.isAuthenticated && petProvider.pets.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddPetScreen()),
-                );
-                if (result == true && mounted) {
-                  context.read<PetProvider>().loadPets();
-                }
-              },
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              child: const Icon(Icons.add),
+          ? Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6B46C1).withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddPetScreen()),
+                    );
+                    if (result == true && mounted) {
+                      context.read<PetProvider>().loadPets();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
             )
           : null,
     );
