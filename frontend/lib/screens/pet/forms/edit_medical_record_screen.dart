@@ -1,27 +1,39 @@
 import 'package:flutter/material.dart';
-import '../../models/pet/pet_model.dart';
-import '../../services/pet_service.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../../models/pet/pet_model.dart';
+import '../../../services/pet_service.dart';
+import '../../../widgets/custom_app_bar.dart';
 
-class AddMedicalRecordScreen extends StatefulWidget {
-  final int petId;
-  const AddMedicalRecordScreen({super.key, required this.petId});
+class EditMedicalRecordScreen extends StatefulWidget {
+  final MedicalRecordModel record;
+  const EditMedicalRecordScreen({super.key, required this.record});
 
   @override
-  State<AddMedicalRecordScreen> createState() => _AddMedicalRecordScreenState();
+  State<EditMedicalRecordScreen> createState() => _EditMedicalRecordScreenState();
 }
 
-class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
+class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-  final _vetController = TextEditingController();
-  final _costController = TextEditingController();
-  String _recordType = 'checkup';
-  DateTime _date = DateTime.now();
+  late TextEditingController _titleController;
+  late TextEditingController _descController;
+  late TextEditingController _vetController;
+  late TextEditingController _costController;
+  late String _recordType;
+  late DateTime _date;
   bool _isSaving = false;
 
   final _service = PetService();
+
+  @override
+  void initState() {
+    super.initState();
+    final r = widget.record;
+    _titleController = TextEditingController(text: r.title);
+    _descController = TextEditingController(text: r.description);
+    _vetController = TextEditingController(text: r.veterinarian ?? '');
+    _costController = TextEditingController(text: r.cost?.toString() ?? '');
+    _recordType = r.recordType;
+    _date = r.date;
+  }
 
   @override
   void dispose() {
@@ -39,30 +51,28 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (dt != null) {
-      setState(() => _date = dt);
-    }
+    if (dt != null) setState(() => _date = dt);
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSaving = true);
     try {
-      final rec = MedicalRecordModel(
+      final updated = MedicalRecordModel(
+        id: widget.record.id,
         recordType: _recordType,
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
         date: _date,
-        veterinarian: _vetController.text.trim(),              // '' allowed (not null)
+        veterinarian: _vetController.text.trim(), // '' allowed
         cost: _costController.text.trim().isEmpty
             ? null
             : double.tryParse(_costController.text.trim()),
       );
-      await _service.addMedicalRecord(widget.petId, rec);
+      await _service.updateMedicalRecord(widget.record.id!, updated);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Medical record added')),
+        const SnackBar(content: Text('Medical record updated')),
       );
       Navigator.pop(context, true);
     } catch (e) {
@@ -79,7 +89,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar:
-          const CustomAppBar(title: 'Add Medical Record', showBackButton: true),
+          const CustomAppBar(title: 'Edit Medical Record', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -161,7 +171,10 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save'),

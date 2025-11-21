@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 import '../../../models/community/group_model.dart';
 import '../../../models/community/group_message_model.dart';
 import '../../../utils/constants.dart';
@@ -25,17 +26,23 @@ class _GroupChatTabState extends State<GroupChatTab> {
   final ScrollController _scrollController = ScrollController();
   List<GroupMessage> _messages = [];
   bool _isLoadingMessages = true;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchMessages();
+    // Auto-refresh messages every 3 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _fetchMessages(silent: true);
+    });
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _refreshTimer?.cancel();
     super.dispose();
   }
 

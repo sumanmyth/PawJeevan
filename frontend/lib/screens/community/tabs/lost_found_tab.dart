@@ -404,79 +404,83 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                     ),
                   ),
                   const SizedBox(width: 8),
-                  AnimatedCrossFade(
+                  AnimatedSize(
                     duration: const Duration(milliseconds: 200),
-                    crossFadeState: _searchExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                    firstChild: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(25),
-                        onTap: () {
-                          setState(() {
-                            _searchExpanded = true;
-                          });
-                        },
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[800] : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: const Icon(Icons.search, color: Colors.grey),
-                        ),
-                      ),
-                    ),
-                    secondChild: SizedBox(
-                      width: 220,
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: 'Search reports...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_searchQuery.isNotEmpty)
-                                IconButton(
-                                  icon: const Icon(Icons.clear, size: 20),
-                                  tooltip: 'Clear search',
-                                  onPressed: () {
-                                    setState(() {
-                                      _searchController.clear();
-                                      _searchQuery = '';
-                                    });
-                                  },
+                    curve: Curves.easeInOut,
+                    child: _searchExpanded
+                        ? Container(
+                            key: const ValueKey('search_field'),
+                            width: 220,
+                            height: 44,
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Search reports...',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (_searchQuery.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.clear, size: 20),
+                                        tooltip: 'Clear search',
+                                        onPressed: () {
+                                          setState(() {
+                                            _searchController.clear();
+                                            _searchQuery = '';
+                                          });
+                                        },
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.arrow_back, size: 20),
+                                      tooltip: 'Close search',
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchExpanded = false;
+                                          _searchController.clear();
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    ),
+                                  ],
                                 ),
-                              IconButton(
-                                icon: const Icon(Icons.arrow_back, size: 20),
-                                tooltip: 'Close search',
-                                onPressed: () {
-                                  setState(() {
-                                    _searchExpanded = false;
-                                    _searchController.clear();
-                                    _searchQuery = '';
-                                  });
-                                },
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                               ),
-                            ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value.toLowerCase();
+                                });
+                              },
+                            ),
+                          )
+                        : Material(
+                            key: const ValueKey('search_icon'),
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(25),
+                              onTap: () {
+                                setState(() {
+                                  _searchExpanded = true;
+                                });
+                              },
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[800] : Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: const Icon(Icons.search, color: Colors.grey),
+                              ),
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value.toLowerCase();
-                          });
-                        },
-                      ),
-                    ),
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ class Group {
   final String slug;
   final String description;
   final String groupType;
+  final String? groupTypeDisplay;
   final String? coverImage;
   final bool isPrivate;
   final int? creatorId;
@@ -17,6 +18,7 @@ class Group {
     required this.slug,
     required this.description,
     required this.groupType,
+    this.groupTypeDisplay,
     this.coverImage,
     required this.isPrivate,
     this.creatorId,
@@ -32,6 +34,7 @@ class Group {
       slug: json['slug'],
       description: json['description'],
       groupType: json['group_type'],
+      groupTypeDisplay: json['group_type_display'],
       coverImage: json['cover_image'],
       isPrivate: json['is_private'],
       creatorId: json['creator'],

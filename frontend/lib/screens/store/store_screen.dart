@@ -1,18 +1,20 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/store_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'adoption/pet_detail_screen.dart';
 import 'adoption/create_adoption_screen.dart';
+import 'adoption/all_pets_screen.dart';
+import 'adoption/pet_grids.dart';
 import 'widgets/store_banner.dart';
 import 'widgets/store_tab_selector.dart';
 import 'widgets/store_category_menu.dart';
 import 'widgets/pet_type_menu.dart';
-import 'adoption/all_pets_screen.dart';
-import 'adoption/pet_grids.dart';
+import 'dialogs/search_dialog.dart';
+import 'dialogs/manage_pet_modal.dart';
+import 'utils/banner_manager.dart';
+import 'utils/pet_actions.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -67,37 +69,23 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
       final provider = context.read<StoreProvider>();
       // Clear search when tab changes
       provider.setSearchQuery('');
+      
       if (_tabController.index == 0) {
+        // Discover tab - keep pet type filter as is
         provider.loadAdoptions(showAllStatuses: false);
       } else {
+        // My Pets tab - reset pet type filter to 'all'
+        provider.setSelectedPetType('all', skipReload: true);
         provider.loadAdoptions(showAllStatuses: true);
       }
     }
   }
 
   void _checkBannerVisibilitySync() {
-    SharedPreferences.getInstance().then((prefs) {
-      final lastDismissed = prefs.getString('banner_dismissed_date_time');
-      
-      if (lastDismissed == null) {
-        if (mounted) {
-          setState(() {
-            _showBanner = true;
-            _isCheckingBanner = false;
-          });
-        }
-        return;
-      }
-      
-      final lastDismissedTime = DateTime.parse(lastDismissed);
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final dismissedDate = DateTime(lastDismissedTime.year, lastDismissedTime.month, lastDismissedTime.day);
-      
+    BannerManager.shouldShowBanner().then((shouldShow) {
       if (mounted) {
         setState(() {
-          _showBanner = today.isAfter(dismissedDate) || 
-                        now.difference(lastDismissedTime).inHours >= 4;
+          _showBanner = shouldShow;
           _isCheckingBanner = false;
         });
       }
@@ -105,198 +93,16 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   }
 
   Future<void> _dismissBanner() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('banner_dismissed_date_time', DateTime.now().toIso8601String());
-    
+    await BannerManager.dismissBanner();
     setState(() {
       _showBanner = false;
     });
   }
 
   void _showSearchDialog() {
-    final searchController = TextEditingController();
-    final provider = context.read<StoreProvider>();
-    searchController.text = provider.searchQuery;
-
-    // Get category-specific search hint
-    String searchHint;
-    String dialogTitle;
-    switch (_selectedCategory) {
-      case 'Adoption':
-        searchHint = 'Search by breed, name, age...';
-        dialogTitle = 'Search Pets for Adoption';
-        break;
-      case 'Food':
-        searchHint = 'Search by food type, brand, ingredients...';
-        dialogTitle = 'Search Pet Food';
-        break;
-      case 'Toys':
-        searchHint = 'Search by toy type, material, size...';
-        dialogTitle = 'Search Pet Toys';
-        break;
-      default:
-        searchHint = 'Search...';
-        dialogTitle = 'Search';
-    }
-
-    showDialog(
+    SearchDialog.show(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey.shade900.withOpacity(0.95)
-                  : Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dialogTitle,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: searchController,
-                  autofocus: true,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: searchHint,
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF6B46C1)),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey.shade800.withOpacity(0.5)
-                        : Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF6B46C1),
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                  ),
-                  onSubmitted: (value) {
-                    provider.setSearchQuery(value);
-                    provider.searchAdoptions();
-                    Navigator.pop(context);
-                  },
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        searchController.clear();
-                        provider.setSearchQuery('');
-                        provider.searchAdoptions();
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey.shade600,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: const Text(
-                        'Clear',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey.shade600,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF6B46C1),
-                              Color(0xFF9F7AEA),
-                              Color(0xFFB794F6),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            provider.setSearchQuery(searchController.text);
-                            provider.searchAdoptions();
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Search',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      selectedCategory: _selectedCategory,
     );
   }
 
@@ -363,6 +169,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                     if (_currentTabIndex == 0) ...[
                       _buildSectionHeader('Find Your New Best Friend'),
                       const SizedBox(height: 16),
+                      // Pet type filter only for Discover tab
                       PetTypeMenu(provider: storeProvider, petTypes: _petTypes),
                       const SizedBox(height: 16),
                       PetGrids.buildAdoptionGrid(
@@ -373,6 +180,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                     ] else ...[
                       _buildSectionHeader('My Pets for Adoption'),
                       const SizedBox(height: 16),
+                      // No pet type filter for My Pets tab
                       PetGrids.buildMyPetsGrid(
                         context: context,
                         provider: storeProvider,
@@ -474,105 +282,12 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   }
 
   void _showPetOptions(adoption) {
-    final theme = Theme.of(context);
-    showModalBottomSheet(
+    ManagePetModal.show(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Manage ${adoption.petName}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.edit, color: Color(0xFF6B46C1)),
-              title: const Text('Edit Pet Details'),
-              onTap: () {
-                Navigator.pop(context);
-                _navigateToEditAdoption(adoption);
-              },
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Change Status',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.pets, color: Colors.green),
-              title: const Text('Available'),
-              subtitle: const Text('Pet is available for adoption'),
-              trailing: adoption.status == 'available'
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: () {
-                Navigator.pop(context);
-                _updatePetStatus(adoption, 'available');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.pending, color: Colors.orange),
-              title: const Text('Adoption Pending'),
-              subtitle: const Text('Someone is interested in adopting'),
-              trailing: adoption.status == 'pending'
-                  ? const Icon(Icons.check_circle, color: Colors.orange)
-                  : null,
-              onTap: () {
-                Navigator.pop(context);
-                _updatePetStatus(adoption, 'pending');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.red),
-              title: const Text('Adopted'),
-              subtitle: const Text('Pet has been successfully adopted'),
-              trailing: adoption.status == 'adopted'
-                  ? const Icon(Icons.check_circle, color: Colors.red)
-                  : null,
-              onTap: () {
-                Navigator.pop(context);
-                _updatePetStatus(adoption, 'adopted');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.close, color: Colors.grey),
-              title: const Text('Closed'),
-              subtitle: const Text('Listing is no longer active'),
-              trailing: adoption.status == 'closed'
-                  ? const Icon(Icons.check_circle, color: Colors.grey)
-                  : null,
-              onTap: () {
-                Navigator.pop(context);
-                _updatePetStatus(adoption, 'closed');
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Delete Listing'),
-              onTap: () {
-                Navigator.pop(context);
-                _confirmDelete(adoption);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      adoption: adoption,
+      onEdit: () => _navigateToEditAdoption(adoption),
+      onStatusChange: (status) => _updatePetStatus(adoption, status),
+      onDelete: () => _confirmDelete(adoption),
     );
   }
 
@@ -592,92 +307,35 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   Future<void> _updatePetStatus(adoption, String status) async {
     final provider = context.read<StoreProvider>();
     
-    try {
-      print('Updating pet ${adoption.id} status to: $status');
-      final success = await provider.updateAdoptionStatus(adoption.id, status);
-      
-      if (!success) {
-        throw Exception(provider.error ?? 'Unknown error updating status');
-      }
-      
-      await provider.loadAdoptions(showAllStatuses: true);
-      
-      if (mounted) {
-        final statusText = status == 'available' 
-            ? 'Available' 
-            : status == 'pending' 
-              ? 'Adoption Pending' 
-              : status == 'adopted' 
-                ? 'Adopted' 
-                : 'Closed';
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Pet status updated to $statusText'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      print('Error in _updatePetStatus: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update status: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    await PetActions.updatePetStatus(
+      context: context,
+      adoption: adoption,
+      status: status,
+      onUpdate: (newStatus) async {
+        final success = await provider.updateAdoptionStatus(adoption.id, newStatus);
+        if (!success) {
+          throw Exception(provider.error ?? 'Unknown error updating status');
+        }
+        await provider.loadAdoptions(showAllStatuses: true);
+      },
+    );
   }
 
   void _confirmDelete(adoption) {
-    showDialog(
+    PetActions.showDeleteConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Pet Listing'),
-        content: Text('Are you sure you want to delete ${adoption.petName}\'s adoption listing?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deletePet(adoption);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      adoption: adoption,
+      onConfirm: () => _deletePet(adoption),
     );
   }
 
   Future<void> _deletePet(adoption) async {
     final provider = context.read<StoreProvider>();
     
-    try {
-      await provider.deleteAdoption(adoption.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pet listing deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete listing: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    await PetActions.deletePet(
+      context: context,
+      onDelete: () => provider.deleteAdoption(adoption.id),
+    );
   }
 
   void _navigateToPetDetail(int id) {
