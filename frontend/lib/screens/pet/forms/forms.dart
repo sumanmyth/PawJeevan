@@ -1,5 +1,6 @@
 /// Barrel file for pet form screens
 /// This makes imports cleaner throughout the app
+library;
 
 // Pet forms
 export 'add_pet_screen.dart';

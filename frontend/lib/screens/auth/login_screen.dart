@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     // Background decorative paw prints
-                    Positioned(
+                    const Positioned(
                       right: -60,
                       top: -40,
                       child: Opacity(
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
+                    const Positioned(
                       left: -50,
                       bottom: -30,
                       child: Opacity(
@@ -257,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     _obscurePassword
                                         ? Icons.visibility_outlined
                                         : Icons.visibility_off_outlined,
-                                    color: Color(0xFF6B46C1),
+                                    color: const Color(0xFF6B46C1),
                                   ),
                                   onPressed: () {
                                     setState(() {

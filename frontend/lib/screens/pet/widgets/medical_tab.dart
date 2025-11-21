@@ -10,10 +10,10 @@ class MedicalTab extends StatelessWidget {
   final VoidCallback onRefresh;
 
   const MedicalTab({
-    Key? key,
+    super.key,
     required this.medicalRecords,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

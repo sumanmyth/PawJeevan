@@ -408,7 +408,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
                     child: _searchExpanded
-                        ? Container(
+                        ? SizedBox(
                             key: const ValueKey('search_field'),
                             width: 220,
                             height: 44,

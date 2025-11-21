@@ -372,7 +372,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
           );
         }
       }
-    };
+    }
   }
 
   String _formatGroupType(String type) {
@@ -695,7 +695,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
                     child: _searchExpanded
-                        ? Container(
+                        ? SizedBox(
                             key: const ValueKey('search_field'),
                             width: 220,
                             height: 44,

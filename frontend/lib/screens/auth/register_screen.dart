@@ -119,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     // Background decorative paw prints
-                    Positioned(
+                    const Positioned(
                       right: -50,
                       top: -30,
                       child: Opacity(
@@ -131,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
+                    const Positioned(
                       left: -40,
                       bottom: 50,
                       child: Opacity(
@@ -358,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: Color(0xFF6B46C1),
+                                    color: const Color(0xFF6B46C1),
                                   ),
                                   onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                 ),
@@ -394,7 +394,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: Color(0xFF6B46C1),
+                                    color: const Color(0xFF6B46C1),
                                   ),
                                   onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                                 ),

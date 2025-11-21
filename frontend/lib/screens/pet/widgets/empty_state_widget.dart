@@ -6,10 +6,10 @@ class EmptyStateWidget extends StatelessWidget {
   final String subtitle;
 
   const EmptyStateWidget({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

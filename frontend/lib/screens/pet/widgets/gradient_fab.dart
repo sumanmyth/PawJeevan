@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class GradientFab extends StatelessWidget {
   final VoidCallback? onPressed;
 
-  const GradientFab({Key? key, this.onPressed}) : super(key: key);
+  const GradientFab({super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {

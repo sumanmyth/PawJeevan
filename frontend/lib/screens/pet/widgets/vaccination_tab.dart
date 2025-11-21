@@ -10,10 +10,10 @@ class VaccinationTab extends StatelessWidget {
   final VoidCallback onRefresh;
 
   const VaccinationTab({
-    Key? key,
+    super.key,
     required this.vaccinations,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

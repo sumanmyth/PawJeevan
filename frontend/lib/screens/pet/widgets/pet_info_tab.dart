@@ -5,7 +5,7 @@ import '../../../models/pet/pet_model.dart';
 class PetInfoTab extends StatelessWidget {
   final PetModel pet;
 
-  const PetInfoTab({Key? key, required this.pet}) : super(key: key);
+  const PetInfoTab({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {

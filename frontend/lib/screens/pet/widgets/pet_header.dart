@@ -6,7 +6,7 @@ import 'full_screen_image.dart';
 class PetHeader extends StatelessWidget {
   final PetModel pet;
 
-  const PetHeader({Key? key, required this.pet}) : super(key: key);
+  const PetHeader({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {

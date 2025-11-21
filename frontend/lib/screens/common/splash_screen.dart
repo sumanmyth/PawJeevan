@@ -82,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Stack(
           children: [
             // Background decorative paw prints
-            Positioned(
+            const Positioned(
               right: -40,
               top: 100,
               child: Opacity(
@@ -94,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            Positioned(
+            const Positioned(
               left: -30,
               bottom: 150,
               child: Opacity(
@@ -106,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            Positioned(
+            const Positioned(
               right: 60,
               bottom: 80,
               child: Opacity(
@@ -176,7 +176,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(height: 60),
                   // Loading indicator
-                  SizedBox(
+                  const SizedBox(
                     width: 40,
                     height: 40,
                     child: CircularProgressIndicator(
