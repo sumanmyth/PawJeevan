@@ -39,46 +39,75 @@ class LostFoundDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Report Details',
         showBackButton: true,
       ),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding, bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Photo
+            // Photo (curved + tappable to open full screen)
             if (report.photo != null && report.photo!.isNotEmpty)
-              Image.network(
-                report.photo!,
-                width: double.infinity,
-                height: 300,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 300,
-                  color: Colors.grey[300],
-                  child: Center(
-                    child: Icon(
-                      report.isLost ? Icons.pets : Icons.favorite,
-                      size: 80,
-                      color: Colors.grey[600],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenImage(
+                          imageUrl: report.photo!,
+                          title: report.petName ?? report.petType,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(
+                      report.photo!,
+                      width: double.infinity,
+                      height: 300,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 300,
+                        color: Colors.grey[300],
+                        child: Center(
+                          child: Icon(
+                            report.isLost ? Icons.pets : Icons.favorite,
+                            size: 80,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               )
             else
-              Container(
-                height: 300,
-                color: report.isLost 
-                    ? Colors.red.withOpacity(0.1) 
-                    : Colors.green.withOpacity(0.1),
-                child: Center(
-                  child: Icon(
-                    report.isLost ? Icons.pets : Icons.favorite,
-                    size: 80,
-                    color: report.isLost ? Colors.red : Colors.green,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    height: 300,
+                    color: report.isLost 
+                        ? Colors.red.withOpacity(0.1) 
+                        : Colors.green.withOpacity(0.1),
+                    child: Center(
+                      child: Icon(
+                        report.isLost ? Icons.pets : Icons.favorite,
+                        size: 80,
+                        color: report.isLost ? Colors.red : Colors.green,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -421,6 +450,57 @@ class LostFoundDetailScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// Full Screen Image Viewer for Lost & Found (same behavior as events)
+class FullScreenImage extends StatelessWidget {
+  final String imageUrl;
+  final String title;
+
+  const FullScreenImage({
+    super.key,
+    required this.imageUrl,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(title),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }

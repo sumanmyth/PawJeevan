@@ -14,11 +14,14 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Settings', showBackButton: true),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         children: [
           const _Header(title: 'Notifications'),
           _SettingsCard(

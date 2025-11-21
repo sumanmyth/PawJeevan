@@ -81,6 +81,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       appBar:
           const CustomAppBar(title: 'Add Medical Record', showBackButton: true),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,

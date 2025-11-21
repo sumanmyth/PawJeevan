@@ -70,13 +70,17 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Edit Post',
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

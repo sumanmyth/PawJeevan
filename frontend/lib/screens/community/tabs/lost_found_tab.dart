@@ -543,6 +543,11 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                 onRefresh: _refreshReports,
                 child: ListView.builder(
                   controller: _scrollController,
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: MediaQuery.of(context).padding.bottom + 110,
+                  ),
                   itemCount: reports.length,
                   itemBuilder: (context, index) {
                     final report = reports[index];

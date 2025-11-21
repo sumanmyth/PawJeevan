@@ -96,6 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -112,6 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
@@ -147,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? Colors.grey.shade900 : Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -202,29 +204,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Create your account to get started',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(color: isDark ? Colors.white : Colors.grey[600]),
                             ),
                             const SizedBox(height: 24),
 
                             // Username
                             TextFormField(
                               controller: _usernameController,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black),
                               decoration: InputDecoration(
                                 labelText: 'Username',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.person_outline, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
                               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter username' : null,
                             ),
@@ -238,20 +243,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     controller: _firstNameController,
                                     decoration: InputDecoration(
                                       labelText: 'First Name (optional)',
+                                      labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                      hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.grey[300]!),
+                                        borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                        borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                       ),
-                                      prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF6B46C1)),
+                                      prefixIcon: Icon(Icons.badge_outlined, color: const Color(0xFF6B46C1)),
                                       filled: true,
-                                      fillColor: Colors.grey[50],
+                                      fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                     ),
                                   ),
                                 ),
@@ -261,20 +268,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     controller: _lastNameController,
                                     decoration: InputDecoration(
                                       labelText: 'Last Name (optional)',
+                                      labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                      hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.grey[300]!),
+                                        borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                        borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                       ),
-                                      prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF6B46C1)),
+                                      prefixIcon: Icon(Icons.badge_outlined, color: const Color(0xFF6B46C1)),
                                       filled: true,
-                                      fillColor: Colors.grey[50],
+                                      fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                     ),
                                   ),
                                 ),
@@ -288,20 +297,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
                                 labelText: 'Email',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.email_outlined, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) return 'Please enter email';
@@ -317,20 +328,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               keyboardType: TextInputType.phone,
                               decoration: InputDecoration(
                                 labelText: 'Phone (optional)',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.phone_outlined, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -341,20 +354,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -377,20 +392,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               obscureText: _obscureConfirm,
                               decoration: InputDecoration(
                                 labelText: 'Confirm Password',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,

@@ -59,6 +59,17 @@ class AuthProvider extends ChangeNotifier {
     await _api.clearTokens();
   }
 
+  // Convert raw exception objects/strings into short, user-friendly messages
+  String _friendlyError(Object e) {
+    final s = e.toString().toLowerCase();
+    if (s.contains('invalid') && s.contains('credential')) return 'Invalid credentials';
+    if (s.contains('unauthorized') || s.contains('401')) return 'Invalid credentials';
+    if (s.contains('network') || s.contains('socket') || s.contains('timeout')) return 'Network error';
+    if (s.contains('not found') || s.contains('404')) return 'Not found';
+    // fallback short message
+    return 'Something went wrong';
+  }
+
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -103,7 +114,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('Login error: $e');
       await _clearAuthState();
-      _error = e.toString();
+      _error = _friendlyError(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -155,7 +166,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('Registration error: $e');
       await _clearAuthState();
-      _error = e.toString();
+      _error = _friendlyError(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -181,7 +192,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _friendlyError(e);
       notifyListeners();
       return false;
     }
@@ -202,7 +213,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _friendlyError(e);
       notifyListeners();
       return false;
     }

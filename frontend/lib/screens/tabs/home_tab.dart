@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../providers/auth_provider.dart';
+import '../../providers/fact_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -13,8 +16,12 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
+// Primary purple used across Home tab cards
+const Color _kPrimaryPurple = Color(0xFF6B46C1);
+
 class _HomeTabState extends State<HomeTab> {
   bool _showWelcome = false;
+  int? _lastUserId;
 
   @override
   void initState() {
@@ -27,17 +34,14 @@ class _HomeTabState extends State<HomeTab> {
     final hasShownWelcome = prefs.getBool('has_shown_welcome') ?? false;
     
     if (!hasShownWelcome) {
-      // Only show welcome if it hasn't been shown before
       if (mounted) {
         setState(() {
           _showWelcome = true;
         });
       }
       
-      // Set the flag to true after showing welcome
       await prefs.setBool('has_shown_welcome', true);
       
-      // Hide the welcome message after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
@@ -52,10 +56,22 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+    final factProvider = Provider.of<FactProvider>(context, listen: false);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    if (user?.id != _lastUserId) {
+      _lastUserId = user?.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        factProvider.nextFact();
+      });
+    }
+
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'PawJeevan',
         actions: [
@@ -116,10 +132,12 @@ class _HomeTabState extends State<HomeTab> {
         ],
       ),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding, bottom: 110),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
             // Welcome Banner
             AnimatedContainer(
@@ -129,68 +147,117 @@ class _HomeTabState extends State<HomeTab> {
                 opacity: _showWelcome ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 500),
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colorScheme.primary, colorScheme.secondary],
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF6B46C1),
+                        Color(0xFF9F7AEA),
+                        Color(0xFFB794F6),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.3),
+                        color: const Color(0xFF6B46C1).withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colorScheme.onPrimary.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.waving_hand,
-                          color: colorScheme.tertiary,
-                          size: 32,
+                      const Positioned(
+                        right: -20,
+                        top: -20,
+                        child: Opacity(
+                          opacity: 0.1,
+                          child: Icon(Icons.pets, size: 120, color: Colors.white),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const Positioned(
+                        right: 40,
+                        bottom: -30,
+                        child: Opacity(
+                          opacity: 0.08,
+                          child: Icon(Icons.pets, size: 100, color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Row(
                           children: [
-                            Text(
-                              'Welcome back!',
-                              style: TextStyle(
-                                color: colorScheme.onPrimary,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(Icons.waving_hand, color: Colors.white, size: 24),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          'Welcome Back!',
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    user?.displayName ?? 'Pet Lover',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white.withOpacity(0.95),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Ready to make a difference in a pet\'s life today?',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.85),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user?.displayName ?? 'Pet Lover',
-                              style: TextStyle(
-                                color: colorScheme.onPrimary.withOpacity(0.9),
-                                fontSize: 16,
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                                onPressed: () {
+                                  setState(() {
+                                    _showWelcome = false;
+                                  });
+                                },
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: colorScheme.onPrimary),
-                        onPressed: () {
-                          setState(() {
-                            _showWelcome = false;
-                          });
-                        },
                       ),
                     ],
                   ),
@@ -198,7 +265,12 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+
+            // Did You Know card
+            const _DidYouKnowCard(),
+
+            const SizedBox(height: 8),
 
             // Quick Actions
             Padding(
@@ -278,7 +350,11 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Shop - Coming soon!')),
+                          );
+                        },
                         child: const Text('See All'),
                       ),
                     ],
@@ -288,6 +364,7 @@ class _HomeTabState extends State<HomeTab> {
                     height: 200,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: 5,
                       itemBuilder: (context, index) {
                         return _FeaturedProductCard(index: index);
@@ -398,14 +475,13 @@ class _FeaturedProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       width: 160,
-      margin: const EdgeInsets.only(right: 12),
+      margin: const EdgeInsets.only(right: 12, bottom: 8),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
@@ -415,45 +491,57 @@ class _FeaturedProductCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+             ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Product ${index + 1} - Coming soon!')),
+              );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: _kPrimaryPurple.withOpacity(0.1),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                ),
+                child: const Center(
+                    child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
+                ),
               ),
-            ),
-            child: Center(
-              child: Icon(Icons.pets, size: 50, color: colorScheme.onSurfaceVariant),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Product ${index + 1}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Product ${index + 1}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${(index + 1) * 10}.99',
+                      style: const TextStyle(
+                        color: _kPrimaryPurple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '\$${(index + 1) * 10}.99',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -474,56 +562,257 @@ class _TipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title - Coming soon!')),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _kPrimaryPurple.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: color.withOpacity(0.75)),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
+class _DidYouKnowCard extends StatelessWidget {
+  // FIXED: Removed {super.key} entirely. 
+  // Since this is a private class and 'key' is never passed to it, the analyzer marks it as unused.
+  const _DidYouKnowCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final factProvider = context.watch<FactProvider>();
+    final fact = factProvider.currentFact;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF6B46C1),
+            Color(0xFF9F7AEA),
+            Color(0xFFB794F6),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: const Color(0xFF6B46C1).withOpacity(0.18),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color),
+          // Decorations
+          const Positioned(
+            right: -6, top: -12,
+            child: Opacity(opacity: 0.10, child: Icon(Icons.pets, size: 100, color: Colors.white)),
           ),
-          const SizedBox(width: 16),
-          Expanded(
+          const Positioned(
+            right: 36, bottom: -12,
+            child: Opacity(opacity: 0.07, child: Icon(Icons.pets, size: 72, color: Colors.white)),
+          ),
+          const Positioned(
+            left: -8, top: -4,
+            child: Opacity(opacity: 0.06, child: Icon(Icons.pets, size: 72, color: Colors.white)),
+          ),
+          const Positioned(
+            bottom: -26, left: 0, right: 0,
+            child: Center(child: Opacity(opacity: 0.06, child: Icon(Icons.pets, size: 88, color: Colors.white))),
+          ),
+          const Positioned(
+            left: 20, bottom: 10,
+            child: Opacity(opacity: 0.06, child: Icon(Icons.pets, size: 56, color: Colors.white)),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14).copyWith(bottom: 64),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.lightbulb, color: Colors.white, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Text(
+                        'Did You Know?',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                const SizedBox(height: 12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                  child: Text(
+                    fact,
+                    key: ValueKey<String>(fact),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.35),
                   ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 16, color: colorScheme.onSurfaceVariant),
+
+          // Tappable area for full fact
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                splashColor: Colors.white10,
+                onTap: () {
+                  showDialog<void>(
+                    context: context,
+                    barrierColor: Colors.black.withOpacity(0.5),
+                    builder: (context) => BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade900.withOpacity(0.95)
+                                : Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.18),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Did You Know?',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(fact, style: const TextStyle(fontSize: 15, height: 1.4)),
+                              const SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Close'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      factProvider.nextFact();
+                                      Navigator.of(context).pop();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _kPrimaryPurple,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Next Fact'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // Next Fact Button
+          Positioned(
+            right: 14,
+            bottom: 12,
+            child: TextButton(
+              onPressed: () => factProvider.nextFact(),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.12),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Next Fact', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            ),
+          ),
         ],
       ),
     );

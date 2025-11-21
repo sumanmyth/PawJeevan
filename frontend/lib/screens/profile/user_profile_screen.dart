@@ -88,7 +88,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         ? community.cachedUserPosts(widget.userId)
         : <Post>[];
 
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      // ensure content starts below the rounded AppBar
       appBar: CustomAppBar(
         title: user?.displayName ?? 'User Profile',
         showBackButton: true,
@@ -98,7 +102,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           : RefreshIndicator(
               onRefresh: _loadUserData,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+                padding: EdgeInsets.only(top: topPadding + 16, bottom: 16),
                 child: Column(
                   children: [
                     _buildProfileHeader(context, user),

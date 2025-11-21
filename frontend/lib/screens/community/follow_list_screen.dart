@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/community_provider.dart';
 import '../../models/user/user_model.dart';
 import '../profile/user_profile_screen.dart';
+import '../../widgets/custom_app_bar.dart';
 
 class FollowListScreen extends StatefulWidget {
   final int userId;
@@ -97,23 +98,25 @@ class _FollowListScreenState extends State<FollowListScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        title: _isSearching 
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        title: widget.title,
+        showBackButton: true,
+        titleWidget: _isSearching 
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.purple.shade900,
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 18,
               ),
-              decoration: InputDecoration(
-                hintText: 'Search ${widget.title.toLowerCase()}...',
+              decoration: const InputDecoration(
+                hintText: 'Search followers...',
                 hintStyle: TextStyle(
-                  color: isDark 
-                    ? Colors.white.withOpacity(0.6) 
-                    : Colors.purple.shade700.withOpacity(0.6),
+                  color: Colors.white70,
                 ),
                 border: InputBorder.none,
               ),
@@ -121,13 +124,20 @@ class _FollowListScreenState extends State<FollowListScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.title),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (_errorMessage == null)
                   Text(
                     '${_filteredUsers.length} ${widget.title.toLowerCase()}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                      color: Colors.white,
                     ),
                   ),
               ],
@@ -135,7 +145,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
         actions: [
           if (_errorMessage == null && _users.isNotEmpty)
             IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              icon: Icon(_isSearching ? Icons.close : Icons.search, color: Colors.white),
               onPressed: () {
                 setState(() {
                   _isSearching = !_isSearching;
@@ -146,15 +156,13 @@ class _FollowListScreenState extends State<FollowListScreen> {
               },
             ),
         ],
-        elevation: 0,
-        backgroundColor: isDark ? Colors.purple.shade900 : Colors.purple.shade50,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: Padding(padding: EdgeInsets.only(top: topPadding), child: const CircularProgressIndicator()))
           : _errorMessage != null
               ? Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(32),
+                    padding: EdgeInsets.only(top: topPadding + 32, left: 32, right: 32, bottom: 32),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -211,7 +219,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
               child: _filteredUsers.isEmpty
                   ? Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(32),
+                        padding: EdgeInsets.only(top: topPadding + 32, left: 32, right: 32, bottom: 32),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -272,6 +280,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
                       ),
                     )
                   : ListView.builder(
+                      padding: EdgeInsets.only(top: topPadding + 8, bottom: 16),
                       itemCount: _filteredUsers.length,
                       itemBuilder: (context, index) {
                         final user = _filteredUsers[index];

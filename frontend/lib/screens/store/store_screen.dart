@@ -109,8 +109,13 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final storeProvider = context.watch<StoreProvider>();
+    
+    // Calculate the bottom edge of the App Bar
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Store',
         showBackButton: false,
@@ -122,132 +127,133 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
           ),
         ],
       ),
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () => storeProvider.loadAdoptions(showAllStatuses: _currentTabIndex == 1),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!_isCheckingBanner && _showBanner)
-                    StoreBanner(
-                      onDismiss: _dismissBanner,
-                      onAdoptClick: () {
-                        setState(() {
-                          _selectedCategory = 'Adoption';
-                          _tabController.animateTo(0);
-                          _currentTabIndex = 0;
-                        });
-                        context.read<StoreProvider>().loadAdoptions(showAllStatuses: false);
-                      },
-                    ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  StoreCategoryMenu(
-                    categories: _categories,
-                    selectedCategory: _selectedCategory,
-                    onCategorySelected: (category) {
-                      // Clear search when category changes
-                      context.read<StoreProvider>().setSearchQuery('');
-                      context.read<StoreProvider>().searchAdoptions();
+      body: RefreshIndicator(
+        onRefresh: () => storeProvider.loadAdoptions(showAllStatuses: _currentTabIndex == 1),
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+          // FIXED: Reduced the top offset from +16 to +4 to decrease the visual gap
+          padding: EdgeInsets.only(top: topPadding + 4, bottom: 110),
+          child: Padding(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!_isCheckingBanner && _showBanner)
+                  StoreBanner(
+                    onDismiss: _dismissBanner,
+                    onAdoptClick: () {
                       setState(() {
-                        _selectedCategory = category;
+                        _selectedCategory = 'Adoption';
+                        _tabController.animateTo(0);
+                        _currentTabIndex = 0;
                       });
+                      context.read<StoreProvider>().loadAdoptions(showAllStatuses: false);
                     },
                   ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  if (_selectedCategory == 'Adoption') ...[
-                    StoreTabSelector(tabController: _tabController),
+                
+                const SizedBox(height: 16),
+                
+                StoreCategoryMenu(
+                  categories: _categories,
+                  selectedCategory: _selectedCategory,
+                  onCategorySelected: (category) {
+                    context.read<StoreProvider>().setSearchQuery('');
+                    context.read<StoreProvider>().searchAdoptions();
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 24),
+                
+                if (_selectedCategory == 'Adoption') ...[
+                  StoreTabSelector(tabController: _tabController),
+                  const SizedBox(height: 16),
+                  if (_currentTabIndex == 0) ...[
+                    _buildSectionHeader('Find Your New Best Friend'),
                     const SizedBox(height: 16),
-                    if (_currentTabIndex == 0) ...[
-                      _buildSectionHeader('Find Your New Best Friend'),
-                      const SizedBox(height: 16),
-                      // Pet type filter only for Discover tab
-                      PetTypeMenu(provider: storeProvider, petTypes: _petTypes),
-                      const SizedBox(height: 16),
-                      PetGrids.buildAdoptionGrid(
-                        context: context,
-                        provider: storeProvider,
-                        onPetTap: (id) => _navigateToPetDetail(id),
-                      ),
-                    ] else ...[
-                      _buildSectionHeader('My Pets for Adoption'),
-                      const SizedBox(height: 16),
-                      // No pet type filter for My Pets tab
-                      PetGrids.buildMyPetsGrid(
-                        context: context,
-                        provider: storeProvider,
-                        onPetTap: (id) => _navigateToPetDetail(id),
-                        onPetOptions: (adoption) => _showPetOptions(adoption),
-                      ),
-                    ],
+                    PetTypeMenu(provider: storeProvider, petTypes: _petTypes),
+                    const SizedBox(height: 16),
+                    PetGrids.buildAdoptionGrid(
+                      context: context,
+                      provider: storeProvider,
+                      onPetTap: (id) => _navigateToPetDetail(id),
+                    ),
                   ] else ...[
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: Text('Coming Soon!', style: TextStyle(fontSize: 18)),
-                      ),
+                    _buildSectionHeader('My Pets for Adoption'),
+                    // Reduced gap to make pet cards sit closer to the header
+                    const SizedBox(height: 0),
+                    PetGrids.buildMyPetsGrid(
+                      context: context,
+                      provider: storeProvider,
+                      onPetTap: (id) => _navigateToPetDetail(id),
+                      onPetOptions: (adoption) => _showPetOptions(adoption),
                     ),
                   ],
+                ] else ...[
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: Text('Coming Soon!', style: TextStyle(fontSize: 18)),
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _selectedCategory == 'Adoption'
-          ? Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6B46C1).withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _navigateToCreateAdoption(),
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 90.0, right: 16.0),
+              child: Container(
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6B46C1).withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Add Pet',
-                          style: TextStyle(
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _navigateToCreateAdoption(),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.add_circle_outline,
                             color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                            size: 24,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 8),
+                          Text(
+                            'Add Pet',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

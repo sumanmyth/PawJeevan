@@ -196,14 +196,17 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isEditing = widget.adoption != null;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: isEditing ? 'Edit Pet Listing' : 'Add Pet for Adoption',
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
           child: Column(

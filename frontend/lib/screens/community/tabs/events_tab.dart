@@ -604,7 +604,12 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                 onRefresh: _refreshEvents,
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: events.length,
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: MediaQuery.of(context).padding.bottom + 110,
+                    ),
+                    itemCount: events.length,
                   itemBuilder: (context, index) {
                     final event = events[index];
                     final isOrganizer = _currentUserId != null && event.organizerId == _currentUserId;

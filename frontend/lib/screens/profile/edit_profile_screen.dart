@@ -120,6 +120,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
 
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     ImageProvider? preview;
     if (_pickedImage != null) {
       preview = kIsWeb
@@ -130,9 +132,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Edit Profile', showBackButton: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
           child: Column(

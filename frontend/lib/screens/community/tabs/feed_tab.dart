@@ -67,6 +67,7 @@ class _FeedTabState extends State<FeedTab> {
     
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -198,11 +199,12 @@ class _FeedTabState extends State<FeedTab> {
         } else {
           mainContent = ListView.builder(
             controller: _scrollController,
+            physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
             padding: EdgeInsets.only(
               left: 16,
               right: 16,
               top: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 110,
             ),
             itemCount: provider.posts.length,
             itemBuilder: (context, index) {

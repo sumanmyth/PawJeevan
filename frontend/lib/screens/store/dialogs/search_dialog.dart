@@ -180,17 +180,17 @@ class SearchDialog {
     switch (category) {
       case 'Adoption':
         return {
-          'hint': 'Search by breed, name, age...',
+          'hint': 'Search by name, breed, title or description...',
           'title': 'Search Pets for Adoption',
         };
       case 'Food':
         return {
-          'hint': 'Search by food type, brand, ingredients...',
+          'hint': 'Search by name, SKU or description...',
           'title': 'Search Pet Food',
         };
       case 'Toys':
         return {
-          'hint': 'Search by toy type, material, size...',
+          'hint': 'Search by name, SKU or description...',
           'title': 'Search Pet Toys',
         };
       default:

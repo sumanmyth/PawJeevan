@@ -81,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -97,6 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
@@ -132,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? Colors.grey.shade900 : Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -193,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Login to continue to PawJeevan',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: isDark ? Colors.grey[300] : Colors.grey[600],
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -203,22 +205,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black),
                               decoration: InputDecoration(
                                 labelText: 'Email',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.email_outlined, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -236,27 +241,28 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black),
                               decoration: InputDecoration(
                                 labelText: 'Password',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: Color(0xFF6B46C1), width: 2),
+                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6B46C1)),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color(0xFF6B46C1)),
                                 filled: true,
-                                fillColor: Colors.grey[50],
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                                     color: const Color(0xFF6B46C1),
                                   ),
                                   onPressed: () {
@@ -351,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 Text(
                                   "Don't have an account? ",
-                                  style: TextStyle(color: Colors.grey[700]),
+                                  style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700]),
                                 ),
                                 TextButton(
                                   onPressed: () {

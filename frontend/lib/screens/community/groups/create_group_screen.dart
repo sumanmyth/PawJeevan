@@ -100,8 +100,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Create Group',
         showBackButton: true,
@@ -109,7 +111,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       body: LoadingOverlay(
         isLoading: _isLoading,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+          padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
           child: Form(
             key: _formKey,
             child: Column(

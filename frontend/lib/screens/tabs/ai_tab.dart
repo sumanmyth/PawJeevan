@@ -8,13 +8,17 @@ class AiTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'AI Features',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         children: [
           // Header
           Text(

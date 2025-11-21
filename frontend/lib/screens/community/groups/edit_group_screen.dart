@@ -123,6 +123,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
       body: LoadingOverlay(
         isLoading: _isLoading,
         child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
