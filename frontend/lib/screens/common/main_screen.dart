@@ -8,6 +8,25 @@ import '../tabs/ai_tab.dart';
 import '../community/community_screen.dart';
 import '../tabs/profile_tab.dart';
 
+class _NoGlowScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
+}
+
+class _NavItem {
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final Widget page;
+
+  const _NavItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.page,
+  });
+}
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -17,23 +36,25 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  // PageController removed to prevent PageView from painting multiple pages
+  late final PageController _pageController;
 
-  final _tabs = [
-    const HomeTab(),
-    const StoreTab(),
-    const AiTab(),
-    const CommunityScreen(),
-    const ProfileTab(),
+  final List<_NavItem> _navItems = [
+    const _NavItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home', page: HomeTab()),
+    const _NavItem(icon: Icons.shopping_bag_outlined, selectedIcon: Icons.shopping_bag, label: 'Store', page: StoreTab()),
+    const _NavItem(icon: Icons.smart_toy_outlined, selectedIcon: Icons.smart_toy, label: 'AI', page: AiTab()),
+    const _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'Community', page: CommunityScreen()),
+    const _NavItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Profile', page: ProfileTab()),
   ];
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -44,28 +65,20 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
-      body: GestureDetector(
-        // Simple horizontal swipe handler to change tabs while ensuring
-        // only the active page is painted (IndexedStack) to avoid ghosting.
-        onHorizontalDragEnd: (details) {
-          final velocity = details.primaryVelocity ?? 0;
-          if (velocity.abs() < 200) return; // ignore slow drags
-          setState(() {
-            if (velocity < 0) {
-              // swipe left -> next
-              _currentIndex = (_currentIndex + 1).clamp(0, _tabs.length - 1);
-            } else {
-              // swipe right -> previous
-              _currentIndex = (_currentIndex - 1).clamp(0, _tabs.length - 1);
+      body: ScrollConfiguration(
+        behavior: _NoGlowScrollBehavior(),
+        child: PageView(
+          controller: _pageController,
+          physics: const ClampingScrollPhysics(),
+          onPageChanged: (int idx) {
+            setState(() {
+              _currentIndex = idx;
+            });
+            if (idx == 0) {
+              Provider.of<FactProvider>(context, listen: false).nextFact();
             }
-          });
-          if (_currentIndex == 0) {
-            Provider.of<FactProvider>(context, listen: false).nextFact();
-          }
-        },
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _tabs,
+          },
+          children: _navItems.map((e) => e.page).toList(),
         ),
       ),
       bottomNavigationBar: Container(
@@ -86,29 +99,13 @@ class _MainScreenState extends State<MainScreen> {
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
-            child: BackdropFilter(
-            // Slightly smaller blur for a more subtle frosted effect
+          child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
             child: Container(
-              // Slightly more opaque so the nav feels less transparent
               color: isDark
-              ? Colors.black.withOpacity(0.60)
-              : Colors.white.withOpacity(0.72),
-              child: NavigationBarTheme(
-                data: NavigationBarThemeData(
-                  indicatorColor: isDark
-                      ? const Color(0xFF6B46C1).withOpacity(0.3)
-                      : Colors.purple.shade100,
-                  labelTextStyle: MaterialStateProperty.all(
-                    TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-                child: _buildGlidingNavigationBar(isDark),
-              ),
+                  ? Colors.black.withOpacity(0.60)
+                  : Colors.white.withOpacity(0.72),
+              child: _buildGlidingNavigationBar(isDark, context),
             ),
           ),
         ),
@@ -116,10 +113,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildGlidingNavigationBar(bool isDark) {
-    final itemCount = _tabs.length;
+  Widget _buildGlidingNavigationBar(bool isDark, BuildContext context) {
+    final itemCount = _navItems.length;
+    
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+    final double barHeight = 75 + (bottomPadding > 0 ? bottomPadding / 2 : 0);
+
     return SizedBox(
-      height: 75,
+      height: barHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final fullWidth = constraints.maxWidth;
@@ -127,31 +128,24 @@ class _MainScreenState extends State<MainScreen> {
           final usableWidth = fullWidth - (horizontalPadding * 2);
 
           double indicatorFactor;
-          if (fullWidth < 360) {
-            indicatorFactor = 0.82;
-          } else if (fullWidth < 420) {
-            indicatorFactor = 0.78;
-          } else if (fullWidth < 600) {
-            indicatorFactor = 0.72;
-          } else if (fullWidth < 900) {
-            indicatorFactor = 0.68;
-          } else {
-            indicatorFactor = 0.60;
-          }
+          if (fullWidth < 360) indicatorFactor = 0.82;
+          else if (fullWidth < 420) indicatorFactor = 0.78;
+          else if (fullWidth < 600) indicatorFactor = 0.72;
+          else if (fullWidth < 900) indicatorFactor = 0.68;
+          else indicatorFactor = 0.60;
 
           final itemWidth = usableWidth / itemCount;
           final indicatorWidth = itemWidth * indicatorFactor;
+          
           double leftPos = horizontalPadding + (_currentIndex * itemWidth) + (itemWidth - indicatorWidth) / 2;
-          final minLeft = horizontalPadding;
-          final maxLeft = fullWidth - horizontalPadding - indicatorWidth;
-          if (leftPos < minLeft) leftPos = minLeft;
-          if (leftPos > maxLeft) leftPos = maxLeft;
-
+          
           final Color selectedColor = isDark ? const Color(0xFFB794F6) : const Color(0xFF6B46C1);
+          final Color unselectedColor = isDark ? Colors.grey.shade300 : Colors.grey.shade700;
 
           return Stack(
             alignment: Alignment.centerLeft,
             children: [
+              // 1. Gliding Pill - This will ALWAYS slide smoothly
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOut,
@@ -169,53 +163,34 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
 
-              // items
+              // 2. Icons
               Positioned.fill(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, bottomPadding > 0 ? 10 : 0),
                   child: Row(
                     children: List.generate(itemCount, (i) {
+                      final item = _navItems[i];
                       final selected = i == _currentIndex;
-                      late final Widget icon;
-                      late final Widget selectedIcon;
-
-                      if (i == 0) {
-                        icon = SizedBox(width: 24, height: 24, child: Icon(Icons.home_outlined, size: 24, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700));
-                        selectedIcon = SizedBox(width: 24, height: 24, child: Icon(Icons.home, size: 24, color: selectedColor));
-                      } else if (i == 1) {
-                        icon = SizedBox(width: 24, height: 24, child: Icon(Icons.shopping_bag_outlined, size: 24, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700));
-                        selectedIcon = SizedBox(width: 24, height: 24, child: Icon(Icons.shopping_bag, size: 24, color: selectedColor));
-                      } else if (i == 2) {
-                        icon = SizedBox(width: 24, height: 24, child: Icon(Icons.smart_toy_outlined, size: 24, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700));
-                        selectedIcon = SizedBox(width: 24, height: 24, child: Icon(Icons.smart_toy, size: 24, color: selectedColor));
-                      } else if (i == 3) {
-                        icon = SizedBox(width: 24, height: 24, child: Icon(Icons.people_outline, size: 24, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700));
-                        selectedIcon = SizedBox(width: 24, height: 24, child: Icon(Icons.people, size: 24, color: selectedColor));
-                      } else {
-                        icon = SizedBox(width: 24, height: 24, child: Icon(Icons.person_outline, size: 24, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700));
-                        selectedIcon = SizedBox(width: 24, height: 24, child: Icon(Icons.person, size: 24, color: selectedColor));
-                      }
-
-                      final label = i == 0
-                          ? 'Home'
-                          : i == 1
-                              ? 'Store'
-                              : i == 2
-                                  ? 'AI'
-                                  : i == 3
-                                      ? 'Community'
-                                      : 'Profile';
 
                       return Expanded(
                         child: InkWell(
+                          // --- LOGIC START ---
                           onTap: () {
-                            setState(() {
-                              _currentIndex = i;
-                            });
-                            if (i == 0) {
-                              Provider.of<FactProvider>(context, listen: false).nextFact();
+                            final int difference = (i - _currentIndex).abs();
+                            
+                            if (difference > 1) {
+                              // TELEPORT: If skipping tabs (e.g. 1 to 3), cut instantly.
+                              _pageController.jumpToPage(i);
+                            } else {
+                              // SLIDE: If neighbor (e.g. 1 to 2), animate smoothly.
+                              _pageController.animateToPage(
+                                i,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
                             }
                           },
+                          // --- LOGIC END ---
                           borderRadius: BorderRadius.zero,
                           splashColor: Colors.transparent,
                           highlightColor: Colors.transparent,
@@ -227,15 +202,24 @@ class _MainScreenState extends State<MainScreen> {
                                 AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 220),
                                   transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-                                  child: selected ? selectedIcon : icon,
+                                  child: SizedBox(
+                                    key: ValueKey(selected),
+                                    width: 24,
+                                    height: 24,
+                                    child: Icon(
+                                      selected ? item.selectedIcon : item.icon,
+                                      size: 24,
+                                      color: selected ? selectedColor : unselectedColor,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  label,
+                                  item.label,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
-                                    color: selected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.grey.shade300 : Colors.grey.shade700),
+                                    color: selected ? (isDark ? Colors.white : Colors.black87) : unselectedColor,
                                   ),
                                 ),
                               ],
