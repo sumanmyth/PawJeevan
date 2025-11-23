@@ -77,16 +77,15 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
-          colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+          colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85), Color.fromRGBO(124, 58, 237, 0.65)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            // Fixed: replaced deprecated withOpacity with withValues
-            color: const Color(0xFF6B46C1).withValues(alpha: 0.4), 
+            color: Color.fromRGBO(124, 58, 237, 0.4),
             blurRadius: 12,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -178,9 +177,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 tabAlignment: isSmallScreen 
                   ? TabAlignment.center 
                   : TabAlignment.fill,
-                labelColor: Colors.purple,
+                labelColor: const Color(0xFF7C3AED),
                 unselectedLabelColor: Colors.grey,
-                indicatorColor: Colors.purple,
+                indicatorColor: const Color(0xFF7C3AED),
                 indicatorSize: isSmallScreen 
                   ? TabBarIndicatorSize.label 
                   : TabBarIndicatorSize.tab,

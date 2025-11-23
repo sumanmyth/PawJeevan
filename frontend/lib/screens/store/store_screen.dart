@@ -130,7 +130,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
       body: RefreshIndicator(
         onRefresh: () => storeProvider.loadAdoptions(showAllStatuses: _currentTabIndex == 1),
         child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           // FIXED: Reduced the top offset from +16 to +4 to decrease the visual gap
           padding: EdgeInsets.only(top: topPadding + 4, bottom: 110),
           child: Padding(
@@ -212,15 +212,15 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+                    colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85), Color.fromRGBO(124, 58, 237, 0.65)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: const Color(0xFF6B46C1).withOpacity(0.4),
+                      color: Color.fromRGBO(124, 58, 237, 0.4),
                       blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -234,9 +234,9 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                         horizontal: 20,
                         vertical: 14,
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(
                             Icons.add_circle_outline,
                             color: Colors.white,

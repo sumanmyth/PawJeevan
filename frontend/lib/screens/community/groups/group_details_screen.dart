@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/community/group_model.dart';
 import '../../../services/api_service.dart';
+import '../../../utils/helpers.dart';
 import 'group_chat_tab.dart';
 import 'group_posts_tab.dart';
 import 'edit_group_screen.dart';
@@ -81,7 +82,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
               controller: _tabController,
               indicator: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                  colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.9)],
                 ),
                 borderRadius: BorderRadius.circular(28),
               ),
@@ -181,7 +182,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
               
               Expanded(
                 child: SingleChildScrollView(
-                  physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +216,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                           width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                              colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.9)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -390,12 +391,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF6750A4).withOpacity(0.1),
+              color: const Color(0xFF7C3AED).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF6750A4),
+              color: const Color(0xFF7C3AED),
               size: 22,
             ),
           ),
@@ -570,7 +571,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       if (mounted) {
         widget.onGroupChanged?.call(); // Trigger refresh
         Navigator.pop(context, true); // Go back to groups list with result
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Group deleted successfully'),
             backgroundColor: Colors.green,
@@ -579,7 +581,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to delete group: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
@@ -596,7 +599,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       if (mounted) {
         widget.onGroupChanged?.call(); // Trigger refresh
         Navigator.pop(context, true); // Go back to groups list with result
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Left group successfully'),
             backgroundColor: Colors.green,
@@ -605,7 +609,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to leave group: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,

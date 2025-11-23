@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../utils/helpers.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../models/community/post_model.dart';
 import '../../../providers/community_provider.dart';
@@ -141,13 +142,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         if (success) {
                           print('Comment deleted successfully');
                           await provider.getPostDetail(widget.postId, force: true);
-                          
+
                           if (!dialogContext.mounted) return;
                           Navigator.pop(dialogContext, true);
                         } else {
                           print('Failed to delete comment');
                           if (!dialogContext.mounted) return;
-                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          Helpers.showInstantSnackBar(
+                            dialogContext,
                             const SnackBar(content: Text('Failed to delete comment')),
                           );
                           Navigator.pop(dialogContext, false);
@@ -155,7 +157,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       } catch (e) {
                         print('Error deleting comment: $e');
                         if (dialogContext.mounted) {
-                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          Helpers.showInstantSnackBar(
+                            dialogContext,
                             SnackBar(content: Text('Error deleting comment: $e')),
                           );
                           Navigator.pop(dialogContext, false);
@@ -192,7 +195,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               );
               
               if (success == true && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                Helpers.showInstantSnackBar(
+                  context,
                   const SnackBar(content: Text('Comment deleted successfully')),
                 );
               }
@@ -293,16 +297,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isDark ? Colors.purple.shade300 : Colors.purple.shade200,
+                color: const Color(0xFF7C3AED),
                 width: 2,
               ),
             ),
             child: CircleAvatar(
               radius: 22,
-              backgroundColor: isDark ? Colors.purple.shade900 : Colors.purple.shade50,
+              backgroundColor: const Color(0xFF7C3AED),
               backgroundImage: post.authorAvatar != null ? NetworkImage(post.authorAvatar!) : null,
               child: post.authorAvatar == null 
-                ? Icon(Icons.person, color: isDark ? Colors.purple.shade200 : Colors.purple.shade400) 
+                ? const Icon(Icons.person, color: Color(0xFF7C3AED)) 
                 : null,
             ),
           ),
@@ -322,9 +326,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 const SizedBox(height: 2),
                 Text(
                   timeago.format(post.createdAt), 
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
-                    color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                    color: Color(0xFF7C3AED),
                   ),
                 ),
               ],
@@ -359,43 +363,53 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentItem(BuildContext context, Comment comment) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    const primary = Color(0xFF7C3AED);
     print('Building comment item: ${comment.id}, isAuthor: ${comment.isCurrentUserAuthor}');
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark 
-          ? Colors.purple.shade900.withOpacity(0.2) 
-          : Colors.purple.shade50.withOpacity(0.5),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+          color: primary.withOpacity(0.12),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isDark ? Colors.purple.shade300 : Colors.purple.shade200,
-                width: 1.5,
+          GestureDetector(
+            onTap: comment.isCurrentUserAuthor
+                ? null
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UserProfileScreen(userId: comment.author),
+                      ),
+                    ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: primary.withOpacity(0.9),
+                  width: 1.2,
+                ),
               ),
-            ),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: isDark ? Colors.purple.shade800 : Colors.purple.shade100,
-              backgroundImage: comment.authorAvatar != null ? NetworkImage(comment.authorAvatar!) : null,
-              child: comment.authorAvatar == null 
-                ? Icon(
-                    Icons.person, 
-                    size: 20,
-                    color: isDark ? Colors.purple.shade200 : Colors.purple.shade400,
-                  ) 
-                : null,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: primary.withOpacity(0.12),
+                backgroundImage: comment.authorAvatar != null ? NetworkImage(comment.authorAvatar!) : null,
+                child: comment.authorAvatar == null 
+                  ? const Icon(
+                      Icons.person, 
+                      size: 20,
+                      color: Color(0xFF7C3AED),
+                    ) 
+                  : null,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -403,12 +417,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  comment.authorUsername, 
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                GestureDetector(
+                  onTap: comment.isCurrentUserAuthor
+                      ? null
+                      : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UserProfileScreen(userId: comment.author),
+                            ),
+                          ),
+                  child: Text(
+                    comment.authorUsername,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: primary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -457,7 +481,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             IconButton(
               icon: Icon(
                 Icons.more_vert,
-                color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                color: primary,
               ),
               onPressed: () => _showCommentOptions(context, comment),
             ),
@@ -467,8 +491,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentsHeader(BuildContext context, Post post) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -478,26 +503,24 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDark 
-              ? Colors.purple.shade900.withOpacity(0.2) 
-              : Colors.purple.shade50.withOpacity(0.5),
+            decoration: BoxDecoration(
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+              color: const Color(0xFF7C3AED).withOpacity(0.12),
             ),
           ),
           child: DropdownButton<String>(
             value: _commentFilter,
             underline: const SizedBox(),
             isDense: true,
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_drop_down,
-              color: isDark ? Colors.purple.shade200 : Colors.purple.shade600,
+              color: Color(0xFF7C3AED),
             ),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+              color: Color(0xFF7C3AED),
               fontWeight: FontWeight.w500,
             ),
             dropdownColor: isDark ? Colors.grey.shade900 : Colors.white,
@@ -532,15 +555,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentInput(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.white,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           top: BorderSide(
-            color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+            color: theme.dividerColor,
           ),
         ),
       ),
@@ -550,25 +573,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark 
-                  ? Colors.purple.shade900.withOpacity(0.2) 
-                  : Colors.purple.shade50.withOpacity(0.5),
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+                  color: const Color(0xFF7C3AED).withOpacity(0.12),
                 ),
               ),
               child: TextField(
                 controller: _commentController,
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: theme.textTheme.bodyLarge?.color ?? Colors.black87,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Add a comment...',
                   hintStyle: TextStyle(
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
                   ),
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isCollapsed: true,
+                  filled: false,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -578,14 +603,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.purple.shade400,
-                  Colors.purple.shade600,
-                ],
-              ),
+              color: Color(0xFF7C3AED),
             ),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white, size: 20),

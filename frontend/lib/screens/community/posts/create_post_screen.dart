@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/community_provider.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../utils/helpers.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -27,7 +29,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _post() async {
     if (_contentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please write something')));
+      Helpers.showInstantSnackBar(
+        context,
+        const SnackBar(content: Text('Please write something')),
+      );
       return;
     }
     setState(() => _isPosting = true);
@@ -42,7 +47,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (ok) {
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.error ?? 'Failed to post')));
+        Helpers.showInstantSnackBar(
+          context,
+          SnackBar(content: Text(provider.error ?? 'Failed to post')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isPosting = false);
@@ -56,8 +64,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Create Post', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Column(
           children: [
@@ -97,9 +104,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                IconButton(
-                  onPressed: _pickImage,
-                  icon: const Icon(Icons.photo_library, color: Colors.purple),
+                Material(
+                  color: const Color(0xFF7C3AED),
+                  elevation: 4,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _pickImage,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.photo_library, color: Colors.white, size: 20),
+                    ),
+                  ),
                 ),
                 Expanded(child: Container()),
                 ElevatedButton(

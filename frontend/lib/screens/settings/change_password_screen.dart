@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../utils/helpers.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/app_form_card.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -36,13 +38,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('Password changed successfully')),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(content: Text(e.toString())),
       );
     } finally {
@@ -56,8 +60,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Change Password', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
@@ -82,7 +85,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

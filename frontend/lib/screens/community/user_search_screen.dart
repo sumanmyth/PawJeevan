@@ -68,12 +68,12 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
             color: (isDark ? Colors.grey.shade900 : Colors.white).withOpacity(0.95),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+              color: const Color.fromRGBO(124, 58, 237, 0.3),
               width: 1.5,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Colors.purple.withOpacity(0.1),
+                color: Color.fromRGBO(124, 58, 237, 0.1),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -85,18 +85,18 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
               // Header with search field
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  border: Border(
+                decoration: const BoxDecoration(
+                    border: Border(
                     bottom: BorderSide(
-                      color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+                      color: Color.fromRGBO(124, 58, 237, 0.3),
                     ),
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.search,
-                      color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                      color: Color(0xFF7C3AED),
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -144,11 +144,11 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
               // Results area
               Flexible(
                 child: _isLoading
-                    ? Center(
+                    ? const Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(32),
+                          padding: EdgeInsets.all(32),
                           child: CircularProgressIndicator(
-                            color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                            color: Color(0xFF7C3AED),
                           ),
                         ),
                       )
@@ -183,18 +183,18 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.person_search,
                                         size: 64,
-                                        color: (isDark ? Colors.purple.shade300 : Colors.purple.shade400).withOpacity(0.5),
+                                        color: Color.fromRGBO(124, 58, 237, 0.5),
                                       ),
                                       const SizedBox(height: 16),
-                                      Text(
+                                      const Text(
                                         'Search for users',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
-                                          color: isDark ? Colors.purple.shade300 : Colors.purple.shade700,
+                                          color: Color(0xFF7C3AED),
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -217,18 +217,18 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.search_off,
                                             size: 64,
-                                            color: (isDark ? Colors.purple.shade300 : Colors.purple.shade400).withOpacity(0.5),
+                                            color: Color.fromRGBO(124, 58, 237, 0.5),
                                           ),
                                           const SizedBox(height: 16),
-                                          Text(
+                                          const Text(
                                             'No users found',
                                             style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w600,
-                                              color: isDark ? Colors.purple.shade300 : Colors.purple.shade700,
+                                              color: Color(0xFF7C3AED),
                                             ),
                                           ),
                                           const SizedBox(height: 8),

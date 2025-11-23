@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../utils/helpers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/store_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../models/pet/adoption_listing_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
+import '../../../widgets/app_form_card.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -108,7 +111,8 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
 
     // Only require image for new adoption (not when editing)
     if (_selectedImage == null && widget.adoption == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(
           content: Text('Please select a photo of the pet'),
           backgroundColor: Colors.red,
@@ -160,7 +164,8 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text(isEditing ? 'Pet updated successfully!' : 'Pet added for adoption successfully!'),
             backgroundColor: Colors.green,
@@ -168,7 +173,8 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
         );
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to ${isEditing ? "update" : "add"} pet: ${storeProvider.error ?? "Unknown error"}'),
             backgroundColor: Colors.red,
@@ -177,7 +183,8 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(
           content: Text('Error: $e'),
           backgroundColor: Colors.red,
@@ -204,9 +211,9 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
         title: isEditing ? 'Edit Pet Listing' : 'Add Pet for Adoption',
         showBackButton: true,
       ),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+        maxWidth: 900,
         child: Form(
           key: _formKey,
           child: Column(
@@ -251,7 +258,7 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
               const SizedBox(height: 16),
 
               // Pet Type
-              DropdownButtonFormField<String>(
+              AppDropdownFormField<String>(
                 initialValue: _selectedPetType,
                 decoration: const InputDecoration(
                   labelText: 'Pet Type *',
@@ -307,7 +314,7 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
+                    child: AppDropdownFormField<String>(
                       initialValue: _selectedGender,
                       decoration: const InputDecoration(
                         labelText: 'Gender *',
@@ -391,7 +398,7 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
                     _isNeutered = value;
                   });
                 },
-                activeThumbColor: const Color(0xFF6B46C1),
+                activeThumbColor: const Color(0xFF7C3AED),
               ),
               const SizedBox(height: 16),
 
@@ -469,7 +476,7 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6B46C1),
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -594,24 +601,20 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
   }
 
   Widget _buildPlaceholder(ThemeData theme) {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.add_photo_alternate,
             size: 64,
-            color: theme.brightness == Brightness.dark
-                ? Colors.grey.shade600
-                : Colors.grey.shade400,
+            color: Color(0xFF7C3AED),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Tap to select a photo',
             style: TextStyle(
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey.shade400
-                  : Colors.grey.shade600,
+              color: Color(0xFF7C3AED),
               fontSize: 14,
             ),
           ),

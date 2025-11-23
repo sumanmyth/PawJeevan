@@ -56,28 +56,28 @@ class ManagePetModal {
   static Widget _buildHeader(dynamic adoption, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
           colors: [
-            const Color(0xFF6B46C1).withOpacity(0.1),
-            const Color(0xFF6B46C1).withOpacity(0.05),
+            Color.fromRGBO(124, 58, 237, 0.1),
+            Color.fromRGBO(124, 58, 237, 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6B46C1).withOpacity(0.2),
+              decoration: BoxDecoration(
+              color: const Color.fromRGBO(124, 58, 237, 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+                    child: const Icon(
               Icons.pets,
-              color: Color(0xFF6B46C1),
+              color: Color(0xFF7C3AED),
               size: 24,
             ),
           ),
@@ -124,11 +124,11 @@ class ManagePetModal {
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6B46C1).withOpacity(0.08),
+              decoration: BoxDecoration(
+              color: const Color.fromRGBO(124, 58, 237, 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFF6B46C1).withOpacity(0.2),
+                color: const Color.fromRGBO(124, 58, 237, 0.2),
                 width: 1,
               ),
             ),
@@ -137,12 +137,12 @@ class ManagePetModal {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6B46C1).withOpacity(0.2),
+                    color: const Color.fromRGBO(124, 58, 237, 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.edit,
-                    color: Color(0xFF6B46C1),
+                    color: Color(0xFF7C3AED),
                     size: 20,
                   ),
                 ),

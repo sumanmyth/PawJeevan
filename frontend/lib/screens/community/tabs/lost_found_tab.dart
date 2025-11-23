@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import '../../../models/pet/lost_found_model.dart';
 import '../lost_found/lost_found_detail_screen.dart';
 import '../lost_found/edit_lost_found_screen.dart';
+import '../../../utils/helpers.dart';
 
 class LostFoundTab extends StatefulWidget {
   final void Function(VoidCallback)? onRefreshCallbackRegistered;
@@ -191,13 +192,15 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
         });
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             const SnackBar(content: Text('Report deleted successfully')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Error deleting report: $e')),
           );
         }
@@ -235,7 +238,8 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
         });
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Status updated to $newStatus')),
           );
         }
@@ -245,7 +249,8 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
     } catch (e) {
       print('Error updating status: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Error updating status: $e'),
             duration: const Duration(seconds: 5),
@@ -387,7 +392,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                           labelColor: Colors.white,
                           unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
                           indicator: BoxDecoration(
-                            color: Colors.purple,
+                            color: const Color(0xFF7C3AED),
                             borderRadius: BorderRadius.circular(25),
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,

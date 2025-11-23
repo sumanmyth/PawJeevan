@@ -53,7 +53,7 @@ class PetInfoTab extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

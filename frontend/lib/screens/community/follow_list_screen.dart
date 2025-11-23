@@ -4,6 +4,7 @@ import '../../providers/community_provider.dart';
 import '../../models/user/user_model.dart';
 import '../profile/user_profile_screen.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../utils/helpers.dart';
 
 class FollowListScreen extends StatefulWidget {
   final int userId;
@@ -80,10 +81,11 @@ class _FollowListScreenState extends State<FollowListScreen> {
         if (errorText.contains('locked') || errorText.contains('private') || errorText.contains('403')) {
           _errorMessage = 'This profile is locked.\n${widget.isFollowers ? 'Followers' : 'Following'} list is private.';
         } else {
-          _errorMessage = 'Failed to load ${widget.title.toLowerCase()}';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+            _errorMessage = 'Failed to load ${widget.title.toLowerCase()}';
+            Helpers.showInstantSnackBar(
+              context,
+              SnackBar(content: Text('Error: $e')),
+            );
         }
       }
     } finally {
@@ -110,15 +112,22 @@ class _FollowListScreenState extends State<FollowListScreen> {
               controller: _searchController,
               autofocus: true,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 18,
               ),
-              decoration: const InputDecoration(
-                hintText: 'Search followers...',
-                hintStyle: TextStyle(
-                  color: Colors.white70,
+              decoration: InputDecoration(
+                hintText: 'Search ${widget.title.toLowerCase()}...',
+                hintStyle: const TextStyle(
+                  color: Colors.black45,
                 ),
-                border: InputBorder.none,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+                isDense: true,
               ),
             )
           : Column(
@@ -170,33 +179,25 @@ class _FollowListScreenState extends State<FollowListScreen> {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isDark 
-                              ? Colors.purple.shade900.withOpacity(0.3) 
-                              : Colors.purple.shade50,
+                            color: const Color.fromRGBO(124, 58, 237, 0.3),
                             border: Border.all(
-                              color: isDark 
-                                ? Colors.purple.shade300.withOpacity(0.3) 
-                                : Colors.purple.shade200,
+                              color: const Color.fromRGBO(124, 58, 237, 0.3),
                               width: 2,
                             ),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.lock_outline,
                             size: 64,
-                            color: isDark 
-                              ? Colors.purple.shade200 
-                              : Colors.purple.shade400,
+                            color: Color(0xFF7C3AED),
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Text(
+                        const Text(
                           'Profile Locked',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w500,
-                            color: isDark 
-                              ? Colors.purple.shade200 
-                              : Colors.purple.shade800,
+                            color: Color(0xFF7C3AED),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -206,8 +207,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             color: isDark 
-                              ? Colors.purple.shade300.withOpacity(0.8) 
-                              : Colors.purple.shade600,
+                              ? const Color.fromRGBO(124, 58, 237, 0.8) 
+                              : const Color(0xFF7C3AED),
                           ),
                         ),
                       ],
@@ -228,36 +229,32 @@ class _FollowListScreenState extends State<FollowListScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isDark 
-                                  ? Colors.purple.shade900.withOpacity(0.3) 
-                                  : Colors.purple.shade50,
+                                  ? const Color.fromRGBO(124, 58, 237, 0.3) 
+                                  : const Color(0xFF7C3AED),
                                 border: Border.all(
                                   color: isDark 
-                                    ? Colors.purple.shade300.withOpacity(0.3) 
-                                    : Colors.purple.shade200,
+                                    ? const Color.fromRGBO(124, 58, 237, 0.3) 
+                                    : const Color(0xFF7C3AED),
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
-                                _searchController.text.isNotEmpty 
-                                  ? Icons.search_off
-                                  : widget.isFollowers ? Icons.group_off : Icons.person_off,
-                                size: 64,
-                                color: isDark 
-                                  ? Colors.purple.shade200 
-                                  : Colors.purple.shade400,
-                              ),
+                                  _searchController.text.isNotEmpty 
+                                    ? Icons.search_off
+                                    : widget.isFollowers ? Icons.group_off : Icons.person_off,
+                                  size: 64,
+                                  color: isDark ? const Color(0xFF7C3AED) : Colors.white,
+                                ),
                             ),
                             const SizedBox(height: 24),
                             Text(
                               _searchController.text.isNotEmpty 
                                 ? 'No results found'
                                 : 'No ${widget.title.toLowerCase()} yet',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
-                                color: isDark 
-                                  ? Colors.purple.shade200 
-                                  : Colors.purple.shade800,
+                                color: Color(0xFF7C3AED),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -270,9 +267,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
-                                color: isDark 
-                                  ? Colors.purple.shade300.withOpacity(0.8) 
-                                  : Colors.purple.shade600,
+                                color: isDark ? const Color.fromRGBO(124, 58, 237, 0.8) : const Color(0xFF7C3AED),
                               ),
                             ),
                           ],
@@ -294,12 +289,12 @@ class _FollowListScreenState extends State<FollowListScreen> {
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
                                 color: isDark 
-                                  ? Colors.purple.shade300.withOpacity(0.3) 
-                                  : Colors.purple.shade200,
+                                  ? const Color.fromRGBO(124, 58, 237, 0.3) 
+                                  : const Color(0xFF7C3AED),
                               ),
                             ),
                             color: isDark 
-                              ? Colors.purple.shade900.withOpacity(0.2) 
+                              ? const Color.fromRGBO(124, 58, 237, 0.2) 
                               : Colors.white,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12),
@@ -320,25 +315,23 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                           color: isDark 
-                                            ? Colors.purple.shade300 
-                                            : Colors.purple.shade200,
+                                            ? const Color(0xFF7C3AED) 
+                                            : const Color(0xFF7C3AED),
                                           width: 2,
                                         ),
                                       ),
                                       child: CircleAvatar(
                                         radius: 26,
-                                        backgroundColor: isDark 
-                                          ? Colors.purple.shade800 
-                                          : Colors.purple.shade50,
+                                          backgroundColor: isDark 
+                                            ? const Color(0xFF7C3AED) 
+                                            : const Color(0xFF7C3AED),
                                         backgroundImage: user.avatarUrl != null 
                                           ? NetworkImage(user.avatarUrl!) 
                                           : null,
                                         child: user.avatarUrl == null
-                                          ? Icon(Icons.person, 
+                                          ? const Icon(Icons.person, 
                                               size: 30,
-                                              color: isDark 
-                                                ? Colors.purple.shade200 
-                                                : Colors.purple.shade400)
+                                              color: Color(0xFF7C3AED))
                                           : null,
                                       ),
                                     ),
@@ -355,7 +348,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                               fontWeight: FontWeight.bold,
                                               color: isDark 
                                                 ? Colors.white 
-                                                : Colors.purple.shade900,
+                                                : const Color(0xFF7C3AED),
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -364,8 +357,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: isDark 
-                                                ? Colors.purple.shade200 
-                                                : Colors.purple.shade600,
+                                                ? const Color(0xFF7C3AED) 
+                        : const Color(0xFF7C3AED),
                                             ),
                                           ),
                                           if (user.bio?.isNotEmpty ?? false) ...[
@@ -377,8 +370,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: isDark 
-                                                  ? Colors.purple.shade200.withOpacity(0.8) 
-                                                  : Colors.purple.shade700,
+                                                  ? const Color.fromRGBO(124, 58, 237, 0.8) 
+                                                  : const Color(0xFF7C3AED),
                                               ),
                                             ),
                                           ],
@@ -389,8 +382,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
                                     Icon(
                                       Icons.chevron_right,
                                       color: isDark 
-                                        ? Colors.purple.shade300 
-                                        : Colors.purple.shade400,
+                                        ? const Color(0xFF7C3AED) 
+                                        : const Color(0xFF7C3AED),
                                     ),
                                   ],
                                 ),

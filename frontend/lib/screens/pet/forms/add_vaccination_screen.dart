@@ -1,7 +1,9 @@
+import '../../../utils/helpers.dart';
 import 'package:flutter/material.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../services/pet_service.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_form_card.dart';
 
 class AddVaccinationScreen extends StatefulWidget {
   final int petId;
@@ -63,15 +65,17 @@ class _AddVaccinationScreenState extends State<AddVaccinationScreen> {
       await _service.addVaccination(widget.petId, v);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vaccination added')),
-      );
+          Helpers.showInstantSnackBar(
+            context,
+            const SnackBar(content: Text('Vaccination added')),
+          );
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+          Helpers.showInstantSnackBar(
+            context,
+            SnackBar(content: Text('Error: $e')),
+          );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -83,8 +87,7 @@ class _AddVaccinationScreenState extends State<AddVaccinationScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Add Vaccination', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
@@ -153,7 +156,7 @@ class _AddVaccinationScreenState extends State<AddVaccinationScreen> {
                       : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

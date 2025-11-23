@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../utils/helpers.dart';
 
 class EditPetScreen extends StatefulWidget {
   final PetModel pet;
@@ -124,18 +127,21 @@ class _EditPetScreenState extends State<EditPetScreen> {
       if (!mounted) return;
 
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Pet updated successfully!')),
         );
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(provider.error ?? 'Failed to update pet')),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
@@ -156,9 +162,9 @@ class _EditPetScreenState extends State<EditPetScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Edit Pet', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+        maxWidth: 720,
         child: Form(
           key: _formKey,
           child: Column(
@@ -169,16 +175,16 @@ class _EditPetScreenState extends State<EditPetScreen> {
                   height: 140,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.purple.shade50,
+                    color: const Color.fromRGBO(124, 58, 237, 0.04),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.purple.shade100),
+                    border: Border.all(color: const Color.fromRGBO(124, 58, 237, 0.08)),
                     image: preview != null ? DecorationImage(image: preview, fit: BoxFit.cover) : null,
                   ),
                   child: preview == null
                       ? const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, color: Colors.purple),
+                            Icon(Icons.add_a_photo, color: Color(0xFF7C3AED)),
                             SizedBox(height: 8),
                             Text('Tap to change photo'),
                           ],
@@ -202,7 +208,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: DropdownButtonFormField<String>(
+                    child: AppDropdownFormField<String>(
                       initialValue: _petType,
                       items: const [
                         DropdownMenuItem(value: 'dog', child: Text('Dog')),
@@ -222,17 +228,17 @@ class _EditPetScreenState extends State<EditPetScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
+                    child: AppDropdownFormField<String>(
                       initialValue: _gender,
                       items: const [
                         DropdownMenuItem(value: 'male', child: Text('Male')),
                         DropdownMenuItem(value: 'female', child: Text('Female')),
                       ],
                       onChanged: (v) => setState(() => _gender = v ?? 'male'),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Gender',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.male),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: Icon(_gender == 'male' ? Icons.male : Icons.female),
                       ),
                     ),
                   ),
@@ -335,7 +341,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
                       : const Icon(Icons.save),
                   label: Text(_isSubmitting ? 'Saving...' : 'Save Changes'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../services/pet_service.dart';
+import '../../../utils/helpers.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
+import '../../../widgets/app_form_card.dart';
 
 class EditMedicalRecordScreen extends StatefulWidget {
   final MedicalRecordModel record;
@@ -71,13 +74,15 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
       );
       await _service.updateMedicalRecord(widget.record.id!, updated);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('Medical record updated')),
       );
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
@@ -92,14 +97,13 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
       extendBodyBehindAppBar: true,
       appBar:
           const CustomAppBar(title: 'Edit Medical Record', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<String>(
+              AppDropdownFormField<String>(
                 initialValue: _recordType,
                 items: const [
                   DropdownMenuItem(value: 'checkup', child: Text('Checkup')),
@@ -182,7 +186,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
                       : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

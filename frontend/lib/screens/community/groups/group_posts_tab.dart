@@ -7,6 +7,7 @@ import '../../../models/community/group_model.dart';
 import '../../../models/community/group_post_model.dart';
 import '../../../services/community_service.dart';
 import '../../profile/user_profile_screen.dart';
+import '../../../utils/helpers.dart';
 
 class GroupPostsTab extends StatefulWidget {
   final Group group;
@@ -136,10 +137,11 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Post created successfully'),
-            backgroundColor: Color(0xFF6750A4),
+            backgroundColor: Color(0xFF7C3AED),
           ),
         );
       }
@@ -149,7 +151,8 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
         _isLoadingPosts = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to create post: $e'),
             backgroundColor: Colors.red,
@@ -186,17 +189,19 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
       await _fetchGroupPosts();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Post deleted successfully'),
-            backgroundColor: Color(0xFF6750A4),
+            backgroundColor: Color(0xFF7C3AED),
           ),
         );
       }
     } catch (e) {
       print('Error deleting post: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to delete post: $e'),
             backgroundColor: Colors.red,
@@ -212,17 +217,19 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
       await _fetchGroupPosts();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text(isPinned ? 'Post pinned' : 'Post unpinned'),
-            backgroundColor: const Color(0xFF6750A4),
+            backgroundColor: const Color(0xFF7C3AED),
           ),
         );
       }
     } catch (e) {
       print('Error toggling pin: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to ${post.isPinned ? "unpin" : "pin"} post: $e'),
             backgroundColor: Colors.red,
@@ -356,7 +363,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                   child: IconButton(
                     icon: const Icon(
                       Icons.image_rounded,
-                      color: Color(0xFF6750A4),
+                      color: Color(0xFF7C3AED),
                     ),
                     onPressed: _pickImage,
                   ),
@@ -389,7 +396,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                 Container(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                      colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.9)],
                     ),
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -455,7 +462,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                         ? Text(
                             post.authorUsername[0].toUpperCase(),
                             style: const TextStyle(
-                              color: Color(0xFF6750A4),
+                              color: Color(0xFF7C3AED),
                               fontWeight: FontWeight.bold,
                             ),
                           )
@@ -490,7 +497,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF6750A4).withOpacity(0.1),
+                                  color: const Color(0xFF7C3AED).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Row(
@@ -498,7 +505,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                                     Icon(
                                       Icons.push_pin,
                                       size: 12,
-                                      color: Color(0xFF6750A4),
+                                      color: Color(0xFF7C3AED),
                                     ),
                                     SizedBox(width: 4),
                                     Text(
@@ -506,7 +513,7 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF6750A4),
+                                        color: Color(0xFF7C3AED),
                                       ),
                                     ),
                                   ],

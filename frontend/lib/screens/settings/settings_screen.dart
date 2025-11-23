@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+// Ensure these imports point to your actual file locations
 import '../../providers/settings_provider.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../utils/helpers.dart';
 import '../profile/edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
@@ -12,15 +14,18 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure your SettingsProvider is properly registered in main.dart
     final settings = context.watch<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Calculate padding to avoid content hiding behind transparent AppBars
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Settings', showBackButton: true),
       body: ListView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         children: [
           const _Header(title: 'Notifications'),
@@ -58,24 +63,25 @@ class SettingsScreen extends StatelessWidget {
                 onChanged: (v) async {
                   try {
                     await context.read<SettingsProvider>().setProfileLocked(v);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      if (context.mounted) {
+                      Helpers.showInstantSnackBar(
+                        context,
                         SnackBar(
                           content: Text(v 
-                            ? 'Profile locked. Your posts, followers, and following are now private.' 
-                            : 'Profile unlocked. Your posts, followers, and following are now public.'),
+                            ? 'Profile locked. Your posts are now private.' 
+                            : 'Profile unlocked. Your posts are now public.'),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                       );
                     }
                   } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      if (context.mounted) {
+                      Helpers.showInstantSnackBar(
+                        context,
                         SnackBar(
                           content: Text('Failed to update: $e'),
                           behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                       );
                     }
@@ -123,12 +129,9 @@ class SettingsScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const PaymentMethodScreen()),
                   );
                   if (updated == true && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Payment method updated'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
+                    Helpers.showInstantSnackBar(
+                      context,
+                      const SnackBar(content: Text('Payment method updated')),
                     );
                   }
                 },
@@ -153,12 +156,9 @@ class SettingsScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const EditProfileScreen()),
                   );
                   if (ok == true && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Profile updated'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
+                    Helpers.showInstantSnackBar(
+                      context,
+                      const SnackBar(content: Text('Profile updated')),
                     );
                   }
                 },
@@ -212,15 +212,10 @@ class SettingsScreen extends StatelessWidget {
             final selected = (settings.language == lang);
             return ListTile(
               title: Text(lang),
-              trailing: selected ? const Icon(Icons.check, color: Colors.purple) : null,
+              trailing: selected ? const Icon(Icons.check, color: Color(0xFF7C3AED)) : null,
               onTap: () async {
                 await settings.setLanguage(lang);
                 if (ctx.mounted) Navigator.pop(ctx);
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Language saved (restart may be required)')),
-                  );
-                }
               },
             );
           },
@@ -243,14 +238,13 @@ class _Header extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    // Removed unused 'isDark' variable
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
       child: Text(
         title,
-        style: TextStyle(
-          color: isDark ? Colors.purple.shade300 : Colors.purple.shade700,
+        style: const TextStyle(
+          color: Color(0xFF7C3AED),
           fontWeight: FontWeight.bold,
           fontSize: 15,
           letterSpacing: 0.5,
@@ -278,13 +272,13 @@ class _SettingsCard extends StatelessWidget {
           : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.3),
+          color: const Color.fromRGBO(124, 58, 237, 0.3),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.05),
+            color: Color.fromRGBO(124, 58, 237, 0.05),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -320,12 +314,15 @@ class _ModernListTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: (isDark ? Colors.purple.shade800 : Colors.purple.shade50).withOpacity(0.8),
+                // FIXED: Changed opacity from 0.8 to 0.1. 
+                // Before: Purple background + Purple icon = Invisible icon.
+                // Now: Light Purple tint background + Purple icon = Visible.
+                color: const Color(0xFF7C3AED).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                color: const Color(0xFF7C3AED),
                 size: 24,
               ),
             ),
@@ -390,12 +387,13 @@ class _ModernSwitchTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.purple.shade800 : Colors.purple.shade50).withOpacity(0.8),
+               // FIXED: Changed opacity from 0.8 to 0.1 for visibility
+              color: const Color(0xFF7C3AED).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+              color: const Color(0xFF7C3AED),
               size: 24,
             ),
           ),
@@ -428,7 +426,7 @@ class _ModernSwitchTile extends StatelessWidget {
             child: Switch.adaptive(
               value: value,
               onChanged: onChanged,
-              activeColor: Colors.purple.shade400,
+              activeColor: const Color(0xFF7C3AED),
             ),
           ),
         ],
@@ -444,11 +442,11 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
+    return const Divider(
       height: 1,
       thickness: 1,
       indent: 70,
-      color: (isDark ? Colors.purple.shade300 : Colors.purple.shade200).withOpacity(0.2),
+      color: Color.fromRGBO(124, 58, 237, 0.2),
     );
   }
 }

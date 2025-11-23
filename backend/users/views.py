@@ -7,7 +7,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
-from .models import User, PetProfile, VaccinationRecord, MedicalRecord, Notification
+from .models import User, PetProfile, VaccinationRecord, MedicalRecord, Notification, ScheduledNotification
 from .serializers import (
     UserSerializer, UserRegistrationSerializer, PetProfileSerializer,
     VaccinationRecordSerializer, MedicalRecordSerializer, NotificationSerializer
@@ -182,6 +182,37 @@ class VaccinationRecordViewSet(viewsets.ModelViewSet):
         try:
             pet = PetProfile.objects.get(id=pet_id, owner=self.request.user)
             serializer.save(pet=pet)
+            # Schedule vaccination reminder if next_due_date provided
+            record = serializer.instance
+            if record.next_due_date:
+                try:
+                    from datetime import datetime, time, timedelta
+                    from django.utils import timezone as dj_timezone
+                    tz = dj_timezone.get_current_timezone()
+                    send_date = record.next_due_date - timedelta(days=1)
+                    send_dt = datetime.combine(send_date, time(hour=9, minute=0))
+                    send_at = dj_timezone.make_aware(send_dt, tz)
+                    now = dj_timezone.now()
+                    if send_at > now:
+                        exists = ScheduledNotification.objects.filter(
+                            user=record.pet.owner,
+                            notification_type='vaccination',
+                            action_url=f'/pets/{record.pet.id}/vaccinations/{record.id}/',
+                            send_at=send_at,
+                            processed=False
+                        ).exists()
+                        if not exists:
+                            ScheduledNotification.objects.create(
+                                user=record.pet.owner,
+                                notification_type='vaccination',
+                                title=f'Vaccination due: {record.vaccine_name}',
+                                message=f'{record.pet.name} has a vaccination due on {record.next_due_date}.',
+                                action_url=f'/pets/{record.pet.id}/',
+                                send_at=send_at
+                            )
+                except Exception:
+                    # scheduling failure should not block the API
+                    pass
         except PetProfile.DoesNotExist:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You can only add vaccinations to your own pets.")
@@ -192,6 +223,36 @@ class VaccinationRecordViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You can only update vaccinations of your own pets.")
         serializer.save()
+        # After update, (re)schedule vaccination reminder if next_due_date present
+        try:
+            record = serializer.instance
+            if record.next_due_date:
+                from datetime import datetime, time, timedelta
+                from django.utils import timezone as dj_timezone
+                tz = dj_timezone.get_current_timezone()
+                send_date = record.next_due_date - timedelta(days=1)
+                send_dt = datetime.combine(send_date, time(hour=9, minute=0))
+                send_at = dj_timezone.make_aware(send_dt, tz)
+                now = dj_timezone.now()
+                if send_at > now:
+                    exists = ScheduledNotification.objects.filter(
+                        user=record.pet.owner,
+                        notification_type='vaccination',
+                        action_url=f'/pets/{record.pet.id}/vaccinations/{record.id}/',
+                        send_at=send_at,
+                        processed=False
+                    ).exists()
+                    if not exists:
+                        ScheduledNotification.objects.create(
+                            user=record.pet.owner,
+                            notification_type='vaccination',
+                            title=f'Vaccination due: {record.vaccine_name}',
+                            message=f'{record.pet.name} has a vaccination due on {record.next_due_date}.',
+                            action_url=f'/pets/{record.pet.id}/',
+                            send_at=send_at
+                        )
+        except Exception:
+            pass
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -242,7 +303,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         ctx["request"] = self.request
         return ctx
         
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post', 'patch'])
     def mark_read(self, request, pk=None):
         """Mark a notification as read"""
         notification = self.get_object()

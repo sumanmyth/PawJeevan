@@ -6,6 +6,7 @@ import '../../../models/community/group_model.dart';
 import '../../../models/community/group_message_model.dart';
 import '../../../utils/constants.dart';
 import '../../profile/user_profile_screen.dart';
+import '../../../utils/helpers.dart';
 
 class GroupChatTab extends StatefulWidget {
   final Group group;
@@ -109,7 +110,8 @@ class _GroupChatTabState extends State<GroupChatTab> {
       await _fetchMessages();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('Error sending message: $e')),
         );
       }
@@ -211,11 +213,11 @@ class _GroupChatTabState extends State<GroupChatTab> {
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7C3AED), Color(0xFF7C3AED)],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                borderRadius: BorderRadius.circular(24),
-              ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -280,16 +282,16 @@ class _GroupChatTabState extends State<GroupChatTab> {
                   ),
                 );
               },
-              child: CircleAvatar(
+                child: CircleAvatar(
                 radius: 16,
-                backgroundColor: Colors.purple[100],
+                backgroundColor: const Color.fromRGBO(124, 58, 237, 0.1),
                 backgroundImage: message.senderAvatar != null && message.senderAvatar!.isNotEmpty
                     ? NetworkImage(message.senderAvatar!)
                     : null,
                 child: message.senderAvatar == null || message.senderAvatar!.isEmpty
                     ? Text(
-                        message.senderName[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
+                        message.senderName.isNotEmpty ? message.senderName[0].toUpperCase() : '',
+                        style: const TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.bold),
                       )
                     : null,
               ),
@@ -313,11 +315,11 @@ class _GroupChatTabState extends State<GroupChatTab> {
                           ),
                         );
                       },
-                      child: Text(
+                        child: Text(
                         message.senderName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.purple[700],
+                          color: Color(0xFF7C3AED),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -327,7 +329,7 @@ class _GroupChatTabState extends State<GroupChatTab> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: isMe 
-                        ? Colors.purple 
+                        ? const Color(0xFF7C3AED) 
                         : (isDark ? Colors.grey[800] : Colors.grey[200]),
                     borderRadius: BorderRadius.circular(16),
                   ),

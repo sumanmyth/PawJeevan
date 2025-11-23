@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/loading_overlay.dart';
+import '../../../widgets/app_form_card.dart';
 import '../../../models/community/group_model.dart';
+import '../../../utils/helpers.dart';
 
 class EditGroupScreen extends StatefulWidget {
   final Group group;
@@ -81,7 +84,8 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
       await ApiService.updateGroup(widget.group.slug, formData);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Group updated successfully!')),
         );
         // Wait a bit for the snackbar to show before popping
@@ -90,7 +94,8 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('Error updating group: $e')),
         );
       }
@@ -114,17 +119,19 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Edit Group',
         showBackButton: true,
       ),
       body: LoadingOverlay(
         isLoading: _isLoading,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
-          padding: const EdgeInsets.all(16.0),
+        child: AppFormCard(
+          padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+          maxWidth: 720,
           child: Form(
             key: _formKey,
             child: Column(
@@ -150,7 +157,14 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                               : null,
                     ),
                     child: _imageBytes == null && (widget.group.coverImage == null || widget.group.coverImage!.isEmpty)
-                        ? Icon(Icons.add_photo_alternate, size: 50, color: isDark ? Colors.grey[400] : Colors.grey[600])
+                        ? const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_photo_alternate, size: 50, color: Color(0xFF7C3AED)),
+                              SizedBox(height: 8),
+                              Text('Add photo', style: TextStyle(color: Color(0xFF7C3AED))),
+                            ],
+                          )
                         : null,
                   ),
                 ),
@@ -184,7 +198,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownFormField<String>(
                   initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Group Type',
@@ -207,6 +221,8 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                   title: const Text('Private Group'),
                   subtitle: const Text('Only approved members can join and view content'),
                   value: _isPrivate,
+                  activeThumbColor: const Color(0xFF7C3AED),
+                  activeTrackColor: const Color.fromRGBO(124, 58, 237, 0.35),
                   onChanged: (bool value) {
                     setState(() {
                       _isPrivate = value;
@@ -219,7 +235,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                     controller: _joinKeyController,
                     decoration: const InputDecoration(
                       labelText: 'Join Key *',
-                      hintText: 'Enter a key for users to join this private group',
+                      hintText: 'Enter join key',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
@@ -234,10 +250,10 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                 ElevatedButton(
                   onPressed: _updateGroup,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                  ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                    ),
                   child: const Text(
                     'Update Group',
                     style: TextStyle(fontSize: 16, color: Colors.white),

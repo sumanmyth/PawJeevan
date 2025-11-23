@@ -47,7 +47,7 @@ class StoreCategoryMenu extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: isSelected 
-                          ? const Color(0xFF6B46C1)
+                          ? const Color(0xFF7C3AED)
                           : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                       borderRadius: BorderRadius.circular(12),
                     ),

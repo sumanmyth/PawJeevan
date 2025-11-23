@@ -4,8 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../../../utils/constants.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../utils/helpers.dart';
 
 class CreateLostFoundScreen extends StatefulWidget {
   const CreateLostFoundScreen({super.key});
@@ -80,7 +83,8 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_dateLostFound == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(content: Text('Please select the date the pet was $_reportType')),
       );
       return;
@@ -136,7 +140,8 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Report created successfully!')),
         );
       }
@@ -149,7 +154,8 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
             errorMessage = data.values.first.toString();
           }
         }
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(errorMessage)),
         );
       }
@@ -178,17 +184,19 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Create Report',
         showBackButton: true,
       ),
       body: LoadingOverlay(
         isLoading: _isLoading,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
-          padding: const EdgeInsets.all(16.0),
+        child: AppFormCard(
+          padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+          maxWidth: 800,
           child: Form(
             key: _formKey,
             child: Column(
@@ -263,17 +271,18 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
                           : null,
                     ),
                     child: _imageBytes == null
-                        ? Column(
+                        ? const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_photo_alternate, 
-                                size: 50, 
-                                color: isDark ? Colors.grey[400] : Colors.grey[600]
+                              Icon(
+                                Icons.add_photo_alternate,
+                                size: 50,
+                                color: Color(0xFF7C3AED),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Text(
                                 'Add Photo',
-                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                                style: TextStyle(color: Color(0xFF7C3AED)),
                               ),
                             ],
                           )
@@ -294,7 +303,7 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
                 const SizedBox(height: 16),
 
                 // Pet Type
-                DropdownButtonFormField<String>(
+                AppDropdownFormField<String>(
                   initialValue: _petTypeController.text.isEmpty ? null : _petTypeController.text,
                   decoration: const InputDecoration(
                     labelText: 'Pet Type *',
@@ -442,13 +451,13 @@ class _CreateLostFoundScreenState extends State<CreateLostFoundScreen> {
                 ElevatedButton(
                   onPressed: _createReport,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
                   child: const Text(
                     'Create Report',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

@@ -56,7 +56,7 @@ class SearchDialog {
                   style: const TextStyle(fontSize: 16),
                   decoration: InputDecoration(
                     hintText: searchConfig['hint']!,
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF6B46C1)),
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFF7C3AED)),
                     filled: true,
                     fillColor: Theme.of(context).brightness == Brightness.dark
                         ? Colors.grey.shade800.withOpacity(0.5)
@@ -72,7 +72,7 @@ class SearchDialog {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(
-                        color: Color(0xFF6B46C1),
+                        color: Color(0xFF7C3AED),
                         width: 2,
                       ),
                     ),
@@ -131,9 +131,9 @@ class SearchDialog {
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color(0xFF6B46C1),
-                              Color(0xFF9F7AEA),
-                              Color(0xFFB794F6),
+                              Color(0xFF7C3AED),
+                              Color.fromRGBO(124, 58, 237, 0.85),
+                              Color.fromRGBO(124, 58, 237, 0.65),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
