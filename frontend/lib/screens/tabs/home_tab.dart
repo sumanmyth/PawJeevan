@@ -43,7 +43,7 @@ class _HomeTabState extends State<HomeTab> {
       
       await prefs.setBool('has_shown_welcome', true);
       
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 5), () {
         if (mounted) {
           setState(() {
             _showWelcome = false;

@@ -428,7 +428,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                   child: Text(
                     comment.authorUsername,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                       color: primary,
@@ -479,7 +479,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           if (comment.isCurrentUserAuthor)
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.more_vert,
                 color: primary,
               ),

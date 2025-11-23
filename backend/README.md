@@ -37,6 +37,17 @@ Welcome to the backend of PawJeevan! 🚀
    python manage.py runserver
    ```
 
+## Runtime configuration for frontend
+
+- The frontend expects a non-secret runtime configuration endpoint on the backend that returns the Google OAuth client id used for Google Sign-In.
+- Local development: put your Google OAuth client id in the backend `.env` as `GOOGLE_CLIENT_ID` (this file should not be committed).
+- Endpoint: `GET /api/config/google/` — returns JSON `{"google_client_id": "<value>"}`.
+- This keeps the client id out of frontend source control; the frontend fetches it at startup or before sign-in.
+
+## CORS and production notes
+
+- In development `CORS_ALLOW_ALL_ORIGINS = True` is set for convenience. For production set `CORS_ALLOW_ALL_ORIGINS = False` and add your frontend origin(s) to `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` in `pawjeevan_backend/settings.py`.
+
 ## 🔌 API Usage
 - Endpoints are available under `/api/`
 - Media files are served from `/media/`

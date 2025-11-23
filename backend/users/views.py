@@ -6,12 +6,16 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticate
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.db import transaction
 
 from .models import User, PetProfile, VaccinationRecord, MedicalRecord, Notification, ScheduledNotification
 from .serializers import (
     UserSerializer, UserRegistrationSerializer, PetProfileSerializer,
     VaccinationRecordSerializer, MedicalRecordSerializer, NotificationSerializer
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserRegistrationView(generics.CreateAPIView):
@@ -51,6 +55,82 @@ class UserLoginView(generics.GenericAPIView):
                 }
             })
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class SocialLoginView(generics.GenericAPIView):
+    """Accepts a Google ID token from the client, verifies it with Google,
+    creates or fetches a local user, and returns the app JWT tokens.
+    Expected POST body: { "provider": "google", "id_token": "..." }
+    """
+    permission_classes = [AllowAny]
+    parser_classes = [JSONParser]
+
+    @transaction.atomic
+    def post(self, request):
+        provider = request.data.get("provider")
+        if provider != "google":
+            return Response({"error": "Unsupported provider"}, status=status.HTTP_400_BAD_REQUEST)
+
+        id_token_str = request.data.get("id_token")
+        if not id_token_str:
+            return Response({"error": "Missing id_token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify token
+        try:
+            from .utils.social import verify_google_id_token
+            payload = verify_google_id_token(id_token_str)
+        except Exception as e:
+            return Response({"error": "Invalid Google token", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Extract user info
+        email = payload.get("email")
+        google_sub = payload.get("sub")
+        full_name = payload.get("name") or ""
+        picture = payload.get("picture")
+
+        if not email:
+            return Response({"error": "Google token did not contain email"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find or create user
+        user, created = User.objects.get_or_create(email=email, defaults={
+            "username": email.split("@")[0],
+            "first_name": full_name.split(" ")[0] if full_name else "",
+            "last_name": " ".join(full_name.split(" ")[1:]) if full_name and len(full_name.split(" ")) > 1 else "",
+        })
+
+        # Optionally update profile picture or other fields. Download and save
+        # the Google profile image when:
+        #  - the user was just created, or
+        #  - the user exists but has no avatar yet.
+        if picture and hasattr(user, "avatar") and (created or not bool(user.avatar)):
+            try:
+                import requests
+                from django.core.files.base import ContentFile
+
+                resp = requests.get(picture, timeout=5)
+                if resp.status_code == 200 and resp.content:
+                    # Determine a safe extension (fallback to jpg)
+                    ext = picture.split('?')[0].split('.')[-1].lower()
+                    if len(ext) > 4 or '/' in ext or ext == '':
+                        ext = 'jpg'
+                    filename = f'google_{google_sub}.{ext}'
+                    try:
+                        user.avatar.save(filename, ContentFile(resp.content), save=True)
+                        logger.info("Saved Google avatar for user %s", user.email)
+                    except Exception as e:
+                        logger.warning("Failed to save avatar for user %s: %s", user.email, e)
+            except Exception as e:
+                logger.warning("Failed to download Google avatar for %s: %s", user.email, e)
+
+        # Issue tokens using SimpleJWT
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "user": UserSerializer(user, context={"request": request}).data,
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
+        })
 
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -587,10 +587,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(width: 4),
                   Text(
                     '${post.likesCount}',
-                    style: TextStyle(color: primary),
+                    style: const TextStyle(color: primary),
                   ),
                   const SizedBox(width: 20),
-                  Icon(
+                  const Icon(
                     Icons.comment_outlined,
                     size: 18,
                     color: primary,
@@ -598,7 +598,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(width: 4),
                   Text(
                     '${post.commentsCount}',
-                    style: TextStyle(color: primary),
+                    style: const TextStyle(color: primary),
                   ),
                 ],
               ),

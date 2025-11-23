@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,3 +136,14 @@ CSRF_TRUSTED_ORIGINS = [
     # "https://api.your-domain.com",
     # "https://your-domain.com",
 ]
+
+# Social auth configuration (Google)
+# Provide a Google OAuth2 client ID for verifying ID tokens sent from the mobile app.
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
+# Optional: a comma-separated list of allowed OAuth client IDs (web + android clients).
+# If not provided, falls back to the single `GOOGLE_CLIENT_ID` value.
+raw_allowed = config('GOOGLE_ALLOWED_CLIENT_IDS', default='')
+if raw_allowed:
+    GOOGLE_ALLOWED_CLIENT_IDS = [c.strip() for c in raw_allowed.split(',') if c.strip()]
+else:
+    GOOGLE_ALLOWED_CLIENT_IDS = [GOOGLE_CLIENT_ID] if GOOGLE_CLIENT_ID else []

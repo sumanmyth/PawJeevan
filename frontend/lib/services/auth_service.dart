@@ -69,6 +69,30 @@ class AuthService {
     throw Exception('Login failed');
   }
 
+  Future<User> socialLoginGoogle({required String idToken}) async {
+    final resp = await _api.post(
+      ApiConstants.socialLogin,
+      data: {
+        'provider': 'google',
+        'id_token': idToken,
+      },
+    );
+
+    if (resp.statusCode == 200) {
+      final data = resp.data;
+      final user = User.fromJson(data['user']);
+      final access = data['tokens']?['access']?.toString();
+      final refresh = data['tokens']?['refresh']?.toString();
+
+      if (access != null) {
+        await _api.saveToken(access, refreshToken: refresh);
+      }
+      return user;
+    }
+
+    throw Exception('Social login failed');
+  }
+
   Future<User> getProfile() async {
     final resp = await _api.get(ApiConstants.profile);
     if (resp.statusCode == 200) {
@@ -94,6 +118,7 @@ class AuthService {
   }
 
   Future<User> updateProfile({
+    String? username,
     String? firstName,
     String? lastName,
     String? phone,
@@ -101,6 +126,7 @@ class AuthService {
     String? location,
   }) async {
     final data = <String, dynamic>{};
+    if (username != null) data['username'] = username.trim();
     if (firstName != null) data['first_name'] = firstName.trim();
     if (lastName != null) data['last_name'] = lastName.trim();
     if (phone != null) data['phone'] = phone.trim();

@@ -21,6 +21,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   final _firstNameController = TextEditingController();
   final _lastNameController  = TextEditingController();
+  final _usernameController  = TextEditingController();
   final _phoneController     = TextEditingController();
   final _bioController       = TextEditingController();
   final _locationController  = TextEditingController();
@@ -34,6 +35,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final user = context.read<AuthProvider>().user;
+    _usernameController.text  = user?.username ?? '';
     _firstNameController.text = user?.firstName ?? '';
     _lastNameController.text  = user?.lastName ?? '';
     _phoneController.text     = user?.phone ?? '';
@@ -43,6 +45,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneController.dispose();
@@ -92,6 +95,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // 2) Save textual fields (PATCH)
       final ok = await auth.updateProfile(
+        username: _usernameController.text.trim(),
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -184,9 +188,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Read-only username & email
+              // Editable username & read-only email
               if (user != null) ...[
-                _roField(label: 'Username', value: user.username, icon: Icons.person_outline),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Username cannot be empty';
+                    if (v.trim().length < 3) return 'Username is too short';
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 12),
                 _roField(label: 'Email', value: user.email, icon: Icons.email_outlined),
                 const SizedBox(height: 12),

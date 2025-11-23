@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../services/social_auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _auth = AuthService();
@@ -36,7 +37,6 @@ class AuthProvider extends ChangeNotifier {
           _error = null;
         } catch (e) {
           print('Failed to get profile: $e');
-          // If profile fetch fails, clear tokens and user
           await _clearAuthState();
         }
       } else {
@@ -59,14 +59,12 @@ class AuthProvider extends ChangeNotifier {
     await _api.clearTokens();
   }
 
-  // Convert raw exception objects/strings into short, user-friendly messages
   String _friendlyError(Object e) {
     final s = e.toString().toLowerCase();
     if (s.contains('invalid') && s.contains('credential')) return 'Invalid credentials';
     if (s.contains('unauthorized') || s.contains('401')) return 'Invalid credentials';
     if (s.contains('network') || s.contains('socket') || s.contains('timeout')) return 'Network error';
     if (s.contains('not found') || s.contains('404')) return 'Not found';
-    // fallback short message
     return 'Something went wrong';
   }
 
@@ -99,10 +97,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Login and get user data
       _user = await _auth.login(email: email, password: password);
       
-      // Set logged in state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setInt('user_id', _user!.id);
@@ -123,11 +119,49 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
+      // 1. Sign out from Google (This now handles disconnect internally)
+      try {
+        final social = SocialAuthService();
+        await social.signOut(); 
+      } catch (e) {
+        print('Social sign-out error: $e');
+      }
+
+      // 2. Clear local app state
       await _clearAuthState();
     } catch (e) {
       print('Logout error: $e');
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final social = SocialAuthService();
+      final idToken = await social.signInWithGoogle();
+
+      _user = await _auth.socialLoginGoogle(idToken: idToken);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setInt('user_id', _user!.id);
+
+      _error = null;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('Google login error: $e');
+      await _clearAuthState();
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -144,7 +178,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Register and get user data
       _user = await _auth.register(
         username: username,
         email: email,
@@ -154,7 +187,6 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
       );
 
-      // Set logged in state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setInt('user_id', _user!.id);
@@ -174,6 +206,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> updateProfile({
+    String? username,
     String? firstName,
     String? lastName,
     String? phone,
@@ -182,6 +215,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     try {
       final updated = await _auth.updateProfile(
+        username: username,
         firstName: firstName,
         lastName: lastName,
         phone: phone,

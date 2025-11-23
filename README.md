@@ -17,6 +17,8 @@ PawJeevan is a full-stack platform for pet adoption, community engagement, and p
 
 ## 🚀 Getting Started
 - See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md) for setup instructions
+- Note: The frontend loads certain non-secret configuration (like the Google OAuth client id)
+	from the backend at runtime. See `backend/README.md` and `frontend/README.md` for details.
 
 ## 📄 License
 MIT

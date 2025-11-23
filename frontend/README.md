@@ -45,6 +45,20 @@ Flutter mobile application for PawJeevan - Pet Store & AI Care Platform 📱
 - 📱 Responsive design for mobile and web
 - 🔗 Integration with backend REST API
 
+### Runtime configuration (Google client id)
+
+- The frontend no longer hard-codes the Google OAuth client id. Instead the app fetches a non-secret runtime configuration from the backend endpoint:
+
+   - `GET http://<api-host>/api/config/google/`
+   - Response: `{"google_client_id": "<value>"}`
+
+- Local development: ensure the backend is running and that `backend/.env` contains `GOOGLE_CLIENT_ID` (this file is not committed). The frontend calls `ConfigService.init()` at startup to load the value.
+
+- Web: `web/index.html` contains a small script that fetches the backend value and sets the `meta[name="google-signin-client_id"]` tag before the Google sign-in script initializes. For production you may prefer CI-time injection instead of runtime fetch.
+
+### Notes
+- If the frontend cannot reach the backend at startup it will still run, but Google Sign-In will fail until the client id is available. During local development run both backend and frontend.
+
 ## 📦 Deployment
 - 📱 Android, 🍏 iOS, and 🌐 Web supported
 - See official Flutter docs for build and release instructions
