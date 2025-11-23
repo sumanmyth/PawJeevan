@@ -2,34 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/store_provider.dart';
 
-class PetTypeMenu extends StatelessWidget {
-  final List<Map<String, String>> petTypes;
-
-  const PetTypeMenu({
-    super.key,
-    required this.petTypes,
-  });
+class LocationFilterMenu extends StatelessWidget {
+  const LocationFilterMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = context.watch<StoreProvider>();
+    final items = [
+      {'id': 'all', 'label': 'All'},
+      {'id': 'my_city', 'label': 'My City'},
+      {'id': 'my_country', 'label': 'My Country'},
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: petTypes.map((petType) {
-          final isSelected = petType['id'] == provider.selectedPetType;
+        children: items.map((it) {
+          final isSelected = it['id'] == provider.selectedLocationFilter;
           return ChoiceChip(
-            label: Text(petType['label']!),
+            label: Text(it['label']!),
             selected: isSelected,
-            onSelected: (selected) {
-              if (selected) {
-                // Clear search when pet type changes
-                provider.setSearchQuery('');
-                provider.searchAdoptions();
-                provider.setSelectedPetType(petType['id']!);
+            onSelected: (s) {
+              if (s) {
+                provider.setLocationFilter(it['id']!);
               }
             },
             selectedColor: const Color(0xFFE9D8FD),

@@ -120,23 +120,19 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
                         onChanged: (value) => _performSearch(value),
                       ),
                     ),
-                    if (_searchController.text.isNotEmpty)
-                      IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                        ),
-                        onPressed: () {
-                          _searchController.clear();
-                          _performSearch('');
-                        },
-                      ),
                     IconButton(
                       icon: Icon(
-                        Icons.close,
+                        _searchController.text.isNotEmpty ? Icons.clear : Icons.close,
                         color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        if (_searchController.text.isNotEmpty) {
+                          _searchController.clear();
+                          _performSearch('');
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
                     ),
                   ],
                 ),

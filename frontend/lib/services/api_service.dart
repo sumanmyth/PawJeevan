@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import '../utils/file_utils.dart';
 import '../utils/constants.dart';
 import '../models/community/group_model.dart';
 
@@ -49,16 +50,8 @@ class ApiService {
 
       if (groupData['cover_image'] != null && groupData['cover_image'] is XFile) {
         final XFile imageFile = groupData['cover_image'];
-        final bytes = await imageFile.readAsBytes();
-        formData.files.add(
-          MapEntry(
-            'cover_image',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: imageFile.name,
-            ),
-          ),
-        );
+        final mp = await multipartFileFromXFile(imageFile);
+        formData.files.add(MapEntry('cover_image', mp));
       }
 
       final response = await dio.post(
@@ -117,16 +110,8 @@ class ApiService {
 
       if (groupData['cover_image'] != null && groupData['cover_image'] is XFile) {
         final XFile imageFile = groupData['cover_image'];
-        final bytes = await imageFile.readAsBytes();
-        formData.files.add(
-          MapEntry(
-            'cover_image',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: imageFile.name,
-            ),
-          ),
-        );
+        final mp = await multipartFileFromXFile(imageFile);
+        formData.files.add(MapEntry('cover_image', mp));
       }
 
       final response = await dio.put(

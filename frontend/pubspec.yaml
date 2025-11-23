@@ -24,6 +24,7 @@ dependencies:
 
   # Image Picking (from gallery/camera)
   image_picker: ^1.2.0
+  flutter_image_compress: ^2.0.0
 
   # Launching URLs (for email feedback)
   url_launcher: ^6.3.2
@@ -66,3 +67,5 @@ flutter:
 
   assets:
     - assets/icon/
+    - assets/data/countries_cities.json
+    - assets/data/facts.json

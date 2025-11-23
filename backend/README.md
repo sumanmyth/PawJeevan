@@ -108,6 +108,21 @@ Welcome to the backend of PawJeevan! 🚀
    - Move from SQLite to PostgreSQL or another production-ready DB.
    - Set `DEBUG=False`, configure `ALLOWED_HOSTS`, secrets, and secure email settings.
 
+  Maintenance: cleanup expired OutstandingToken rows
+
+  If you're using `djangorestframework-simplejwt` with the `token_blacklist` app, outstanding refresh tokens are recorded in the `OutstandingToken` model. Over time expired rows can accumulate.
+
+  A management command is provided to remove expired `OutstandingToken` rows:
+
+  ```powershell
+  cd backend
+  .\.venv\Scripts\Activate.ps1
+  python manage.py cleanup_expired_tokens --dry-run
+  python manage.py cleanup_expired_tokens
+  ```
+
+  Schedule this command in your production environment (cron, systemd timer, or a scheduled task) to keep the table small.
+
    API
 
    - API endpoints are generally available under `/api/`.

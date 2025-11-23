@@ -41,16 +41,19 @@ class PetHeader extends StatelessWidget {
 
   Widget _buildPetPhoto(BuildContext context, String? url) {
     return GestureDetector(
-      onTap: url != null
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => FullScreenImage(imageUrl: url),
-                ),
-              );
-            }
-          : null,
+        onTap: url != null
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imageUrl: url,
+                      heroTag: 'pet_photo_${pet.id}',
+                    ),
+                  ),
+                );
+              }
+            : null,
       child: Hero(
         tag: 'pet_photo_${pet.id}',
         child: Container(

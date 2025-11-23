@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/country_city_selector.dart';
 import '../../widgets/app_form_card.dart';
 import '../../utils/helpers.dart';
 
@@ -239,10 +240,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(
+                readOnly: true,
+                onTap: () async {
+                  final res = await showCountryCitySelector(context, initialLocation: _locationController.text);
+                  if (res != null) setState(() => _locationController.text = res);
+                },
+                decoration: InputDecoration(
                   labelText: 'Location (optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on_outlined),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.location_on_outlined),
+                  suffixIcon: _locationController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _locationController.clear()),
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 12),

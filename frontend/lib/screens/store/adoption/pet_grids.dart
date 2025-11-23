@@ -28,11 +28,11 @@ class PetGrids {
       return _buildErrorWidget(theme, provider);
     }
 
+    // Apply location filter from provider using the current user's profile location
+    final allFiltered = provider.filteredAdoptionsForLocation(authProvider.user?.location);
     final discoverPets = currentUserId != null
-        ? provider.adoptions
-            .where((adoption) => adoption.poster != currentUserId)
-            .toList()
-        : provider.adoptions;
+      ? allFiltered.where((adoption) => adoption.poster != currentUserId).toList()
+      : allFiltered;
 
     if (discoverPets.isEmpty) {
       return _buildEmptyState(theme, 'No pets available for adoption', 'Check back later for new pets!');

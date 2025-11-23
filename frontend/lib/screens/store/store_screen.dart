@@ -10,7 +10,7 @@ import 'adoption/pet_grids.dart';
 import 'widgets/store_banner.dart';
 import 'widgets/store_tab_selector.dart';
 import 'widgets/store_category_menu.dart';
-import 'widgets/pet_type_menu.dart';
+import 'widgets/filter_button.dart';
 import 'dialogs/search_dialog.dart';
 import 'dialogs/manage_pet_modal.dart';
 import 'utils/banner_manager.dart';
@@ -30,13 +30,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   int _currentTabIndex = 0;
   bool _showBanner = true;
   bool _isCheckingBanner = true;
-  final List<Map<String, String>> _petTypes = [
-    {'id': 'all', 'label': 'All'},
-    {'id': 'dog', 'label': 'Dogs'},
-    {'id': 'cat', 'label': 'Cats'},
-    {'id': 'bird', 'label': 'Birds'},
-    {'id': 'rabbit', 'label': 'Rabbits'},
-  ];
+ 
 
   @override
   void initState() {
@@ -173,7 +167,8 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                   if (_currentTabIndex == 0) ...[
                     _buildSectionHeader('Find Your New Best Friend'),
                     const SizedBox(height: 16),
-                    PetTypeMenu(provider: storeProvider, petTypes: _petTypes),
+                    // Filter button opens a sheet containing the location & type filters
+                    FilterButton(provider: storeProvider),
                     const SizedBox(height: 16),
                     PetGrids.buildAdoptionGrid(
                       context: context,

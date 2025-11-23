@@ -194,7 +194,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                       builder: (context) => EditGroupScreen(group: group),
                     ),
                   );
-                  if (result == true) {
+                  if (result is Group || result == true) {
                     // Small delay to ensure backend has processed the update
                     await Future.delayed(const Duration(milliseconds: 300));
                     _refreshGroups();

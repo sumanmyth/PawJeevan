@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../models/community/event_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../pet/widgets/full_screen_image.dart';
 import '../../../providers/community_provider.dart';
 import '../../profile/user_profile_screen.dart';
 
@@ -43,7 +44,8 @@ class EventDetailScreen extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => FullScreenImage(
                           imageUrl: event.coverImage!,
-                          eventTitle: event.title,
+                          title: event.title,
+                          heroTag: 'event_cover_${event.id}',
                         ),
                       ),
                     );
@@ -384,53 +386,4 @@ class EventDetailScreen extends StatelessWidget {
   }
 }
 
-// Full Screen Image Viewer for Events
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String eventTitle;
 
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.eventTitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(eventTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}

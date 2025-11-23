@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../models/pet/lost_found_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../pet/widgets/full_screen_image.dart';
 import '../../../providers/community_provider.dart';
 import '../../profile/user_profile_screen.dart';
 
@@ -68,6 +69,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                         builder: (context) => FullScreenImage(
                           imageUrl: report.photo!,
                           title: report.petName ?? report.petType,
+                          heroTag: 'lostfound_photo_${report.id}',
                         ),
                       ),
                     );
@@ -525,53 +527,4 @@ class LostFoundDetailScreen extends StatelessWidget {
   }
 }
 
-// Full Screen Image Viewer for Lost & Found (same behavior as events)
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String title;
 
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}

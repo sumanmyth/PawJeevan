@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../models/common/feed_filter.dart';
 import '../../../providers/community_provider.dart';
 import '../../../widgets/post_card.dart';
+import '../../../widgets/post_skeleton.dart';
 
 class FeedTab extends StatefulWidget {
   const FeedTab({super.key});
@@ -166,7 +167,19 @@ class _FeedTabState extends State<FeedTab> {
         
         if (provider.posts.isEmpty) {
           if (provider.isLoading) {
-            mainContent = const Center(child: CircularProgressIndicator());
+            // show skeleton placeholders while loading
+            mainContent = ListView.builder(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 110,
+              ),
+              itemCount: 3,
+              itemBuilder: (context, index) => const PostSkeleton(),
+            );
           } else if (provider.error != null) {
             mainContent = Center(
               child: Column(

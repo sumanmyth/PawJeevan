@@ -9,6 +9,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../community/posts/post_detail_screen.dart';
 import '../community/follow_list_screen.dart';
 import '../../utils/helpers.dart';
+import '../pet/widgets/full_screen_image.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final int userId;
@@ -170,19 +171,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               children: [
                 // Avatar
                 GestureDetector(
-                  onTap: () {
-                    if (user.avatarUrl != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FullScreenImage(
-                            imageUrl: user.avatarUrl!,
-                            tag: 'user_avatar_${user.id}',
+                    onTap: () {
+                      if (user.avatarUrl != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FullScreenImage(
+                              imageUrl: user.avatarUrl!,
+                              heroTag: 'user_avatar_${user.id}',
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                  },
+                        );
+                      }
+                    },
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
@@ -399,10 +400,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF7C3AED),
+                  color: isDark ? Colors.white.withOpacity(0.95) : const Color(0xFF7C3AED),
                 ),
               ),
             ],
@@ -605,103 +606,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String tag;
-
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.tag,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Interactive image viewer with zoom and pan
-          Center(
-            child: InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.white,
-                          size: 64,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Failed to load image',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          error.toString(),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Close button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Material(
-              color: Colors.black.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(30),
-              child: InkWell(
-                onTap: () => Navigator.pop(context),
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

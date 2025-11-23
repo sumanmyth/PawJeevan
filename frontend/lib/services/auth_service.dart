@@ -3,6 +3,8 @@ import '../utils/constants.dart';
 import 'api_service.dart';
 import 'package:dio/dio.dart';
 
+import '../utils/file_utils.dart';
+
 class AuthService {
   final ApiService _api = ApiService();
 
@@ -177,12 +179,15 @@ class AuthService {
       throw Exception('No image provided');
     }
 
-    final form = FormData.fromMap({
-      if (imageBytes != null)
-        'avatar': MultipartFile.fromBytes(imageBytes, filename: fileName ?? 'avatar.jpg')
-      else
-        'avatar': await MultipartFile.fromFile(imagePath!, filename: imagePath.split('/').last),
-    });
+    final data = <String, dynamic>{};
+    if (imageBytes != null) {
+      final mp = await multipartFileFromBytes(imageBytes, fileName ?? 'avatar.jpg');
+      data['avatar'] = mp;
+    } else {
+      final mp = await multipartFileFromPath(imagePath!);
+      data['avatar'] = mp;
+    }
+    final form = FormData.fromMap(data);
 
     final resp = await _api.patch(ApiConstants.profile, data: form);
     if (resp.statusCode == 200) {
