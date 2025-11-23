@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import '../../../utils/helpers.dart';
 import '../../../models/pet/adoption_listing_model.dart';
 import '../../../services/store_service.dart';
 import '../../../widgets/custom_app_bar.dart';
@@ -82,7 +83,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return SingleChildScrollView(
-      physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: EdgeInsets.only(top: topPadding + 16, bottom: 16, left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +272,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           } else {
                             // FIXED: Use 'mounted' (State property) instead of 'context.mounted'
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              Helpers.showInstantSnackBar(
+                                context,
                                 const SnackBar(
                                   content: Text('Could not open phone dialer'),
                                 ),
@@ -295,7 +297,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         return ElevatedButton.icon(
                           onPressed: () {
                             provider.togglePetFavorite(adoption.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            Helpers.showInstantSnackBar(
+                              context,
                               SnackBar(
                                 content: Text(
                                   isFavorite
@@ -311,12 +314,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           label: const Text('Save'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isFavorite
-                                ? const Color(0xFF6B46C1)
-                                : Colors.white,
+                              ? const Color(0xFF7C3AED)
+                              : Colors.white,
                             foregroundColor: isFavorite
-                                ? Colors.white
-                                : const Color(0xFF6B46C1),
-                            side: const BorderSide(color: Color(0xFF6B46C1)),
+                              ? Colors.white
+                              : const Color(0xFF7C3AED),
+                            side: const BorderSide(color: Color(0xFF7C3AED)),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 16,
@@ -343,7 +346,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       label: Text(label),
       backgroundColor: const Color(0xFFE9D8FD),
       labelStyle: const TextStyle(
-        color: Color(0xFF6B46C1),
+        color: Color(0xFF7C3AED),
         fontWeight: FontWeight.w500,
       ),
     );
@@ -402,7 +405,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF6B46C1)),
+          Icon(icon, size: 20, color: const Color(0xFF7C3AED)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

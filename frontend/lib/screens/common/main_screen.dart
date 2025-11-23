@@ -124,12 +124,13 @@ class _MainScreenState extends State<MainScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final fullWidth = constraints.maxWidth;
-          final horizontalPadding = 12.0;
+          const horizontalPadding = 12.0;
           final usableWidth = fullWidth - (horizontalPadding * 2);
 
           double indicatorFactor;
-          if (fullWidth < 360) indicatorFactor = 0.82;
-          else if (fullWidth < 420) indicatorFactor = 0.78;
+          if (fullWidth < 360) {
+            indicatorFactor = 0.82;
+          } else if (fullWidth < 420) indicatorFactor = 0.78;
           else if (fullWidth < 600) indicatorFactor = 0.72;
           else if (fullWidth < 900) indicatorFactor = 0.68;
           else indicatorFactor = 0.60;
@@ -139,7 +140,7 @@ class _MainScreenState extends State<MainScreen> {
           
           double leftPos = horizontalPadding + (_currentIndex * itemWidth) + (itemWidth - indicatorWidth) / 2;
           
-          final Color selectedColor = isDark ? const Color(0xFFB794F6) : const Color(0xFF6B46C1);
+          final Color selectedColor = isDark ? const Color.fromRGBO(124, 58, 237, 0.65) : const Color(0xFF7C3AED);
           final Color unselectedColor = isDark ? Colors.grey.shade300 : Colors.grey.shade700;
 
           return Stack(

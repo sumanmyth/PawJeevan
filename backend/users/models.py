@@ -219,3 +219,26 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} - {self.title} ({self.user.username})"
+
+
+class ScheduledNotification(models.Model):
+    """
+    Scheduled in-app notifications to be sent at a specific time.
+    This allows reliable scheduling (created when user joins an event)
+    and processed by a periodic worker/management command.
+    """
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='scheduled_notifications')
+    notification_type = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    action_url = models.CharField(max_length=500, blank=True)
+    send_at = models.DateTimeField()
+    processed = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['send_at']
+
+    def __str__(self):
+        return f"Scheduled {self.notification_type} for {self.user.username} at {self.send_at}"

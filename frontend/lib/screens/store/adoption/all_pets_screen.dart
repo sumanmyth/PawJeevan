@@ -26,7 +26,7 @@ class AllPetsScreen extends StatelessWidget {
             floating: true,
             snap: true,
             pinned: false,
-            backgroundColor: const Color(0xFF6B46C1),
+            backgroundColor: const Color(0xFF7C3AED),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
@@ -42,8 +42,8 @@ class AllPetsScreen extends StatelessWidget {
               ),
               background: Container(
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                    gradient: LinearGradient(
+                    colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -250,7 +250,7 @@ class AllPetsScreen extends StatelessWidget {
                       child: Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+                            colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85), Color.fromRGBO(124, 58, 237, 0.65)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

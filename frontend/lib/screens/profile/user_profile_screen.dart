@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../community/posts/post_detail_screen.dart';
 import '../community/follow_list_screen.dart';
+import '../../utils/helpers.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final int userId;
@@ -69,7 +70,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('Failed to load user data: $e')),
         );
       }
@@ -102,7 +104,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           : RefreshIndicator(
               onRefresh: _loadUserData,
               child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 padding: EdgeInsets.only(top: topPadding + 16, bottom: 16),
                 child: Column(
                   children: [
@@ -123,10 +125,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF6B46C1),
-            Color(0xFF9F7AEA),
-            Color(0xFFB794F6),
-          ],
+              Color(0xFF7C3AED),
+              Color.fromRGBO(124, 58, 237, 0.85),
+              Color.fromRGBO(124, 58, 237, 0.65),
+            ],
         ),
         borderRadius: BorderRadius.circular(24),
       ),
@@ -183,10 +185,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   },
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Colors.purple.shade300, Colors.purple.shade500],
+                        gradient: LinearGradient(
+                        colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
                       ),
                     ),
                     child: CircleAvatar(
@@ -329,7 +331,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      Helpers.showInstantSnackBar(
+                        context,
                         SnackBar(
                           content: Text('Failed to ${user.isFollowing ? "unfollow" : "follow"} user'),
                         ),
@@ -377,10 +380,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark ? Colors.purple.shade300.withOpacity(0.3) : Colors.purple.shade200,
+              color: isDark ? const Color.fromRGBO(124, 58, 237, 0.3) : const Color(0xFF7C3AED),
               width: 1,
             ),
-            color: isDark ? Colors.purple.shade900.withOpacity(0.2) : Colors.white.withOpacity(0.7),
+            color: isDark ? const Color.fromRGBO(124, 58, 237, 0.2) : Colors.white.withOpacity(0.7),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -390,16 +393,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.purple.shade900,
+                  color: isDark ? Colors.white : const Color(0xFF7C3AED),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
+                  color: Color(0xFF7C3AED),
                 ),
               ),
             ],
@@ -426,22 +429,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark 
-                  ? Colors.purple.shade900.withOpacity(0.3) 
-                  : Colors.purple.shade50,
-                border: Border.all(
-                  color: isDark 
-                    ? Colors.purple.shade300.withOpacity(0.3) 
-                    : Colors.purple.shade200,
-                  width: 2,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.lock_outline, 
-                size: 64, 
-                color: isDark 
-                  ? Colors.purple.shade200 
-                  : Colors.purple.shade400,
+              child: const Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
@@ -451,8 +455,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
                 color: isDark 
-                  ? Colors.purple.shade200 
-                  : Colors.purple.shade800,
+                  ? const Color(0xFF7C3AED) 
+                  : const Color(0xFF7C3AED),
               ),
             ),
             const SizedBox(height: 12),
@@ -462,8 +466,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               style: TextStyle(
                 fontSize: 16,
                 color: isDark 
-                  ? Colors.purple.shade300.withOpacity(0.8) 
-                  : Colors.purple.shade600,
+                  ? const Color.fromRGBO(124, 58, 237, 0.8) 
+                  : const Color(0xFF7C3AED),
               ),
             ),
           ],
@@ -503,22 +507,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildPostCard(BuildContext context, Post post) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final theme = Theme.of(context);
+    const primary = Color(0xFF7C3AED);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: isDark ? 2 : 0,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark
-              ? Colors.purple.shade300.withOpacity(0.3)
-              : Colors.purple.withOpacity(0.3),
-        ),
+        side: BorderSide(color: primary.withOpacity(0.06)),
       ),
-      color: isDark
-          ? Colors.purple.shade900.withOpacity(0.2)
-          : Colors.purple.shade50.withOpacity(0.7),
+      color: theme.cardColor,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -538,43 +537,35 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Text(
                 timeago.format(post.createdAt),
                 style: TextStyle(
-                  color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                  color: primary.withOpacity(0.9),
                   fontSize: 12,
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Content
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.black12 : Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.purple.shade200.withOpacity(0.3)
-                        : Colors.purple.shade100,
-                  ),
+                  border: Border.all(color: primary.withOpacity(0.06)),
                 ),
                 child: Text(
                   post.content,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: isDark ? Colors.purple.shade100 : Colors.purple.shade900,
-                    height: 1.4,
-                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4) ?? const TextStyle(fontSize: 15, height: 1.4),
                 ),
               ),
-              
+
               // Image if available
               if (post.image != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   height: 200,
                   decoration: BoxDecoration(
-                    color: Colors.purple.shade50,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.purple.shade200),
+                    border: Border.all(color: primary.withOpacity(0.06)),
                     image: DecorationImage(
                       image: NetworkImage(post.image!),
                       fit: BoxFit.cover,
@@ -582,38 +573,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 12),
-              
+
               // Stats
               Row(
                 children: [
                   Icon(
                     post.isLiked ? Icons.favorite : Icons.favorite_border,
                     size: 18,
-                    color: post.isLiked
-                        ? Colors.red
-                        : (isDark ? Colors.purple.shade300 : Colors.purple.shade600),
+                    color: post.isLiked ? Colors.red : primary,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${post.likesCount}',
-                    style: TextStyle(
-                      color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
-                    ),
+                    style: TextStyle(color: primary),
                   ),
                   const SizedBox(width: 20),
                   Icon(
                     Icons.comment_outlined,
                     size: 18,
-                    color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
+                    color: primary,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${post.commentsCount}',
-                    style: TextStyle(
-                      color: isDark ? Colors.purple.shade300 : Colors.purple.shade600,
-                    ),
+                    style: TextStyle(color: primary),
                   ),
                 ],
               ),

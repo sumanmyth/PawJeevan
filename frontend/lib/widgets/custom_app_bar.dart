@@ -57,7 +57,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           borderRadius: borderRadius,
           boxShadow: [
             BoxShadow(
-              color: Color(0x4D6B46C1), // Increased opacity slightly for visibility
+              color: Color(0x4D7C3AED), // Increased opacity slightly for visibility
               blurRadius: 20,
               offset: Offset(0, 10),
             ),
@@ -68,11 +68,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF6B46C1).withOpacity(0.92),
-                    const Color(0xFF9F7AEA).withOpacity(0.92),
+                    Color.fromRGBO(124, 58, 237, 0.92),
+                    Color.fromRGBO(159, 122, 234, 0.92),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

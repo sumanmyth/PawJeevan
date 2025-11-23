@@ -39,12 +39,12 @@ class PetTypeMenu extends StatelessWidget {
                 }
               },
               selectedColor: const Color(0xFFE9D8FD),
-              checkmarkColor: const Color(0xFF6B46C1),
+              checkmarkColor: const Color(0xFF7C3AED),
               backgroundColor: theme.brightness == Brightness.dark
                   ? Colors.grey.shade800
                   : Colors.grey.shade200,
               labelStyle: TextStyle(
-                color: isSelected ? const Color(0xFF6B46C1) : theme.textTheme.bodyLarge?.color,
+                color: isSelected ? const Color(0xFF7C3AED) : theme.textTheme.bodyLarge?.color,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),

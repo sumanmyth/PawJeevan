@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter/rendering.dart';
 import '../../../services/api_service.dart';
+import '../../../utils/helpers.dart';
 import '../../../models/community/group_model.dart';
 import '../groups/group_details_screen.dart';
 import '../groups/edit_group_screen.dart';
@@ -154,13 +156,15 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
           _groupsFuture = _fetchGroupsWithDebug();
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             const SnackBar(content: Text('Group deleted successfully')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Error deleting group: $e')),
           );
         }
@@ -245,29 +249,44 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
     
     if (group.isPrivate) {
       // Show dialog to enter join key for private groups
-      joinKey = await showDialog<String>(
+      joinKey = await showGeneralDialog<String>(
         context: context,
-        builder: (context) {
+        barrierDismissible: true,
+        barrierLabel: 'Join Private Group',
+        barrierColor: Colors.black.withOpacity(0.25),
+        transitionDuration: const Duration(milliseconds: 180),
+        pageBuilder: (context, animation, secondaryAnimation) {
           final controller = TextEditingController();
-          return AlertDialog(
-            title: const Text('Join Private Group'),
-            content: TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Enter Join Key',
-                hintText: 'Join key required for private group',
+          return SafeArea(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+              child: Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: const Text('Join Private Group'),
+                    content: TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        labelText: 'Enter Join Key',
+                        hintText: 'Join key required for private group',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, controller.text),
+                        child: const Text('Join'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, controller.text),
-                child: const Text('Join'),
-              ),
-            ],
           );
         },
       );
@@ -283,7 +302,8 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
         _groupsFuture = _fetchGroupsWithDebug();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Successfully joined the group!')),
         );
       }
@@ -315,7 +335,8 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
           errorMessage = 'Network error. Please check your connection.';
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
@@ -324,7 +345,8 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Unable to join group. Please try again.'),
             backgroundColor: Colors.red,
@@ -361,13 +383,15 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
           _groupsFuture = _fetchGroupsWithDebug();
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             const SnackBar(content: Text('Successfully left the group')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Error leaving group: $e')),
           );
         }
@@ -438,7 +462,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
               
               Expanded(
                 child: SingleChildScrollView(
-                  physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +496,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                           width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF6750A4), Color(0xFF9575CD)],
+                              colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.9)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -585,7 +609,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                             icon: const Icon(Icons.group_add),
                             label: const Text('Join Group'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6750A4),
+                              backgroundColor: const Color(0xFF7C3AED),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -624,7 +648,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
         children: [
           Icon(
             icon,
-            color: const Color(0xFF6750A4),
+            color: const Color(0xFF7C3AED),
             size: 28,
           ),
           const SizedBox(height: 8),
@@ -678,7 +702,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                         labelColor: Colors.white,
                         unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
                         indicator: BoxDecoration(
-                          color: Colors.purple,
+                          color: const Color(0xFF7C3AED),
                           borderRadius: BorderRadius.circular(25),
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
@@ -833,8 +857,8 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                             _tabController.animateTo(1);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple[50],
-                            foregroundColor: Colors.purple,
+                            backgroundColor: const Color.fromRGBO(124, 58, 237, 0.08),
+                            foregroundColor: const Color(0xFF7C3AED),
                             elevation: 0,
                           ),
                           child: const Text('Discover Groups'),
@@ -945,7 +969,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                               icon: const Icon(Icons.group_add, size: 18),
                               label: const Text('Join'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple,
+                                backgroundColor: const Color(0xFF7C3AED),
                                 foregroundColor: Colors.white,
                               ),
                               onPressed: () => _joinGroup(group),

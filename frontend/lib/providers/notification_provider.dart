@@ -23,6 +23,8 @@ class NotificationProvider extends ChangeNotifier {
     try {
       final notifications = await _service.getNotifications();
       _notifications = notifications;
+      // Ensure notifications are shown newest-first based on device-local times
+      _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       _updateUnreadCount();
     } catch (e) {
       _error = e.toString();

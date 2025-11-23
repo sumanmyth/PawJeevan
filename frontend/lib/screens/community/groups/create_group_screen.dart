@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/loading_overlay.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../utils/helpers.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -70,13 +73,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Group created successfully!')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('Error creating group: $e')),
         );
       }
@@ -110,9 +115,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       ),
       body: LoadingOverlay(
         isLoading: _isLoading,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        child: AppFormCard(
           padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+          maxWidth: 720,
           child: Form(
             key: _formKey,
             child: Column(
@@ -133,10 +138,25 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                           : null,
                     ),
                     child: _imageBytes == null
-                        ? Icon(
-                            Icons.add_photo_alternate, 
-                            size: 50,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ? const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.add_photo_alternate,
+                                  size: 48,
+                                  color: Color(0xFF7C3AED),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Add photo',
+                                  style: TextStyle(
+                                    color: Color(0xFF7C3AED),
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
                           )
                         : null,
                   ),
@@ -171,7 +191,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownFormField<String>(
                   initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Group Type',
@@ -194,6 +214,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   title: const Text('Private Group'),
                   subtitle: const Text('Only approved members can join and view content'),
                   value: _isPrivate,
+                  activeThumbColor: const Color(0xFF7C3AED),
+                  activeTrackColor: const Color.fromRGBO(124, 58, 237, 0.35),
                   onChanged: (bool value) {
                     setState(() {
                       _isPrivate = value;
@@ -206,7 +228,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     controller: _joinKeyController,
                     decoration: const InputDecoration(
                       labelText: 'Join Key *',
-                      hintText: 'Enter a key for users to join this private group',
+                      hintText: 'Enter join key',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
@@ -221,10 +243,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 ElevatedButton(
                   onPressed: _createGroup,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                  ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                    ),
                   child: const Text(
                     'Create Group',
                     style: TextStyle(fontSize: 16, color: Colors.white),

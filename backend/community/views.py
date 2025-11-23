@@ -18,6 +18,7 @@ from .serializers import (
     LostFoundReportSerializer
 )
 from users.models import User, Notification
+from users.models import ScheduledNotification
 from users.serializers import UserSerializer
 
 
@@ -389,6 +390,49 @@ class EventViewSet(viewsets.ModelViewSet):
             message=f'You are now attending {event.title} on {event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}. We will remind you before the event starts.',
             action_url=f'/events/{event.id}/'
         )
+
+        # Schedule a reminder 1 hour before the event start.
+        # If the reminder time has already passed, create the start notification immediately.
+        reminder_offset = timedelta(hours=1)
+        send_at = event.start_datetime - reminder_offset
+        now = timezone.now()
+
+        if send_at <= now:
+            # send immediately (event is within the reminder window)
+            # prevent duplicate by checking recent similar notifications
+            existing = Notification.objects.filter(
+                user=request.user,
+                notification_type='event_starting',
+                action_url=f'/events/{event.id}/',
+                created_at__gte=now - timedelta(hours=2)
+            ).exists()
+            if not existing:
+                Notification.objects.create(
+                    user=request.user,
+                    notification_type='event_starting',
+                    title=f'Event "{event.title}" is starting soon!',
+                    message=f'{event.title} will start at {event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}.',
+                    action_url=f'/events/{event.id}/'
+                )
+        else:
+            # create a scheduled notification (avoid duplicates)
+            already = ScheduledNotification.objects.filter(
+                user=request.user,
+                notification_type='event_starting',
+                action_url=f'/events/{event.id}/',
+                send_at=send_at,
+                processed=False
+            ).exists()
+
+            if not already:
+                ScheduledNotification.objects.create(
+                    user=request.user,
+                    notification_type='event_starting',
+                    title=f'Event "{event.title}" is starting soon!',
+                    message=f'{event.title} will start at {event.start_datetime.strftime("%B %d, %Y at %I:%M %p")}.',
+                    action_url=f'/events/{event.id}/',
+                    send_at=send_at
+                )
         
         return Response({'status': 'attending', 'attendees_count': event.attendees.count()})
 

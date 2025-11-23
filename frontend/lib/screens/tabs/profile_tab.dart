@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../utils/helpers.dart';
 import '../../providers/community_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../auth/login_screen.dart';
@@ -75,13 +76,13 @@ class _ProfileTabState extends State<ProfileTab> {
 
       if (!mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile picture updated')));
+        Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Profile picture updated')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.error ?? 'Failed to update avatar')));
+        Helpers.showInstantSnackBar(context, SnackBar(content: Text(auth.error ?? 'Failed to update avatar')));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _avatarUploading = false);
     }
@@ -118,7 +119,7 @@ class _ProfileTabState extends State<ProfileTab> {
         ],
       ),
       body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         // FIX: Added 'topPadding + 24' so the content isn't hidden behind the AppBar
         padding: EdgeInsets.only(bottom: 110, top: topPadding + 24),
         child: Column(
@@ -130,19 +131,19 @@ class _ProfileTabState extends State<ProfileTab> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF6B46C1),
-                    Color(0xFF9F7AEA),
-                    Color(0xFFB794F6),
+                    Color(0xFF7C3AED),
+                    Color.fromRGBO(124, 58, 237, 0.85),
+                    Color.fromRGBO(124, 58, 237, 0.65),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: const Color(0xFF6B46C1).withOpacity(0.3),
+                    color: Color.fromRGBO(124, 58, 237, 0.3),
                     blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    offset: Offset(0, 10),
                   ),
                 ],
               ),
@@ -186,7 +187,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                 ? NetworkImage(user.avatarUrl!)
                                 : null,
                             child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
-                                ? const Icon(Icons.person, size: 50, color: Color(0xFF6B46C1))
+                                ? const Icon(Icons.person, size: 50, color: Color(0xFF7C3AED))
                                 : null,
                           ),
                           Positioned(
@@ -214,7 +215,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         padding: EdgeInsets.all(8.0),
                                         child: CircularProgressIndicator(strokeWidth: 2),
                                       )
-                                    : const Icon(Icons.camera_alt, color: Colors.purple),
+                                    : const Icon(Icons.camera_alt, color: Color(0xFF7C3AED)),
                               ),
                             ),
                           ),
@@ -322,7 +323,8 @@ class _ProfileTabState extends State<ProfileTab> {
                         title: 'My Orders',
                         subtitle: 'Track your orders',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          Helpers.showInstantSnackBar(
+                            context,
                             const SnackBar(content: Text('Orders - Coming soon!')),
                           );
                         },
@@ -392,10 +394,10 @@ class _StatItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: const Color.fromRGBO(255, 255, 255, 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: const Color.fromRGBO(255, 255, 255, 0.2),
             width: 1.5,
           ),
         ),
@@ -483,7 +485,7 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    const primaryColor = Color(0xFF7C3AED);
 
     return InkWell(
       onTap: onTap,
@@ -495,10 +497,10 @@ class _MenuItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: primaryColor.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: colorScheme.primary, size: 24),
+              child: Icon(icon, color: primaryColor, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(

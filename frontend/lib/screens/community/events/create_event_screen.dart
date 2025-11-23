@@ -4,8 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/loading_overlay.dart';
+import '../../../widgets/app_form_card.dart';
 import '../../../utils/constants.dart';
+import '../../../utils/helpers.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -89,14 +92,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_startDateTime == null || _endDateTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('Please select start and end date/time')),
       );
       return;
     }
 
     if (_endDateTime!.isBefore(_startDateTime!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('End time must be after start time')),
       );
       return;
@@ -151,7 +156,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Event created successfully!')),
         );
       }
@@ -164,7 +170,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             errorMessage = data.values.first.toString();
           }
         }
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(errorMessage)),
         );
       }
@@ -190,17 +197,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Create Event',
         showBackButton: true,
       ),
       body: LoadingOverlay(
         isLoading: _isLoading,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
-          padding: const EdgeInsets.all(16.0),
+        child: AppFormCard(
+          padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+          maxWidth: 800,
           child: Form(
             key: _formKey,
             child: Column(
@@ -222,18 +231,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           : null,
                     ),
                     child: _imageBytes == null
-                        ? Column(
+                        ? const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_photo_alternate, 
-                                size: 50, 
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              Icon(
+                                Icons.add_photo_alternate,
+                                size: 50,
+                                color: Color(0xFF7C3AED),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Text(
                                 'Add Cover Image',
                                 style: TextStyle(
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: Color(0xFF7C3AED),
                                 ),
                               ),
                             ],
@@ -261,7 +271,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 16),
 
                 // Event Type
-                DropdownButtonFormField<String>(
+                AppDropdownFormField<String>(
                   initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Event Type *',
@@ -404,10 +414,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ElevatedButton(
                   onPressed: _createEvent,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                  ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                    ),
                   child: const Text(
                     'Create Event',
                     style: TextStyle(fontSize: 16, color: Colors.white),

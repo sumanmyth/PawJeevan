@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../common/main_screen.dart';
+import '../../utils/helpers.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -52,7 +53,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(
           content: const Row(
             children: [
@@ -75,7 +77,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         (route) => false,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(
           content: Row(
             children: [
@@ -103,8 +106,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF6B46C1),
-              Color(0xFF9F7AEA),
+              Color(0xFF7C3AED),
+              Color.fromRGBO(124, 58, 237, 0.85),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -113,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
@@ -166,11 +168,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             // Logo with gradient
                             Container(
                               padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
                                   colors: [
-                                    Color(0xFF6B46C1),
-                                    Color(0xFF9F7AEA),
+                                    Color(0xFF7C3AED),
+                                    Color.fromRGBO(124, 58, 237, 0.85),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -178,9 +180,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF6B46C1).withOpacity(0.3),
+                                    color: Color.fromRGBO(124, 58, 237, 0.3),
                                     blurRadius: 15,
-                                    offset: const Offset(0, 8),
+                                    offset: Offset(0, 8),
                                   ),
                                 ],
                               ),
@@ -198,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF6B46C1),
+                                color: Color(0xFF7C3AED),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -225,9 +227,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
+                                  borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: Icon(Icons.person_outline, color: const Color(0xFF6B46C1)),
+                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF7C3AED)),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
@@ -235,56 +237,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 12),
 
-                            // Name row
-                            Row(
+                            // First Name then Last Name (stacked)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _firstNameController,
-                                    decoration: InputDecoration(
-                                      labelText: 'First Name (optional)',
-                                      labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
-                                      hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
-                                      ),
-                                      prefixIcon: Icon(Icons.badge_outlined, color: const Color(0xFF6B46C1)),
-                                      filled: true,
-                                      fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
+                                TextFormField(
+                                  controller: _firstNameController,
+                                  decoration: InputDecoration(
+                                    labelText: 'First Name (optional)',
+                                    labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                    hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
+                                    ),
+                                    prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF7C3AED)),
+                                    filled: true,
+                                    fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _lastNameController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Last Name (optional)',
-                                      labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
-                                      hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
-                                      ),
-                                      prefixIcon: Icon(Icons.badge_outlined, color: const Color(0xFF6B46C1)),
-                                      filled: true,
-                                      fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _lastNameController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Last Name (optional)',
+                                    labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                    hintStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
+                                    ),
+                                    prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF7C3AED)),
+                                    filled: true,
+                                    fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                   ),
                                 ),
                               ],
@@ -308,9 +307,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
+                                  borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: Icon(Icons.email_outlined, color: const Color(0xFF6B46C1)),
+                                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C3AED)),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
@@ -339,9 +338,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
+                                  borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: Icon(Icons.phone_outlined, color: const Color(0xFF6B46C1)),
+                                prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF7C3AED)),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
@@ -365,15 +364,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
+                                  borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color(0xFF6B46C1)),
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C3AED)),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: const Color(0xFF6B46C1),
+                                    color: const Color(0xFF7C3AED),
                                   ),
                                   onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                 ),
@@ -403,15 +402,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: const Color(0xFF6B46C1).withOpacity(isDark ? 0.95 : 1.0), width: 2),
+                                  borderSide: BorderSide(color: Color.fromRGBO(124, 58, 237, isDark ? 0.95 : 1.0), width: 2),
                                 ),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color(0xFF6B46C1)),
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C3AED)),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: const Color(0xFF6B46C1),
+                                    color: const Color(0xFF7C3AED),
                                   ),
                                   onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                                 ),
@@ -455,10 +454,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: ElevatedButton(
                                 onPressed: auth.isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6B46C1),
+                                  backgroundColor: const Color(0xFF7C3AED),
                                   foregroundColor: Colors.white,
                                   elevation: 8,
-                                  shadowColor: const Color(0xFF6B46C1).withOpacity(0.4),
+                                  shadowColor: const Color.fromRGBO(124, 58, 237, 0.4),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                                 child: auth.isLoading
@@ -485,7 +484,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             // Back button
                             Container(
                               decoration: BoxDecoration(
-                                border: Border.all(color: const Color(0xFF6B46C1), width: 2),
+                                border: Border.all(color: const Color(0xFF7C3AED), width: 2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: TextButton(
@@ -499,14 +498,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.arrow_back, color: Color(0xFF6B46C1), size: 20),
+                                    Icon(Icons.arrow_back, color: Color(0xFF7C3AED), size: 20),
                                     SizedBox(width: 8),
                                     Text(
                                       'Back to Login',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: Color(0xFF6B46C1),
+                                        color: Color(0xFF7C3AED),
                                       ),
                                     ),
                                   ],

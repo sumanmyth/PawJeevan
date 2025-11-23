@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../utils/helpers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pet_provider.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -70,15 +71,15 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFFB794F6)],
+                  colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85), Color.fromRGBO(124, 58, 237, 0.65)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: const Color(0xFF6B46C1).withOpacity(0.4),
+                    color: Color.fromRGBO(124, 58, 237, 0.4),
                     blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
@@ -235,137 +236,152 @@ class _PetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  image: pet.photo != null
-                      ? DecorationImage(
-                          image: NetworkImage(pet.photo!),
-                          fit: BoxFit.cover,
-                        )
+        border: Border.all(
+          color: const Color.fromRGBO(124, 58, 237, 0.06),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    image: pet.photo != null
+                        ? DecorationImage(
+                            image: NetworkImage(pet.photo!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: pet.photo == null
+                      ? Icon(Icons.pets, size: 40, color: Theme.of(context).colorScheme.primary)
                       : null,
                 ),
-                child: pet.photo == null
-                    ? Icon(Icons.pets, size: 40, color: Theme.of(context).colorScheme.primary)
-                    : null,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pet.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pet.name,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${pet.breed} • ${pet.petType}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${pet.breed} • ${pet.petType}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _InfoChip(icon: Icons.cake, label: '${pet.age ?? '-'} yrs'),
-                        const SizedBox(width: 8),
-                        _InfoChip(
-                            icon: Icons.monitor_weight,
-                            label: '${pet.weight} kg'),
-                      ],
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          _InfoChip(icon: Icons.cake, label: '${pet.age ?? '-'} yrs'),
+                          const SizedBox(width: 8),
+                          _InfoChip(icon: Icons.monitor_weight, label: '${pet.weight} kg'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => EditPetScreen(pet: pet)),
+                      );
+                      if (result == true && context.mounted) {
+                        context.read<PetProvider>().loadPets();
+                      }
+                    } else if (value == 'delete') {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text(
+                            'Delete Pet',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          content: Text(
+                            'Are you sure you want to delete ${pet.name}?',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true && context.mounted) {
+                        final ok = await context.read<PetProvider>().deletePet(pet.id!);
+                        if (ok) {
+                          Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Pet deleted')));
+                        } else {
+                          final err = context.read<PetProvider>().error ?? 'Delete failed';
+                          Helpers.showInstantSnackBar(context, SnackBar(content: Text(err)));
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        'Delete',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                ),
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => EditPetScreen(pet: pet)),
-                    );
-                    if (result == true && context.mounted) {
-                      context.read<PetProvider>().loadPets();
-                    }
-                  } else if (value == 'delete') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text(
-                          'Delete Pet',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        content: Text(
-                          'Are you sure you want to delete ${pet.name}?',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              'Delete',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true && context.mounted) {
-                      final ok = await context.read<PetProvider>().deletePet(pet.id!);
-                      if (ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pet deleted')));
-                      } else {
-                        final err = context.read<PetProvider>().error ?? 'Delete failed';
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-                      }
-                    }
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(
-                      'Delete',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

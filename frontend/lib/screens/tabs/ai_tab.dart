@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../utils/helpers.dart';
 
 class AiTab extends StatelessWidget {
   const AiTab({super.key});
@@ -17,7 +18,7 @@ class AiTab extends StatelessWidget {
         title: 'AI Features',
       ),
       body: ListView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         children: [
           // Header
@@ -109,7 +110,8 @@ class _AIFeatureCard extends StatelessWidget {
     
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('$title - Coming soon!')),
         );
       },

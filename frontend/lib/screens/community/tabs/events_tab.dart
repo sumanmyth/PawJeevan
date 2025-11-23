@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import '../../../models/community/event_model.dart';
 import '../events/event_detail_screen.dart';
 import '../events/edit_event_screen.dart';
+import '../../../utils/helpers.dart';
 
 class EventsTab extends StatefulWidget {
   final void Function(VoidCallback)? onRefreshCallbackRegistered;
@@ -135,8 +136,10 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
       // My Events - only events organized by current user
       allEvents = allEvents.where((event) => event.organizerId == _currentUserId).toList();
     } else if (_currentTab == 1 && _currentUserId != null) {
-      // Discover - exclude events organized by current user
-      allEvents = allEvents.where((event) => event.organizerId != _currentUserId).toList();
+      // Discover - exclude events organized by current user and events the user is already attending
+      allEvents = allEvents.where((event) =>
+        event.organizerId != _currentUserId && !event.isAttending(_currentUserId!)
+      ).toList();
     } else if (_currentTab == 2 && _currentUserId != null) {
       // Joined Events - attending but not organizing
       allEvents = allEvents.where((event) => 
@@ -184,13 +187,15 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
         });
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             const SnackBar(content: Text('Event deleted successfully')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Error deleting event: $e')),
           );
         }
@@ -200,7 +205,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
 
   Future<void> _joinEvent(Event event) async {
     if (event.isFull) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(
           content: Text('Event is full'),
           backgroundColor: Colors.orange,
@@ -226,7 +232,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Successfully joined the event!')),
         );
       }
@@ -245,7 +252,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
           errorMessage = 'Event not found';
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
@@ -254,7 +262,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Unable to join event. Please try again.'),
             backgroundColor: Colors.red,
@@ -302,13 +311,15 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
         });
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             const SnackBar(content: Text('Successfully left the event')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          Helpers.showInstantSnackBar(
+            context,
             SnackBar(content: Text('Error leaving event: $e')),
           );
         }
@@ -429,7 +440,7 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                         labelColor: Colors.white,
                         unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
                         indicator: BoxDecoration(
-                          color: Colors.purple,
+                          color: const Color(0xFF7C3AED),
                           borderRadius: BorderRadius.circular(25),
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
@@ -585,8 +596,8 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                             _tabController.animateTo(1);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple[50],
-                            foregroundColor: Colors.purple,
+                            backgroundColor: const Color.fromRGBO(124, 58, 237, 0.08),
+                            foregroundColor: const Color(0xFF7C3AED),
                             elevation: 0,
                           ),
                           child: const Text('Discover Events'),
@@ -659,13 +670,13 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.purple.withOpacity(0.1),
+                                      color: const Color.fromRGBO(124, 58, 237, 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       event.eventTypeDisplay,
                                       style: const TextStyle(
-                                        color: Colors.purple,
+                                        color: Color(0xFF7C3AED),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -770,7 +781,7 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                             icon: const Icon(Icons.event_available, size: 18),
                                             label: Text(event.isFull ? 'Event Full' : 'Join Event'),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: event.isFull ? Colors.grey : Colors.purple,
+                                              backgroundColor: event.isFull ? Colors.grey : const Color(0xFF7C3AED),
                                               foregroundColor: Colors.white,
                                             ),
                                             onPressed: event.isFull ? null : () => _joinEvent(event),

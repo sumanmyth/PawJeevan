@@ -7,6 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 from community.models import Event
 from users.models import Notification
+from users.models import ScheduledNotification
 
 
 class Command(BaseCommand):
@@ -89,6 +90,31 @@ class Command(BaseCommand):
                     f'Deleted ended event: "{event_title}"'
                 )
             )
+
+        # Process any explicit ScheduledNotification entries (created on join)
+        scheduled = ScheduledNotification.objects.filter(processed=False, send_at__lte=now)
+        for s in scheduled:
+            # Double-check duplicate prevention
+            exists = Notification.objects.filter(
+                user=s.user,
+                notification_type=s.notification_type,
+                action_url=s.action_url,
+                created_at__gte=now - timedelta(hours=2)
+            ).exists()
+
+            if not exists:
+                Notification.objects.create(
+                    user=s.user,
+                    notification_type=s.notification_type,
+                    title=s.title,
+                    message=s.message,
+                    action_url=s.action_url
+                )
+                self.stdout.write(self.style.SUCCESS(f'Sent scheduled notification to {s.user.username} for {s.action_url}'))
+
+            # mark processed regardless to avoid retry loops
+            s.processed = True
+            s.save()
         
         self.stdout.write(
             self.style.SUCCESS(

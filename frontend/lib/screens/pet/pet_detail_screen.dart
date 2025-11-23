@@ -5,6 +5,7 @@ import '../../models/pet/pet_model.dart';
 import '../../providers/pet_provider.dart';
 import '../../services/pet_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../utils/helpers.dart';
 
 // Screens for add/edit flows
 import 'forms/add_vaccination_screen.dart';
@@ -121,9 +122,10 @@ class _PetDetailScreenState extends State<PetDetailScreen>
                 context,
                 MaterialPageRoute(builder: (_) => EditPetScreen(pet: _pet)),
               );
-              if (ok == true && mounted) {
+                if (ok == true && mounted) {
                 await _refreshPetFromProvider();
-                ScaffoldMessenger.of(context).showSnackBar(
+                Helpers.showInstantSnackBar(
+                  context,
                   const SnackBar(content: Text('Pet updated')),
                 );
               }
@@ -159,7 +161,8 @@ class _PetDetailScreenState extends State<PetDetailScreen>
                 if (ok && mounted) {
                   Navigator.pop(context, true);
                 } else if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  Helpers.showInstantSnackBar(
+                    context,
                     const SnackBar(content: Text('Failed to delete pet')),
                   );
                 }
@@ -217,9 +220,9 @@ class _PetDetailScreenState extends State<PetDetailScreen>
       color: Theme.of(context).scaffoldBackgroundColor,
       child: TabBar(
         controller: _tabController,
-        labelColor: const Color(0xFF6B46C1),
+        labelColor: const Color(0xFF7C3AED),
         unselectedLabelColor: Colors.grey[600],
-        indicatorColor: const Color(0xFF6B46C1),
+        indicatorColor: const Color(0xFF7C3AED),
         indicatorWeight: 3,
         labelStyle: const TextStyle(
           fontWeight: FontWeight.bold,

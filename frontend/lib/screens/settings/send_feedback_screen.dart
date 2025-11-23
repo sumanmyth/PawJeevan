@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../utils/helpers.dart';
 import '../../services/feedback_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/app_form_card.dart';
 
 class SendFeedbackScreen extends StatefulWidget {
   const SendFeedbackScreen({super.key});
@@ -32,14 +34,16 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         message: _messageController.text.trim(),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Opening email client...')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(e.toString())),
         );
       }
@@ -54,8 +58,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Send Feedback', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
@@ -112,8 +115,8 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                       : const Icon(Icons.send),
                   label: Text(_isSending ? 'Sending...' : 'Send Feedback'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    backgroundColor: const Color(0xFF7C3AED),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

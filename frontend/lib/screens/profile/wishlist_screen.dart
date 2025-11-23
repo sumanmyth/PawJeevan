@@ -50,8 +50,8 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                   : Colors.grey.shade100,
               child: TabBar(
                 controller: _tabController,
-                indicatorColor: const Color(0xFF6B46C1),
-                labelColor: const Color(0xFF6B46C1),
+                indicatorColor: const Color(0xFF7C3AED),
+                labelColor: const Color(0xFF7C3AED),
                 unselectedLabelColor: Colors.grey,
                 tabs: const [
                   Tab(text: 'Products'),
@@ -268,7 +268,7 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                         pet.ageDisplay,
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xFF6B46C1),
+                          color: Color(0xFF7C3AED),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

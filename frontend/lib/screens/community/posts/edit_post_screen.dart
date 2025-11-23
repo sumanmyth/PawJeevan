@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../models/community/post_model.dart';
 import '../../../providers/community_provider.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../utils/helpers.dart';
 
 class EditPostScreen extends StatefulWidget {
   final Post post;
@@ -40,7 +42,8 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   Future<void> _update() async {
     if (_contentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('Please write something')),
       );
       return;
@@ -59,7 +62,8 @@ class _EditPostScreenState extends State<EditPostScreen> {
       if (ok) {
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(provider.error ?? 'Failed to update post')),
         );
       }
@@ -78,8 +82,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
         title: 'Edit Post',
         showBackButton: true,
       ),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

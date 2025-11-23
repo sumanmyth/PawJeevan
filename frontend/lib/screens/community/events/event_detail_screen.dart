@@ -22,7 +22,7 @@ class EventDetailScreen extends StatelessWidget {
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -67,9 +67,9 @@ class EventDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
                     height: 250,
-                    color: Colors.purple.withOpacity(0.1),
+                    color: const Color.fromRGBO(124, 58, 237, 0.1),
                     child: const Center(
-                      child: Icon(Icons.event, size: 80, color: Colors.purple),
+                      child: Icon(Icons.event, size: 80, color: Color(0xFF7C3AED)),
                     ),
                   ),
                 ),
@@ -84,13 +84,13 @@ class EventDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.1),
+                      color: const Color.fromRGBO(124, 58, 237, 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       event.eventTypeDisplay,
                       style: const TextStyle(
-                        color: Colors.purple,
+                        color: Color(0xFF7C3AED),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -118,7 +118,7 @@ class EventDetailScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.calendar_today, color: Colors.purple),
+                              const Icon(Icons.calendar_today, color: Color(0xFF7C3AED)),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -146,7 +146,7 @@ class EventDetailScreen extends StatelessWidget {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              const Icon(Icons.calendar_today, color: Colors.purple),
+                              const Icon(Icons.calendar_today, color: Color(0xFF7C3AED)),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -186,7 +186,7 @@ class EventDetailScreen extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.location_on, color: Colors.purple),
+                          const Icon(Icons.location_on, color: Color(0xFF7C3AED)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -232,7 +232,7 @@ class EventDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.purple),
+                          const Icon(Icons.people, color: Color(0xFF7C3AED)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -290,7 +290,7 @@ class EventDetailScreen extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundColor: Colors.purple.withOpacity(0.1),
+                            backgroundColor: const Color.fromRGBO(124, 58, 237, 0.1),
                             backgroundImage: event.organizerAvatar != null && event.organizerAvatar!.isNotEmpty
                               ? NetworkImage(event.organizerAvatar!)
                               : null,
@@ -300,7 +300,7 @@ class EventDetailScreen extends StatelessWidget {
                                     ? event.organizerUsername[0].toUpperCase()
                                     : 'O',
                                   style: const TextStyle(
-                                    color: Colors.purple,
+                                    color: Color(0xFF7C3AED),
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),

@@ -25,7 +25,7 @@ class StoreTabSelector extends StatelessWidget {
         labelColor: Colors.white,
         unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
         indicator: BoxDecoration(
-          color: const Color(0xFF6B46C1),
+          color: const Color(0xFF7C3AED),
           borderRadius: BorderRadius.circular(25),
         ),
         indicatorSize: TabBarIndicatorSize.tab,

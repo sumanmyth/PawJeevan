@@ -15,18 +15,20 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<CommunityProvider>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    const primary = Color(0xFF7C3AED);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: isDark ? 2 : 0,
+      elevation: 2,
+      shadowColor: primary.withOpacity(0.06),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDark ? Colors.purple.shade300.withOpacity(0.3) : Colors.purple.withOpacity(0.3)
+          color: primary.withOpacity(0.08),
         ),
       ),
-      color: isDark ? Colors.purple.shade900.withOpacity(0.2) : Colors.purple.shade50.withOpacity(0.7),
+      color: theme.cardColor,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -34,21 +36,21 @@ class PostCard extends StatelessWidget {
             MaterialPageRoute(builder: (_) => PostDetailScreen(postId: post.id)),
           );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context, isDark),
+              _buildHeader(context),
               const SizedBox(height: 12),
-              _buildContent(isDark),
-              if (post.image != null) ...[
+              _buildContent(context),
+              if (post.image != null && post.image!.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                _buildImage(),
+                _buildImage(context),
               ],
               const SizedBox(height: 12),
-              _buildActions(context, provider, isDark),
+              _buildActions(context, provider),
             ],
           ),
         ),
@@ -56,7 +58,10 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark) {
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    const primary = Color(0xFF7C3AED);
     return GestureDetector(
       onTap: post.isCurrentUserAuthor 
         ? null 
@@ -70,24 +75,20 @@ class PostCard extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: isDark ? [
-                  Colors.purple.shade200,
-                  Colors.purple.shade400,
-                ] : [
-                  Colors.purple.shade300,
-                  Colors.purple.shade200,
-                ],
-              ),
               border: Border.all(
-                color: isDark ? Colors.purple.shade200 : Colors.purple.shade300, 
-                width: 2
+                color: primary.withOpacity(0.9), 
+                width: 1.6,
               ),
             ),
             child: CircleAvatar(
-              backgroundColor: isDark ? Colors.purple.shade900 : Colors.purple.shade100,
-              backgroundImage: post.authorAvatar != null ? NetworkImage(post.authorAvatar!) : null,
-              child: post.authorAvatar == null ? Icon(Icons.person, color: Colors.purple.shade700) : null,
+              radius: 20,
+              backgroundColor: primary.withOpacity(0.12),
+              backgroundImage: (post.authorAvatar != null && post.authorAvatar!.isNotEmpty) 
+                  ? NetworkImage(post.authorAvatar!) 
+                  : null,
+              child: (post.authorAvatar == null || post.authorAvatar!.isEmpty) 
+                  ? Icon(Icons.person, color: primary) 
+                  : null,
             ),
           ),
           const SizedBox(width: 12),
@@ -97,16 +98,13 @@ class PostCard extends StatelessWidget {
               children: [
                 Text(
                   post.authorUsername,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.purple.shade200 : Colors.purple.shade700,
-                    fontSize: 15,
-                  ),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold) ?? const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   timeago.format(post.createdAt),
                   style: TextStyle(
-                    color: isDark ? Colors.purple.shade300 : Colors.purple.shade500,
+                    // Fixed: Use Grey for readability
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
@@ -114,7 +112,7 @@ class PostCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -132,41 +130,36 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(bool isDark) {
+  Widget _buildContent(BuildContext context) {
+    final theme = Theme.of(context);
+    const primary = Color(0xFF7C3AED);
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black12 : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.purple.shade200.withOpacity(0.3) : Colors.purple.shade100
-        ),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primary.withOpacity(0.06)),
       ),
       child: Text(
         post.content,
-        style: TextStyle(
-          fontSize: 15,
-          color: isDark ? Colors.purple.shade100 : Colors.purple.shade900,
-          height: 1.4,
-        ),
+        style: theme.textTheme.bodyMedium?.copyWith(height: 1.4) ?? const TextStyle(fontSize: 15, height: 1.4),
       ),
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
+    final theme = Theme.of(context);
+    const primary = Color(0xFF7C3AED);
+
     return Container(
       height: 200,
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.purple.shade50,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.shade100.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: primary.withOpacity(0.08)),
         image: DecorationImage(
           image: NetworkImage(post.image!),
           fit: BoxFit.cover,
@@ -174,20 +167,22 @@ class PostCard extends StatelessWidget {
       ),
     );
   }
+  Widget _buildActions(BuildContext context, CommunityProvider provider) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
 
-  Widget _buildActions(BuildContext context, CommunityProvider provider, bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildActionButton(
-          isDark: isDark,
+          primary: primary,
           icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
           iconColor: post.isLiked ? Colors.red : null,
           label: '${post.likesCount}',
           onPressed: () => provider.toggleLike(post.id),
         ),
         _buildActionButton(
-          isDark: isDark,
+          primary: primary,
           icon: Icons.comment_outlined,
           label: '${post.commentsCount}',
           onPressed: () => Navigator.push(
@@ -196,7 +191,7 @@ class PostCard extends StatelessWidget {
           ),
         ),
         _buildActionButton(
-          isDark: isDark,
+          primary: primary,
           icon: Icons.share_outlined,
           label: 'Share',
           onPressed: () {},
@@ -206,29 +201,34 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildActionButton({
-    required bool isDark,
+    required Color primary,
     required IconData icon,
     required String label,
     Color? iconColor,
     VoidCallback? onPressed,
   }) {
-    final baseColor = isDark ? Colors.purple.shade200 : Colors.purple.shade700;
-    
+    final fgColor = primary;
+    final bgColor = primary.withOpacity(0.06);
+
     return TextButton.icon(
       style: TextButton.styleFrom(
-        foregroundColor: baseColor,
-        backgroundColor: isDark ? Colors.purple.shade900.withOpacity(0.3) : Colors.purple.shade50,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        foregroundColor: fgColor,
+        backgroundColor: bgColor,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: onPressed,
       icon: Icon(
         icon,
-        color: iconColor ?? baseColor,
+        color: iconColor ?? fgColor,
         size: 20,
       ),
       label: Text(
         label,
-        style: TextStyle(color: baseColor),
+        style: TextStyle(
+          color: fgColor,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

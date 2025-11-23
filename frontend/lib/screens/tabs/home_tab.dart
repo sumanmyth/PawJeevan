@@ -8,6 +8,7 @@ import '../../providers/fact_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../utils/helpers.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -17,7 +18,7 @@ class HomeTab extends StatefulWidget {
 }
 
 // Primary purple used across Home tab cards
-const Color _kPrimaryPurple = Color(0xFF6B46C1);
+const Color _kPrimaryPurple = Color(0xFF7C3AED);
 
 class _HomeTabState extends State<HomeTab> {
   bool _showWelcome = false;
@@ -124,7 +125,8 @@ class _HomeTabState extends State<HomeTab> {
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
+              Helpers.showInstantSnackBar(
+                context,
                 const SnackBar(content: Text('Cart - Coming soon!')),
               );
             },
@@ -132,7 +134,7 @@ class _HomeTabState extends State<HomeTab> {
         ],
       ),
       body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         padding: EdgeInsets.only(top: topPadding, bottom: 110),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,19 +153,19 @@ class _HomeTabState extends State<HomeTab> {
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [
-                        Color(0xFF6B46C1),
-                        Color(0xFF9F7AEA),
-                        Color(0xFFB794F6),
+                        Color(0xFF7C3AED),
+                        Color.fromRGBO(124, 58, 237, 0.85),
+                        Color.fromRGBO(124, 58, 237, 0.65),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color(0xFF6B46C1).withOpacity(0.3),
+                        color: Color.fromRGBO(124, 58, 237, 0.3),
                         blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        offset: Offset(0, 10),
                       ),
                     ],
                   ),
@@ -199,7 +201,7 @@ class _HomeTabState extends State<HomeTab> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
+                                          color: const Color.fromRGBO(255, 255, 255, 0.2),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(Icons.waving_hand, color: Colors.white, size: 24),
@@ -221,19 +223,19 @@ class _HomeTabState extends State<HomeTab> {
                                   const SizedBox(height: 12),
                                   Text(
                                     user?.displayName ?? 'Pet Lover',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white.withOpacity(0.95),
+                                      color: Color.fromRGBO(255, 255, 255, 0.95),
                                       height: 1.4,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
+                                  const Text(
                                     'Ready to make a difference in a pet\'s life today?',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.white.withOpacity(0.85),
+                                      color: Color.fromRGBO(255, 255, 255, 0.85),
                                       height: 1.4,
                                     ),
                                   ),
@@ -243,9 +245,9 @@ class _HomeTabState extends State<HomeTab> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: const Color.fromRGBO(255, 255, 255, 0.15),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                                border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.3), width: 2),
                               ),
                               child: IconButton(
                                 icon: const Icon(Icons.close, color: Colors.white, size: 20),
@@ -351,7 +353,8 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       TextButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          Helpers.showInstantSnackBar(
+                            context,
                             const SnackBar(content: Text('Shop - Coming soon!')),
                           );
                         },
@@ -439,7 +442,8 @@ class _QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('$label - Coming soon!')),
         );
       },
@@ -494,20 +498,21 @@ class _FeaturedProductCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Product ${index + 1} - Coming soon!')),
-              );
-          },
+           onTap: () {
+             Helpers.showInstantSnackBar(
+              context,
+              SnackBar(content: Text('Product ${index + 1} - Coming soon!')),
+             );
+           },
           borderRadius: BorderRadius.circular(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 height: 120,
-                decoration: BoxDecoration(
-                  color: _kPrimaryPurple.withOpacity(0.1),
-                  borderRadius: const BorderRadius.vertical(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(124, 58, 237, 0.1),
+                  borderRadius: BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
                 ),
@@ -564,15 +569,16 @@ class _TipCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text('$title - Coming soon!')),
         );
       },
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+        child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _kPrimaryPurple.withOpacity(0.03),
+          color: const Color.fromRGBO(124, 58, 237, 0.03),
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
@@ -638,19 +644,19 @@ class _DidYouKnowCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF6B46C1),
-            Color(0xFF9F7AEA),
-            Color(0xFFB794F6),
+            Color(0xFF7C3AED),
+            Color.fromRGBO(124, 58, 237, 0.85),
+            Color.fromRGBO(124, 58, 237, 0.65),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF6B46C1).withOpacity(0.18),
+            color: Color.fromRGBO(124, 58, 237, 0.18),
             blurRadius: 22,
-            offset: const Offset(0, 10),
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -734,7 +740,7 @@ class _DidYouKnowCard extends StatelessWidget {
                 onTap: () {
                   showDialog<void>(
                     context: context,
-                    barrierColor: Colors.black.withOpacity(0.5),
+                    barrierColor: const Color.fromRGBO(0, 0, 0, 0.5),
                     builder: (context) => BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Dialog(
@@ -743,12 +749,12 @@ class _DidYouKnowCard extends StatelessWidget {
                           constraints: const BoxConstraints(maxWidth: 520),
                           decoration: BoxDecoration(
                             color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey.shade900.withOpacity(0.95)
-                                : Colors.white.withOpacity(0.95),
+                              ? Colors.grey.shade900.withOpacity(0.95)
+                              : const Color.fromRGBO(255, 255, 255, 0.95),
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
+                            boxShadow: const [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.18),
+                                color: Color.fromRGBO(0, 0, 0, 0.18),
                                 blurRadius: 20,
                                 spreadRadius: 2,
                               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/helpers.dart';
 
 class PetActions {
   static Future<void> updatePetStatus({
@@ -13,7 +14,8 @@ class PetActions {
       
       if (context.mounted) {
         final statusText = _getStatusText(status);
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Pet status updated to $statusText'),
             backgroundColor: Colors.green,
@@ -23,7 +25,8 @@ class PetActions {
     } catch (e) {
       print('Error in updatePetStatus: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to update status: $e'),
             backgroundColor: Colors.red,
@@ -85,7 +88,8 @@ class PetActions {
     try {
       await onDelete();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(
             content: Text('Pet listing deleted successfully'),
             backgroundColor: Colors.green,
@@ -94,7 +98,8 @@ class PetActions {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(
             content: Text('Failed to delete listing: $e'),
             backgroundColor: Colors.red,

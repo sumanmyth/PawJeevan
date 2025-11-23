@@ -67,7 +67,7 @@ class _FeedTabState extends State<FeedTab> {
     
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -77,15 +77,15 @@ class _FeedTabState extends State<FeedTab> {
               'Recent',
               style: TextStyle(
                 color: _currentFilter == FeedFilter.recent
-                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                    : (isDark ? Colors.white : Colors.purple.shade700),
+                  ? const Color(0xFF7C3AED)
+                  : (isDark ? Colors.white : const Color(0xFF7C3AED)),
               ),
             ),
             avatar: Icon(
               Icons.access_time,
               color: _currentFilter == FeedFilter.recent
-                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+                  ? const Color(0xFF7C3AED)
+                  : (isDark ? Colors.white70 : const Color(0xFF7C3AED)),
             ),
             onSelected: (selected) {
               setState(() {
@@ -93,9 +93,9 @@ class _FeedTabState extends State<FeedTab> {
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            selectedColor: isDark ? const Color.fromRGBO(124, 58, 237, 0.12) : const Color.fromRGBO(124, 58, 237, 0.08),
             backgroundColor: isDark ? Colors.grey.shade800 : null,
-            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
+            checkmarkColor: const Color(0xFF7C3AED),
           ),
           const SizedBox(width: 8),
           FilterChip(
@@ -104,15 +104,15 @@ class _FeedTabState extends State<FeedTab> {
               'Trending',
               style: TextStyle(
                 color: _currentFilter == FeedFilter.trending
-                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                    : (isDark ? Colors.white : Colors.purple.shade700),
+                    ? const Color(0xFF7C3AED)
+                    : (isDark ? Colors.white : const Color(0xFF7C3AED)),
               ),
             ),
             avatar: Icon(
               Icons.trending_up,
               color: _currentFilter == FeedFilter.trending
-                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+                  ? const Color(0xFF7C3AED)
+                  : (isDark ? Colors.white70 : const Color(0xFF7C3AED)),
             ),
             onSelected: (selected) {
               setState(() {
@@ -120,9 +120,9 @@ class _FeedTabState extends State<FeedTab> {
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            selectedColor: isDark ? const Color.fromRGBO(124, 58, 237, 0.12) : const Color.fromRGBO(124, 58, 237, 0.08),
             backgroundColor: isDark ? Colors.grey.shade800 : null,
-            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
+            checkmarkColor: const Color(0xFF7C3AED),
           ),
           const SizedBox(width: 8),
           FilterChip(
@@ -131,15 +131,15 @@ class _FeedTabState extends State<FeedTab> {
               'Following',
               style: TextStyle(
                 color: _currentFilter == FeedFilter.followed
-                    ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                    : (isDark ? Colors.white : Colors.purple.shade700),
+                    ? const Color(0xFF7C3AED)
+                    : (isDark ? Colors.white : const Color(0xFF7C3AED)),
               ),
             ),
             avatar: Icon(
               Icons.people,
               color: _currentFilter == FeedFilter.followed
-                  ? (isDark ? Colors.purple.shade900 : Colors.purple.shade900)
-                  : (isDark ? Colors.white70 : Colors.purple.shade700),
+                  ? const Color(0xFF7C3AED)
+                  : (isDark ? Colors.white70 : const Color(0xFF7C3AED)),
             ),
             onSelected: (selected) {
               setState(() {
@@ -147,9 +147,9 @@ class _FeedTabState extends State<FeedTab> {
                 context.read<CommunityProvider>().fetchPosts(filter: _currentFilter);
               });
             },
-            selectedColor: isDark ? Colors.purple.shade200 : Colors.purple.shade100,
+            selectedColor: isDark ? const Color.fromRGBO(124, 58, 237, 0.12) : const Color.fromRGBO(124, 58, 237, 0.08),
             backgroundColor: isDark ? Colors.grey.shade800 : null,
-            checkmarkColor: isDark ? Colors.purple.shade900 : Colors.purple,
+            checkmarkColor: const Color(0xFF7C3AED),
           ),
         ],
       ),
@@ -199,7 +199,7 @@ class _FeedTabState extends State<FeedTab> {
         } else {
           mainContent = ListView.builder(
             controller: _scrollController,
-            physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             padding: EdgeInsets.only(
               left: 16,
               right: 16,

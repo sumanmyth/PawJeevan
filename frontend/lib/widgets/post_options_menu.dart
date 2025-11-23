@@ -4,6 +4,7 @@ import '../models/community/post_model.dart';
 import '../providers/community_provider.dart';
 import '../screens/community/posts/edit_post_screen.dart';
 import '../services/community_service.dart';
+import '../utils/helpers.dart';
 
 class PostOptionsMenu extends StatefulWidget {
   final Post post;
@@ -34,7 +35,8 @@ class _PostOptionsMenuState extends State<PostOptionsMenu> {
             title: const Text('Report Post'),
             onTap: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              Helpers.showInstantSnackBar(
+                context,
                 const SnackBar(content: Text('Post reported')),
               );
             },
@@ -124,7 +126,8 @@ class _PostOptionsMenuState extends State<PostOptionsMenu> {
             } catch (e) {
               print('Error during delete: $e');
               if (dialogContext.mounted) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                Helpers.showInstantSnackBar(
+                  dialogContext,
                   SnackBar(content: Text('Failed to delete post: $e')),
                 );
                 Navigator.pop(dialogContext, false);
@@ -163,7 +166,8 @@ class _PostOptionsMenuState extends State<PostOptionsMenu> {
     // If deletion was successful
     if (success == true && context.mounted) {
       print('Delete successful, showing confirmation');
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         const SnackBar(content: Text('Post deleted successfully')),
       );
       

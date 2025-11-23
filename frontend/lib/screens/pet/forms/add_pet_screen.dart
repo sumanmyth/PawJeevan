@@ -3,9 +3,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../utils/helpers.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/app_form_card.dart';
+import '../../../widgets/app_dropdown_field.dart';
 
 class AddPetScreen extends StatefulWidget {
   const AddPetScreen({super.key});
@@ -113,18 +116,21 @@ class _AddPetScreenState extends State<AddPetScreen> {
       if (!mounted) return;
 
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           const SnackBar(content: Text('Pet added successfully!')),
         );
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Helpers.showInstantSnackBar(
+          context,
           SnackBar(content: Text(petProvider.error ?? 'Failed to add pet')),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      Helpers.showInstantSnackBar(
+        context,
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
@@ -143,9 +149,9 @@ class _AddPetScreenState extends State<AddPetScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Add Pet', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
+        maxWidth: 720,
         child: Form(
           key: _formKey,
           child: Column(
@@ -157,9 +163,9 @@ class _AddPetScreenState extends State<AddPetScreen> {
                   height: 140,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.purple.shade50,
+                    color: const Color.fromRGBO(124, 58, 237, 0.04),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.purple.shade100),
+                    border: Border.all(color: const Color.fromRGBO(124, 58, 237, 0.08)),
                     image: picked != null
                         ? DecorationImage(image: picked, fit: BoxFit.cover)
                         : null,
@@ -168,7 +174,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
                       ? const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, color: Colors.purple),
+                            Icon(Icons.add_a_photo, color: Color(0xFF7C3AED)),
                             SizedBox(height: 8),
                             Text('Tap to add photo'),
                           ],
@@ -194,7 +200,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: DropdownButtonFormField<String>(
+                    child: AppDropdownFormField<String>(
                       initialValue: _petType,
                       items: const [
                         DropdownMenuItem(value: 'dog', child: Text('Dog')),
@@ -214,17 +220,17 @@ class _AddPetScreenState extends State<AddPetScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
+                    child: AppDropdownFormField<String>(
                       initialValue: _gender,
                       items: const [
                         DropdownMenuItem(value: 'male', child: Text('Male')),
                         DropdownMenuItem(value: 'female', child: Text('Female')),
                       ],
                       onChanged: (v) => setState(() => _gender = v ?? 'male'),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Gender',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.male),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: Icon(_gender == 'male' ? Icons.male : Icons.female),
                       ),
                     ),
                   ),
@@ -330,8 +336,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
                         )
                       : const Icon(Icons.save),
                   label: Text(_isSubmitting ? 'Saving...' : 'Save Pet'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

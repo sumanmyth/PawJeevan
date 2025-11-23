@@ -2,15 +2,28 @@ import 'package:flutter/material.dart';
 
 class Helpers {
   static void showSnackBar(BuildContext context, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    // Remove any current snackbar immediately so the new one doesn't queue.
+    messenger.removeCurrentSnackBar();
+
+    messenger.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        // Short, noticeable duration. Adjust as needed.
+        duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  // Show a custom SnackBar immediately by removing any current one first.
+  static void showInstantSnackBar(BuildContext context, SnackBar snackBar) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.removeCurrentSnackBar();
+    messenger.showSnackBar(snackBar);
   }
 
   static void showLoadingDialog(BuildContext context) {

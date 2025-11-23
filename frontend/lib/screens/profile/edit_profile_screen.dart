@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/app_form_card.dart';
+import '../../utils/helpers.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -57,7 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _pickedImage = image);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image pick error: $e')));
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Image pick error: $e')));
     }
   }
 
@@ -83,7 +85,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         if (!ok) {
           final err = auth.error ?? 'Failed to update avatar';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+          Helpers.showInstantSnackBar(context, SnackBar(content: Text(err)));
           // Continue saving textual fields even if avatar fails
         }
       }
@@ -100,17 +102,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
 
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
+        Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Profile updated successfully')));
         Navigator.pop(context, true);
       } else {
         final err = auth.error ?? 'Failed to update profile';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        Helpers.showInstantSnackBar(context, SnackBar(content: Text(err)));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -134,8 +134,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Edit Profile', showBackButton: true),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      body: AppFormCard(
         padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
@@ -146,10 +145,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 56,
-                    backgroundColor: Colors.purple.shade50,
+                    backgroundColor: const Color.fromRGBO(124, 58, 237, 0.04),
                     backgroundImage: preview,
                     child: preview == null
-                        ? const Icon(Icons.person, size: 56, color: Colors.purple)
+                        ? const Icon(Icons.person, size: 56, color: Color(0xFF7C3AED))
                         : null,
                   ),
                   Positioned(
@@ -177,7 +176,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 padding: EdgeInsets.all(8.0),
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Icon(Icons.camera_alt, color: Colors.purple),
+                            : const Icon(Icons.camera_alt, color: Color(0xFF7C3AED)),
                       ),
                     ),
                   ),
@@ -256,7 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

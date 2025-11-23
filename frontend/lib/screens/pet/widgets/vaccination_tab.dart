@@ -45,14 +45,14 @@ class VaccinationTab extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF6B46C1).withOpacity(0.2),
+          color: const Color.fromRGBO(124, 58, 237, 0.2),
           width: 1.5,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF6B46C1).withOpacity(0.08),
+            color: Color.fromRGBO(124, 58, 237, 0.08),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -62,7 +62,7 @@ class VaccinationTab extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

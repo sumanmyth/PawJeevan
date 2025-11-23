@@ -14,8 +14,8 @@ class PetHeader extends StatelessWidget {
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFF6B46C1),
-            Color(0xFF9F7AEA),
+            Color(0xFF7C3AED),
+            Color.fromRGBO(124, 58, 237, 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -57,7 +57,14 @@ class PetHeader extends StatelessWidget {
           width: 90,
           height: 90,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF7C3AED),
+                Color.fromRGBO(124, 58, 237, 0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: Colors.white.withOpacity(0.3),

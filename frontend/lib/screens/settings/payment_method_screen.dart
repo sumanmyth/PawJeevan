@@ -24,7 +24,7 @@ class PaymentMethodScreen extends StatelessWidget {
           final selected = (settings.paymentMethod == m);
           return ListTile(
             title: Text(m),
-            trailing: selected ? const Icon(Icons.check, color: Colors.purple) : null,
+              trailing: selected ? const Icon(Icons.check, color: Color(0xFF7C3AED)) : null,
             onTap: () async {
               await context.read<SettingsProvider>().setPaymentMethod(m);
               if (ctx.mounted) {

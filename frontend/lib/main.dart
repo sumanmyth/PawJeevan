@@ -31,13 +31,41 @@ class MyApp extends StatelessWidget {
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF6B46C1),
+        seedColor: const Color(0xFF7C3AED),
         brightness: Brightness.light,
       ),
     );
     return base.copyWith(
       scaffoldBackgroundColor: const Color(0xFFF7FAFC),
       appBarTheme: const AppBarTheme(centerTitle: true),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey[50],
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 2),
+        ),
+        prefixIconColor: const Color(0xFF7C3AED),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStatePropertyAll(const Color(0xFF7C3AED)),
+          foregroundColor: WidgetStatePropertyAll(Colors.white),
+          elevation: const WidgetStatePropertyAll(8.0),
+          shadowColor: const WidgetStatePropertyAll(Color.fromRGBO(124, 58, 237, 0.4)),
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 14, horizontal: 20)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFF7C3AED)),
+      ),
       // FIX: Changed CardTheme to CardThemeData
       cardTheme: CardThemeData(
         color: Colors.white,
@@ -47,7 +75,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFF6B46C1),
+        indicatorColor: Color(0xFF7C3AED),
         backgroundColor: Colors.white,
         elevation: 2.0,
         labelTextStyle: WidgetStatePropertyAll(
@@ -61,13 +89,41 @@ class MyApp extends StatelessWidget {
   ThemeData _darkTheme() {
     final base = ThemeData.dark(useMaterial3: true).copyWith(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF6B46C1),
+        seedColor: const Color(0xFF7C3AED),
         brightness: Brightness.dark,
       ),
     );
     return base.copyWith(
       scaffoldBackgroundColor: const Color(0xFF121212),
       appBarTheme: const AppBarTheme(centerTitle: true),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey[800],
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[700]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color.fromRGBO(124, 58, 237, 0.95), width: 2),
+        ),
+        prefixIconColor: const Color(0xFF7C3AED),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStatePropertyAll(const Color(0xFF7C3AED)),
+          foregroundColor: WidgetStatePropertyAll(Colors.white),
+          elevation: const WidgetStatePropertyAll(8.0),
+          shadowColor: const WidgetStatePropertyAll(Color.fromRGBO(107, 70, 193, 0.4)),
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 14, horizontal: 20)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFF7C3AED)),
+      ),
       // FIX: Changed CardTheme to CardThemeData
       cardTheme: CardThemeData(
         color: const Color(0xFF1E1E1E),
@@ -77,7 +133,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
-        indicatorColor: Color(0xFF6B46C1),
+        indicatorColor: Color(0xFF7C3AED),
         backgroundColor: Color(0xFF1A1A1A),
         elevation: 2.0,
         labelTextStyle: WidgetStatePropertyAll(

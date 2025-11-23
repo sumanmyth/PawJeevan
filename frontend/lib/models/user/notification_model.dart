@@ -21,7 +21,9 @@ class NotificationModel {
       type: json['type'],
       title: json['title'],
       message: json['message'],
-      createdAt: DateTime.parse(json['created_at']),
+      // Ensure server timestamps are interpreted in UTC then converted to local time
+      // so relative-time displays and scheduling align with the device timezone.
+      createdAt: DateTime.parse(json['created_at']).toLocal(),
       isRead: json['is_read'] ?? false,
     );
   }
@@ -32,7 +34,8 @@ class NotificationModel {
       'type': type,
       'title': title,
       'message': message,
-      'created_at': createdAt.toIso8601String(),
+      // Convert to UTC string when sending back to the server
+      'created_at': createdAt.toUtc().toIso8601String(),
       'is_read': isRead,
     };
   }

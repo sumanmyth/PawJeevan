@@ -48,7 +48,7 @@ class LostFoundDetailScreen extends StatelessWidget {
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         padding: EdgeInsets.only(top: topPadding, bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +217,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.location_on, color: Colors.purple, size: 24),
+                              const Icon(Icons.location_on, color: Color(0xFF7C3AED), size: 24),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -257,7 +257,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_today, color: Colors.purple),
+                          const Icon(Icons.calendar_today, color: Color(0xFF7C3AED)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
