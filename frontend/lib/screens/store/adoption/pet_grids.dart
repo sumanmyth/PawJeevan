@@ -84,6 +84,7 @@ class PetGrids {
           final aspectRatio = constraints.maxWidth > 600 ? 0.75 : 0.72;
           
           return GridView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -116,6 +117,7 @@ class PetGrids {
           final aspectRatio = constraints.maxWidth > 600 ? 0.75 : 0.72;
           
           return GridView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

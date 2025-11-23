@@ -49,7 +49,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // FIXED: Removed unused 'topPadding' variable here
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Pet Details', showBackButton: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -76,8 +79,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   Widget _buildContent() {
     final adoption = _adoption!;
     final theme = Theme.of(context);
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return SingleChildScrollView(
+      physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+      padding: EdgeInsets.only(top: topPadding + 16, bottom: 16, left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -263,7 +269,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           if (await canLaunchUrl(uri)) {
                             await launchUrl(uri);
                           } else {
-                            if (context.mounted) {
+                            // FIXED: Use 'mounted' (State property) instead of 'context.mounted'
+                            if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Could not open phone dialer'),

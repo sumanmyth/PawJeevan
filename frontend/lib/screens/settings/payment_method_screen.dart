@@ -10,11 +10,13 @@ class PaymentMethodScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final methods = ['Card', 'UPI', 'NetBanking', 'COD'];
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Payment Method', showBackButton: true),
       body: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         itemCount: methods.length,
         separatorBuilder: (_, __) => const Divider(),
         itemBuilder: (ctx, i) {

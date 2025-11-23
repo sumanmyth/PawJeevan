@@ -211,7 +211,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     
     print('Building post detail: ${post.id}, isAuthor: ${post.isCurrentUserAuthor}');
 
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Post',
         showBackButton: true,
@@ -227,7 +230,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
               children: [
                 _buildPostHeader(context, post),
                 const SizedBox(height: 12),

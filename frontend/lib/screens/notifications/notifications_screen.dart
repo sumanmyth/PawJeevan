@@ -119,7 +119,9 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Notifications',
         showBackButton: true,
@@ -155,7 +157,7 @@ class NotificationsScreen extends StatelessWidget {
           return RefreshIndicator(
             onRefresh: () => provider.loadNotifications(),
             child: ListView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.only(top: topPadding + 8, left: 8, right: 8, bottom: 8),
               itemCount: provider.notifications.length,
               itemBuilder: (context, index) {
                 final notification = provider.notifications[index];

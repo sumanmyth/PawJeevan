@@ -31,8 +31,10 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final petProvider = context.watch<PetProvider>();
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'My Pets', showBackButton: true),
       body: !auth.isAuthenticated
           ? _notLoggedIn()
@@ -43,7 +45,7 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
                   : petProvider.pets.isEmpty
                       ? _emptyState()
                       : ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
                           itemCount: petProvider.pets.length,
                           itemBuilder: (context, index) {
                             final pet = petProvider.pets[index];

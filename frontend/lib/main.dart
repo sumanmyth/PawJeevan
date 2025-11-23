@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 // Providers
 import 'providers/auth_provider.dart';
+import 'providers/fact_provider.dart';
 import 'providers/store_provider.dart';
 import 'providers/pet_provider.dart';
 import 'providers/settings_provider.dart';
@@ -91,6 +92,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => FactProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
         ChangeNotifierProvider(create: (_) => PetProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),

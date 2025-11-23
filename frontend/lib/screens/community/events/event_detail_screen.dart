@@ -22,6 +22,7 @@ class EventDetailScreen extends StatelessWidget {
         showBackButton: true,
       ),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

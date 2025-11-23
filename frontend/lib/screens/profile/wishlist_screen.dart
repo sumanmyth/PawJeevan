@@ -32,38 +32,44 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Wishlist',
         showBackButton: true,
       ),
-      body: Column(
-        children: [
-          Container(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey.shade900
-                : Colors.grey.shade100,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: const Color(0xFF6B46C1),
-              labelColor: const Color(0xFF6B46C1),
-              unselectedLabelColor: Colors.grey,
-              tabs: const [
-                Tab(text: 'Products'),
-                Tab(text: 'Pets'),
-              ],
+      body: Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: Column(
+          children: [
+            Container(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade900
+                  : Colors.grey.shade100,
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: const Color(0xFF6B46C1),
+                labelColor: const Color(0xFF6B46C1),
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(text: 'Products'),
+                  Tab(text: 'Pets'),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildProductsTab(),
-                _buildPetsTab(),
-              ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildProductsTab(),
+                  _buildPetsTab(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -201,7 +207,8 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                     right: 8,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        // FIXED: Replaced withOpacity with withValues
+                        color: Colors.black.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(

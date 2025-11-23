@@ -22,7 +22,6 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   final _picker = ImagePicker();
   bool _avatarUploading = false;
-
   bool _isLoading = false;
 
   @override
@@ -95,7 +94,15 @@ class _ProfileTabState extends State<ProfileTab> {
     final user = auth.user;
     final userPosts = user != null ? community.cachedUserPosts(user.id) : [];
 
+    // Calculate the required top padding (Status bar + AppBar height)
+    // This ensures content starts below the app bar even though body is extended
+      final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      // FIX: This allows the background to flow behind the rounded AppBar corners
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
+      
       appBar: CustomAppBar(
         title: 'Profile',
         actions: [
@@ -111,9 +118,11 @@ class _ProfileTabState extends State<ProfileTab> {
         ],
       ),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        // FIX: Added 'topPadding + 24' so the content isn't hidden behind the AppBar
+        padding: EdgeInsets.only(bottom: 110, top: topPadding + 24),
         child: Column(
           children: [
-            const SizedBox(height: 24),
             Container(
               width: double.infinity,
               margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -167,119 +176,119 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                   // Main content
                   Column(
-                children: [
-                  Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage: (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
-                            ? NetworkImage(user.avatarUrl!)
-                            : null,
-                        child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
-                            ? const Icon(Icons.person, size: 50, color: Color(0xFF6B46C1))
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: _avatarUploading ? null : _pickAndUploadAvatar,
-                          borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: _avatarUploading ? Colors.grey : Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x26000000), // Black @ 15%
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: _avatarUploading
-                                ? const Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.camera_alt, color: Colors.purple),
+                      Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white,
+                            backgroundImage: (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
+                                ? NetworkImage(user.avatarUrl!)
+                                : null,
+                            child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
+                                ? const Icon(Icons.person, size: 50, color: Color(0xFF6B46C1))
+                                : null,
                           ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: InkWell(
+                              onTap: _avatarUploading ? null : _pickAndUploadAvatar,
+                              borderRadius: BorderRadius.circular(18),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: _avatarUploading ? Colors.grey : Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x26000000), // Black @ 15%
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: _avatarUploading
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.camera_alt, color: Colors.purple),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        user?.displayName ?? 'User',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user?.email ?? '',
+                        style: const TextStyle(
+                          color: Color(0xE6FFFFFF), // White @ 90%
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Posts',
+                              value: userPosts.length.toString(),
+                              onTap: user != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Followers',
+                              value: user?.followersCount.toString() ?? '0',
+                              onTap: user != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Following',
+                              value: user?.followingCount.toString() ?? '0',
+                              onTap: user != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.displayName ?? 'User',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.email ?? '',
-                    style: const TextStyle(
-                      color: Color(0xE6FFFFFF), // White @ 90%
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: _StatItem(
-                          label: 'Posts',
-                          value: userPosts.length.toString(),
-                          onTap: user != null
-                              ? () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => UserProfileScreen(userId: user.id),
-                                    ),
-                                  )
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatItem(
-                          label: 'Followers',
-                          value: user?.followersCount.toString() ?? '0',
-                          onTap: user != null
-                              ? () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => UserProfileScreen(userId: user.id),
-                                    ),
-                                  )
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatItem(
-                          label: 'Following',
-                          value: user?.followingCount.toString() ?? '0',
-                          onTap: user != null
-                              ? () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => UserProfileScreen(userId: user.id),
-                                    ),
-                                  )
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
                 ],
               ),
             ),

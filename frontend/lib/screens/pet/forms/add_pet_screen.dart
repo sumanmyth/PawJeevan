@@ -138,11 +138,14 @@ class _AddPetScreenState extends State<AddPetScreen> {
     if (_pickedImage != null) {
       picked = kIsWeb ? NetworkImage(_pickedImage!.path) : FileImage(File(_pickedImage!.path)) as ImageProvider;
     }
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Add Pet', showBackButton: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
           child: Column(

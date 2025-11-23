@@ -87,11 +87,14 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar:
           const CustomAppBar(title: 'Edit Medical Record', showBackButton: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding + 16, left: 16, right: 16, bottom: 16),
         child: Form(
           key: _formKey,
           child: Column(

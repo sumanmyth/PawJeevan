@@ -181,6 +181,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
               
               Expanded(
                 child: SingleChildScrollView(
+                  physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

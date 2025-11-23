@@ -107,7 +107,9 @@ class _PetDetailScreenState extends State<PetDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Pet Details',
         showBackButton: true,
@@ -178,30 +180,33 @@ class _PetDetailScreenState extends State<PetDetailScreen>
                     ),
                   ),
                 )
-              : Column(
-                  children: [
-                    PetHeader(pet: _pet),
-                    _buildTabBar(),
-                    Expanded(
-                      child: Container(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            PetInfoTab(pet: _pet),
-                            VaccinationTab(
-                              vaccinations: _vaccinations,
-                              onRefresh: _loadAll,
-                            ),
-                            MedicalTab(
-                              medicalRecords: _medicalRecords,
-                              onRefresh: _loadAll,
-                            ),
-                          ],
+              : Padding(
+                  padding: EdgeInsets.only(top: topPadding),
+                  child: Column(
+                    children: [
+                      PetHeader(pet: _pet),
+                      _buildTabBar(),
+                      Expanded(
+                        child: Container(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              PetInfoTab(pet: _pet),
+                              VaccinationTab(
+                                vaccinations: _vaccinations,
+                                onRefresh: _loadAll,
+                              ),
+                              MedicalTab(
+                                medicalRecords: _medicalRecords,
+                                onRefresh: _loadAll,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
       floatingActionButton: _buildFab(),
     );

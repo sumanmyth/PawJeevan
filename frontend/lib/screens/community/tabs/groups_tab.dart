@@ -438,6 +438,7 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
               
               Expanded(
                 child: SingleChildScrollView(
+                  physics: BouncingScrollPhysics(parent: const AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,6 +852,11 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
                 onRefresh: _refreshGroups,
                 child: ListView.builder(
                   controller: _scrollController,
+                  padding: EdgeInsets.only(
+                    left: 0,
+                    right: 0,
+                    bottom: MediaQuery.of(context).padding.bottom + 110,
+                  ),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];

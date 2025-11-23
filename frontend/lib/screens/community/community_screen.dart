@@ -83,7 +83,8 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6B46C1).withOpacity(0.4),
+            // Fixed: replaced deprecated withOpacity with withValues
+            color: const Color(0xFF6B46C1).withValues(alpha: 0.4), 
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -114,17 +115,13 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     );
     if (posted == true && mounted) {
       if (_currentTabIndex == 0) {
-        // Add a small delay before fetching posts to ensure server processing
         await Future.delayed(const Duration(milliseconds: 500));
         await context.read<CommunityProvider>().fetchPosts();
       } else if (_currentTabIndex == 1) {
-        // Refresh groups tab using callback
         _refreshGroupsCallback?.call();
       } else if (_currentTabIndex == 2) {
-        // Refresh events tab using callback
         _refreshEventsCallback?.call();
       } else if (_currentTabIndex == 3) {
-        // Refresh lost & found tab using callback
         _refreshLostFoundCallback?.call();
       }
     }
@@ -139,14 +136,17 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    // Get screen width to determine layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < CommunityTabConfig.smallScreenWidth;
     final isMediumScreen = screenWidth >= CommunityTabConfig.smallScreenWidth && 
                           screenWidth < CommunityTabConfig.largeScreenWidth;
     final isLargeScreen = screenWidth >= CommunityTabConfig.largeScreenWidth;
     
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Community',
         actions: [
@@ -157,94 +157,97 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 1,
-                  offset: const Offset(0, 1),
+      body: Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 1,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: isSmallScreen,
+                tabAlignment: isSmallScreen 
+                  ? TabAlignment.center 
+                  : TabAlignment.fill,
+                labelColor: Colors.purple,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Colors.purple,
+                indicatorSize: isSmallScreen 
+                  ? TabBarIndicatorSize.label 
+                  : TabBarIndicatorSize.tab,
+                indicatorWeight: 3,
+                labelStyle: TextStyle(
+                  fontSize: isLargeScreen ? 16 : (isMediumScreen ? 14 : 14),
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
-            child: TabBar(
-              controller: _tabController,
-              // Scrollable on small screens to ensure all tabs are visible
-              isScrollable: isSmallScreen,
-              // Center alignment for scrollable tabs
-              tabAlignment: isSmallScreen 
-                ? TabAlignment.center 
-                : TabAlignment.fill,
-              labelColor: Colors.purple,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.purple,
-              indicatorSize: isSmallScreen 
-                ? TabBarIndicatorSize.label 
-                : TabBarIndicatorSize.tab,
-              indicatorWeight: 3,
-              labelStyle: TextStyle(
-                fontSize: isLargeScreen ? 16 : (isMediumScreen ? 14 : 14),
-                fontWeight: FontWeight.w600,
+                unselectedLabelStyle: TextStyle(
+                  fontSize: isLargeScreen ? 16 : (isMediumScreen ? 14 : 14),
+                  fontWeight: FontWeight.normal,
+                ),
+                labelPadding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 16 : (isMediumScreen ? 8 : 12),
+                  vertical: isLargeScreen ? 4 : 0,
+                ),
+                padding: isSmallScreen 
+                  ? const EdgeInsets.symmetric(horizontal: 8) 
+                  : EdgeInsets.zero,
+                tabs: _buildTabs(isSmallScreen, isMediumScreen, isLargeScreen),
               ),
-              unselectedLabelStyle: TextStyle(
-                fontSize: isLargeScreen ? 16 : (isMediumScreen ? 14 : 14),
-                fontWeight: FontWeight.normal,
-              ),
-              // Dynamic padding based on screen size
-              labelPadding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 16 : (isMediumScreen ? 8 : 12),
-                vertical: isLargeScreen ? 4 : 0,
-              ),
-              // Container padding for scroll indicators on small screens
-              padding: isSmallScreen 
-                ? const EdgeInsets.symmetric(horizontal: 8) 
-                : EdgeInsets.zero,
-              tabs: _buildTabs(isSmallScreen, isMediumScreen, isLargeScreen),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: CommunityTabConfig.tabs.map((tab) {
-                switch (tab.route) {
-                  case '/feed':
-                    return const FeedTab();
-                  case '/groups':
-                    return GroupsTab(
-                      onRefreshCallbackRegistered: (callback) {
-                        _refreshGroupsCallback = callback;
-                      },
-                    );
-                  case '/events':
-                    return EventsTab(
-                      onRefreshCallbackRegistered: (callback) {
-                        _refreshEventsCallback = callback;
-                      },
-                    );
-                  case '/lost-found':
-                    return LostFoundTab(
-                      onRefreshCallbackRegistered: (callback) {
-                        _refreshLostFoundCallback = callback;
-                      },
-                    );
-                  default:
-                    return const SizedBox.shrink();
-                }
-              }).toList(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: CommunityTabConfig.tabs.map((tab) {
+                  switch (tab.route) {
+                    case '/feed':
+                      return const FeedTab();
+                    case '/groups':
+                      return GroupsTab(
+                        onRefreshCallbackRegistered: (callback) {
+                          _refreshGroupsCallback = callback;
+                        },
+                      );
+                    case '/events':
+                      return EventsTab(
+                        onRefreshCallbackRegistered: (callback) {
+                          _refreshEventsCallback = callback;
+                        },
+                      );
+                    case '/lost-found':
+                      return LostFoundTab(
+                        onRefreshCallbackRegistered: (callback) {
+                          _refreshLostFoundCallback = callback;
+                        },
+                      );
+                    default:
+                      return const SizedBox.shrink();
+                  }
+                }).toList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ), // Closes Column
+      ), // Closes Padding (This was missing!)
+      
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0, right: 16.0),
+        child: _buildFab(),
       ),
-      floatingActionButton: _buildFab(),
     );
   }
 
   List<Widget> _buildTabs(bool isSmall, bool isMedium, bool isLarge) {
     if (isSmall) {
-      // Small screens - text only, but full text (scrollable)
       return const [
         Tab(text: 'Feed'),
         Tab(text: 'Groups'),
@@ -252,7 +255,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         Tab(text: 'Lost & Found'),
       ];
     } else if (isMedium) {
-      // Medium screens - icons with text, wrapped to prevent overflow
       return [
         const Tab(
           child: FittedBox(
@@ -312,7 +314,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         ),
       ];
     } else {
-      // Large screens - full size with icons and complete text
       return [
         const Tab(
           height: 50,
@@ -378,5 +379,3 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     }
   }
 }
-
-
