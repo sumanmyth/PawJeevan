@@ -6,7 +6,7 @@ import 'package:dio/dio.dart';
 class AuthService {
   final ApiService _api = ApiService();
 
-  Future<User> register({
+  Future<Map<String, dynamic>> register({
     required String username,
     required String email,
     required String password,
@@ -29,17 +29,45 @@ class AuthService {
 
     if (resp.statusCode == 201 || resp.statusCode == 200) {
       final data = resp.data;
-      final user = User.fromJson(data['user']);
+      final user = data['user'] != null ? User.fromJson(data['user']) : null;
       final access = data['tokens']?['access']?.toString();
       final refresh = data['tokens']?['refresh']?.toString();
 
+      final result = <String, dynamic>{
+        'user': user,
+        'requires_verification': data['requires_verification'] ?? false,
+        // backend may return pending_id when account is not yet created
+        'pending_id': data['pending_id'] ?? data['user_id'],
+        'tokens': data['tokens'],
+      };
+
+      // If backend issued tokens (rare on registration when verification required), save them now
       if (access != null) {
         await _api.saveToken(access, refreshToken: refresh);
       }
-      return user;
+
+      return result;
     }
 
-    throw Exception('Registration failed');
+    // Non-2xx: try to extract a helpful error message from response body
+    final body = resp.data;
+    String message = 'Registration failed';
+    try {
+      if (body is Map) {
+        if (body.containsKey('detail')) {
+          message = body['detail'].toString();
+        } else if (body.keys.isNotEmpty) {
+          final firstKey = body.keys.first;
+          final val = body[firstKey];
+          if (val is List && val.isNotEmpty) message = val.first.toString();
+          else message = val.toString();
+        }
+      } else if (body is String) {
+        message = body;
+      }
+    } catch (_) {}
+
+    throw Exception(message);
   }
 
   Future<User> login({
@@ -161,6 +189,36 @@ class AuthService {
       return User.fromJson(resp.data);
     }
     throw Exception('Failed to update avatar');
+  }
+
+  Future<void> sendOtp({String? email, int? userId}) async {
+    final data = <String, dynamic>{};
+    if (email != null) data['email'] = email;
+    if (userId != null) data['user_id'] = userId;
+    final resp = await _api.post(ApiConstants.sendOtp, data: data);
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      throw Exception('Failed to send OTP');
+    }
+  }
+
+  Future<User> verifyOtp({String? email, int? userId, required String code}) async {
+    final data = <String, dynamic>{'code': code};
+    if (email != null) data['email'] = email;
+    if (userId != null) data['user_id'] = userId;
+
+    final resp = await _api.post(ApiConstants.verifyOtp, data: data);
+    if (resp.statusCode == 200) {
+      final data = resp.data;
+      final user = User.fromJson(data['user']);
+      final access = data['tokens']?['access']?.toString();
+      final refresh = data['tokens']?['refresh']?.toString();
+
+      if (access != null) {
+        await _api.saveToken(access, refreshToken: refresh);
+      }
+      return user;
+    }
+    throw Exception('OTP verification failed');
   }
 
   Future<void> logout() async {

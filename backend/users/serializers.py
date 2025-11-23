@@ -59,6 +59,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        # Check uniqueness for username and email and provide clear errors
+        from .models import User as _User
+        username = attrs.get('username')
+        email = attrs.get('email')
+        errors = {}
+        if username and _User.objects.filter(username=username).exists():
+            errors['username'] = 'Username already exists'
+        if email and _User.objects.filter(email=email).exists():
+            errors['email'] = 'Email already exists'
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs
 
     def create(self, validated_data):
@@ -113,3 +125,28 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ['id', 'type', 'title', 'message', 'is_read', 'action_url', 'created_at']
         read_only_fields = ["id", "user", "created_at"]
+
+
+class OTPRequestSerializer(serializers.Serializer):
+    """Request/resend OTP by email or user id."""
+    email = serializers.EmailField(required=False)
+    user_id = serializers.IntegerField(required=False)
+
+    def validate(self, attrs):
+        if not attrs.get('email') and not attrs.get('user_id'):
+            raise serializers.ValidationError('Provide email or user_id')
+        return attrs
+
+
+class OTPVerifySerializer(serializers.Serializer):
+    """Verify OTP: accept user identifier and code."""
+    email = serializers.EmailField(required=False)
+    user_id = serializers.IntegerField(required=False)
+    code = serializers.CharField()
+
+    def validate(self, attrs):
+        if not attrs.get('email') and not attrs.get('user_id'):
+            raise serializers.ValidationError('Provide email or user_id')
+        if not attrs.get('code'):
+            raise serializers.ValidationError('Provide code')
+        return attrs

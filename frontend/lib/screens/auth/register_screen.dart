@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'verify_otp_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../common/main_screen.dart';
 import '../../utils/helpers.dart';
@@ -41,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
-    final ok = await auth.register(
+    final result = await auth.register(
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
@@ -52,31 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!mounted) return;
 
-    if (ok) {
-      Helpers.showInstantSnackBar(
-        context,
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Registration successful! Welcome to PawJeevan')),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-        (route) => false,
-      );
-    } else {
+    if (result == null) {
       Helpers.showInstantSnackBar(
         context,
         SnackBar(
@@ -93,7 +71,114 @@ class _RegisterScreenState extends State<RegisterScreen> {
           margin: const EdgeInsets.all(16),
         ),
       );
+      return;
     }
+
+    if (result is Map && (result['requires_verification'] == true)) {
+      final pendingId = result['pending_id'] as int?;
+      final userId = pendingId ?? result['user_id'] as int?;
+      final verifiedUser = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VerifyOtpScreen(email: _emailController.text.trim(), userId: userId)),
+      );
+
+      if (verifiedUser != null) {
+        auth.updateLocalUser(verifiedUser);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setInt('user_id', verifiedUser.id);
+
+        Helpers.showInstantSnackBar(
+          context,
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('Registration complete — email verified')),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+        return;
+      } else {
+        Helpers.showInstantSnackBar(
+          context,
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text(auth.error ?? 'Verification required')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (result is Map) {
+      final user = result['user'] as dynamic;
+      if (user != null) {
+        Helpers.showInstantSnackBar(
+          context,
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('Registration successful! Welcome to PawJeevan')),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+        return;
+      }
+    }
+
+    Helpers.showInstantSnackBar(
+      context,
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(auth.error ?? 'Registration failed')),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override

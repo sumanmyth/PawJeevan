@@ -4,6 +4,7 @@ User models: User, PetProfile, VaccinationRecord, MedicalRecord, Notification
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -242,3 +243,58 @@ class ScheduledNotification(models.Model):
 
     def __str__(self):
         return f"Scheduled {self.notification_type} for {self.user.username} at {self.send_at}"
+
+
+class UserOTP(models.Model):
+    """
+    Stores one-time-passwords for actions like email verification.
+    """
+    PURPOSE_CHOICES = (
+        ('email_verification', 'Email Verification'),
+    )
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='otps')
+    code = models.CharField(max_length=10)
+    purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES, default='email_verification')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"OTP for {self.user.email} ({self.purpose})"
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+
+class PendingRegistration(models.Model):
+    """
+    Temporary store for user registration data until email OTP is verified.
+    The password stored here is the hashed password using Django's password hasher.
+    """
+    username = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128)
+    first_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # OTP fields for this pending registration
+    otp_code = models.CharField(max_length=10)
+    otp_expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Pending registration for {self.email}"
+
+    def otp_is_expired(self):
+        return timezone.now() > self.otp_expires_at

@@ -37,38 +37,110 @@ Flutter mobile application for PawJeevan - Pet Store & AI Care Platform 📱
 - 👤 User authentication and profile management
 - 🐶 Pet adoption and lost & found
 - 📝 Community posts, events, and groups
+# 🐾 PawJeevan Frontend
+
+Flutter mobile application for PawJeevan - Pet Store & AI Care Platform 📱
+
+## 🚀 Getting Started
+
+### Prerequisites
+- 🐦 Flutter SDK (3.0.0 or higher)
+- 🎯 Dart SDK
+- 🌐 Chrome/Edge browser for web development
+
+### Installation
+1. 📦 Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+2. ▶️ Run the app:
+   ```bash
+   flutter run
+   ```
+   - For web: `flutter run -d chrome`
+   - For Android: `flutter run -d android`
+   - For iOS: `flutter run -d ios`
+
+## 🗂️ Project Structure
+- `lib/`: Main source code
+  - `models/`: Data models
+  - `providers/`: State management
+  - `screens/`: UI screens
+  - `services/`: API and business logic
+  - `utils/`: Utility functions
+  - `widgets/`: Reusable UI components
+- `assets/`: Images and icons
+- `test/`: Widget and unit tests
+
+## ✨ Features
+- 👤 User authentication and profile management (registration now requires email OTP verification)
+- 🐶 Pet adoption and lost & found
+- 📝 Community posts, events, and groups
 - 🛒 Store for pet products
 - 🤖 AI-powered pet care features
 
-## 🛠️ Development
-- ⚡ Hot reload supported for rapid development
-- 📱 Responsive design for mobile and web
-- 🔗 Integration with backend REST API
+## �️ Development
+# PawJeevan — Frontend (Flutter)
 
-### Runtime configuration (Google client id)
+This directory contains the Flutter application used by PawJeevan (mobile and web).
 
-- The frontend no longer hard-codes the Google OAuth client id. Instead the app fetches a non-secret runtime configuration from the backend endpoint:
+Prerequisites
 
-   - `GET http://<api-host>/api/config/google/`
-   - Response: `{"google_client_id": "<value>"}`
+- Flutter SDK (stable channel) installed and available on PATH
+- A compatible Dart SDK (bundled with Flutter)
+- For mobile builds: Android SDK / Xcode (as required by Flutter)
 
-- Local development: ensure the backend is running and that `backend/.env` contains `GOOGLE_CLIENT_ID` (this file is not committed). The frontend calls `ConfigService.init()` at startup to load the value.
+Quick start (Windows PowerShell)
 
-- Web: `web/index.html` contains a small script that fetches the backend value and sets the `meta[name="google-signin-client_id"]` tag before the Google sign-in script initializes. For production you may prefer CI-time injection instead of runtime fetch.
+```powershell
+cd frontend
+flutter doctor
+flutter pub get
 
-### Notes
-- If the frontend cannot reach the backend at startup it will still run, but Google Sign-In will fail until the client id is available. During local development run both backend and frontend.
+# Run on web (Chrome)
+flutter run -d chrome
 
-## 📦 Deployment
-- 📱 Android, 🍏 iOS, and 🌐 Web supported
-- See official Flutter docs for build and release instructions
+# Or run on connected device/emulator
+flutter run
 
-## 📝 Notes
-- 📄 Update `pubspec.yaml` for new dependencies
-- 🔧 Configure API endpoints in `lib/services/`
+# Build release outputs
+flutter build web
+flutter build apk
+```
 
-## 📄 License
-MIT
+Configuration
+
+- API base URL / runtime config: the app loads non-secret runtime configuration from the backend at startup. Ensure the backend is running locally while developing.
+- For local development, update the API settings in `lib/config.dart` if needed, or make sure your backend's `api` host is reachable.
+
+Project layout (important folders)
+
+- `lib/` — application source
+   - `models/`, `providers/`, `screens/`, `services/`, `utils/`, `widgets/`
+- `assets/` — images and icons referenced from `pubspec.yaml`
+- `test/` — widget & unit tests
+
+OTP registration flow (frontend notes)
+
+- The app's registration flow supports an email OTP verification step. When the backend returns `requires_verification` with a `pending_id`, the app shows a screen to collect the 6-digit OTP and complete verification.
+- Relevant frontend pieces: `AuthService.register()` and `AuthService.verifyOtp()` (verify how `pending_id` is handled in your app code).
+
+Testing
+
+```powershell
+cd frontend
+flutter test
+```
+
+Deployment
+
+- Use `flutter build` variants for your target platform (`web`, `apk`, `ios`).
+- For web deployment, serve the contents of `build/web` via any static host or CDN.
+
+Notes
+
+- Keep secrets out of the repo. Do not commit API keys or `.env` files. Use runtime config and environment variables.
+- If you change native platform files, run `flutter pub get` and rebuild.
 
 ---
 

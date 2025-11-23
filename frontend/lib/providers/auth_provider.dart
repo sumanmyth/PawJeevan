@@ -165,7 +165,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register({
+  Future<dynamic> register({
     required String username,
     required String email,
     required String password,
@@ -178,7 +178,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await _auth.register(
+      final result = await _auth.register(
         username: username,
         email: email,
         password: password,
@@ -187,21 +187,29 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
       );
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setInt('user_id', _user!.id);
+      // If tokens were returned and saved by the service, try to fetch profile
+      if (result.containsKey('tokens') && result['tokens'] != null) {
+        try {
+          _user = await _auth.getProfile();
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setInt('user_id', _user!.id);
+        } catch (e) {
+          // ignore profile fetch errors here
+        }
+      }
 
-      _error = null;
       _isLoading = false;
       notifyListeners();
-      return true;
+      return result;
     } catch (e) {
       print('Registration error: $e');
       await _clearAuthState();
-      _error = _friendlyError(e);
+      // Surface backend validation message directly for registration failures
+      _error = e.toString();
       _isLoading = false;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
