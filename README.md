@@ -8,15 +8,6 @@ PawJeevan is a full-stack platform for pet adoption, community engagement, and p
 - 📦 `backend/`: Django REST API, user management, community, store, AI features
 - 📱 `frontend/`: Flutter mobile app for Android, iOS, and web
 
-# PawJeevan
-
-PawJeevan is a full-stack pet adoption and care platform with a Django REST backend and a Flutter frontend (mobile + web).
-
-This repository contains two main parts:
-
-- `backend/` — Django REST API and admin services
-- `frontend/` — Flutter application (Android, iOS, Web)
-
 Quick links
 - Backend docs: `backend/README.md`
 - Frontend docs: `frontend/README.md`
