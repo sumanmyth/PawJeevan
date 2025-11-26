@@ -53,7 +53,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
   Future<void> _pickDob() async {
     final now = DateTime.now();
     final first = DateTime(now.year - 30, now.month, now.day);
-    final dt = await showDatePicker(
+    final dt = await Helpers.showBlurredDatePicker(
       context: context,
       initialDate: _dob ?? now,
       firstDate: first,

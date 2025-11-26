@@ -1,11 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'dart:typed_data';
 
 /// Create a MultipartFile from an [XFile], attempting to set a correct
 /// Content-Type for common image formats including HEIC/HEIF.

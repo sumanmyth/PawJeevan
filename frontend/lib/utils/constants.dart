@@ -1,8 +1,16 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+/// Override for the API base URL. Set to a public ngrok URL when testing
+/// from devices that cannot reach the local machine via LAN/emulator loopback.
+/// Leave empty to use the local defaults (emulator loopback or LAN IP).
+const String overrideBaseUrl = ''; // e.g. 'https://abcd-1234.ngrok-free.dev'
+
 class ApiConstants {
   static String get baseUrl {
+    // If an override is provided, prefer it (useful for ngrok testing).
+    if (overrideBaseUrl.isNotEmpty) return overrideBaseUrl;
+
     if (kIsWeb) {
       // For web browsers
       return 'http://localhost:8000';
@@ -26,6 +34,7 @@ class ApiConstants {
   static const String socialLogin = '/api/users/social-login/';
   static const String sendOtp = '/api/users/send-otp/';
   static const String verifyOtp = '/api/users/verify-otp/';
+  static const String resetPassword = '/api/users/profiles/reset-password/';
   
   // Pet endpoints
   static const String pets = '/api/users/pets/';

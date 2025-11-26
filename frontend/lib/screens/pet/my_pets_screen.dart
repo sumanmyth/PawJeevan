@@ -323,38 +323,13 @@ class _PetCard extends StatelessWidget {
                         context.read<PetProvider>().loadPets();
                       }
                     } else if (value == 'delete') {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: Text(
-                            'Delete Pet',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          content: Text(
-                            'Are you sure you want to delete ${pet.name}?',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(
-                                'Delete',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      final confirm = await Helpers.showBlurredConfirmationDialog(
+                        context,
+                        title: 'Delete Pet',
+                        content: 'Are you sure you want to delete ${pet.name}?',
+                        cancelLabel: 'Cancel',
+                        confirmLabel: 'Delete',
+                        confirmDestructive: true,
                       );
                       if (confirm == true && context.mounted) {
                         final ok = await context.read<PetProvider>().deletePet(pet.id!);

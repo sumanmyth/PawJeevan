@@ -548,38 +548,23 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
     ).join(' ');
   }
   
-  void _showDeleteConfirmation() {
+  Future<void> _showDeleteConfirmation() async {
     // Close the group info sheet first
     Navigator.pop(context);
     
     // Then show confirmation dialog
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Group'),
-          content: Text(
-            'Are you sure you want to delete "${_group.name}"? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                _deleteGroup();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
+    final confirmed = await Helpers.showBlurredConfirmationDialog(
+      context,
+      title: 'Delete Group',
+      content: 'Are you sure you want to delete "${_group.name}"? This action cannot be undone.',
+      cancelLabel: 'Cancel',
+      confirmLabel: 'Delete',
+      confirmDestructive: true,
     );
+
+    if (confirmed == true) {
+      _deleteGroup();
+    }
   }
   
   void _showLeaveConfirmation() {

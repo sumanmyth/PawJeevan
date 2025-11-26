@@ -44,7 +44,7 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
   }
 
   Future<void> _pickDate(bool isNextDue) async {
-    final dt = await showDatePicker(
+    final dt = await Helpers.showBlurredDatePicker(
       context: context,
       initialDate: isNextDue ? (_nextDueDate ?? DateTime.now()) : _vaccinationDate,
       firstDate: DateTime(2000),

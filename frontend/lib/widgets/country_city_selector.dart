@@ -18,7 +18,7 @@ Future<String?> showCountryCitySelector(BuildContext context, {String? initialLo
 
 class _CountryCitySelector extends StatefulWidget {
   final String? initialLocation;
-  const _CountryCitySelector({Key? key, this.initialLocation}) : super(key: key);
+  const _CountryCitySelector({this.initialLocation});
 
   @override
   State<_CountryCitySelector> createState() => _CountryCitySelectorState();

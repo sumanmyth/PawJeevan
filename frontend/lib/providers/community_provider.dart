@@ -176,6 +176,17 @@ class CommunityProvider extends ChangeNotifier {
       final index = _posts.indexWhere((p) => p.id == postId);
       if (index != -1) {
         _posts[index] = updatedPost;
+        // Also update any detailed cache entry so PostDetailScreen shows updated content
+        if (_postDetails.containsKey(postId)) {
+          _postDetails[postId] = updatedPost;
+        }
+        // Update user's cached posts list if available
+        if (_userPosts.containsKey(updatedPost.author)) {
+          final list = _userPosts[updatedPost.author]!;
+          final uIndex = list.indexWhere((p) => p.id == postId);
+          if (uIndex != -1) list[uIndex] = updatedPost;
+          _userPosts[updatedPost.author] = list;
+        }
         notifyListeners();
       }
       return true;

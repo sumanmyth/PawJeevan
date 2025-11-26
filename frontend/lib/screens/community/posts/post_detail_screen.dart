@@ -52,8 +52,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _showPostOptions(Post post) {
+    // Capture the state context to avoid using a deactivated bottom-sheet context
+    final parentContext = context;
+
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -61,16 +64,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             leading: const Icon(Icons.edit),
             title: const Text('Edit Post'),
             onTap: () async {
+              // Close the bottom sheet using its own context, but perform navigation
+              // and provider interaction using the parent state context to avoid
+              // looking up ancestors on a deactivated context.
               Navigator.pop(context);
               final edited = await Navigator.push<bool>(
-                context,
+                parentContext,
                 MaterialPageRoute(
                   builder: (_) => EditPostScreen(post: post),
                 ),
               );
-              if (edited == true) {
-                await context.read<CommunityProvider>().fetchPosts();
-                await context.read<CommunityProvider>().getPostDetail(post.id, force: true);
+              if (edited == true && mounted) {
+                final provider = context.read<CommunityProvider>();
+                await provider.fetchPosts();
+                await provider.getPostDetail(post.id, force: true);
               }
             },
           ),
@@ -79,28 +86,33 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             title: const Text('Delete Post', style: TextStyle(color: Colors.red)),
             onTap: () async {
               Navigator.pop(context);
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Delete Post'),
-                  content: const Text('Are you sure you want to delete this post?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
+              final confirm = await Helpers.showBlurredConfirmationDialog(
+                parentContext,
+                title: 'Delete Post',
+                content: 'Are you sure you want to delete this post?',
+                cancelLabel: 'Cancel',
+                confirmLabel: 'Delete',
+                confirmDestructive: true,
               );
               if (confirm == true) {
-                final success = await context.read<CommunityProvider>().deletePost(post.id);
+                if (!mounted) return;
+                final provider = context.read<CommunityProvider>();
+                print('PostDetail: attempting to delete post ${post.id}');
+                final success = await provider.deletePost(post.id);
+                print('PostDetail: provider.deletePost returned: $success, error: ${provider.error}');
                 if (success && mounted) {
+                  // Ensure the main posts list is refreshed so the post disappears
+                  // from any feed or list screens before popping the detail view.
+                  await provider.fetchPosts();
                   Navigator.pop(context);
+                } else {
+                  // Show user-facing feedback when delete fails
+                  if (mounted) {
+                    Helpers.showInstantSnackBar(
+                      context,
+                      SnackBar(content: Text('Failed to delete post: ${provider.error ?? 'Unknown error'}')),
+                    );
+                  }
                 }
               }
             },
@@ -125,21 +137,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               if (!context.mounted) return;
               
               // Show confirmation dialog with state management
-              final success = await showDialog<bool>(
-                context: context,
+              final success = await Helpers.showBlurredDialog<bool>(
+                context,
                 barrierDismissible: false,
                 builder: (BuildContext dialogContext) => StatefulBuilder(
                   builder: (BuildContext context, StateSetter setState) {
                     bool isDeleting = false;
-                    
+
                     void handleDelete() async {
                       try {
                         setState(() => isDeleting = true);
-                        
+
                         print('Starting comment delete operation...');
                         final provider = Provider.of<CommunityProvider>(context, listen: false);
                         final success = await provider.deleteComment(widget.postId, comment.id);
-                        
+
                         if (success) {
                           print('Comment deleted successfully');
                           await provider.getPostDetail(widget.postId, force: true);

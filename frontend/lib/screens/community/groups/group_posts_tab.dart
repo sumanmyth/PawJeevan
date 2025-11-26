@@ -151,23 +151,13 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
   }
 
   Future<void> _deletePost(GroupPost post) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirm = await Helpers.showBlurredConfirmationDialog(
+      context,
+      title: 'Delete Post',
+      content: 'Are you sure you want to delete this post?',
+      cancelLabel: 'Cancel',
+      confirmLabel: 'Delete',
+      confirmDestructive: true,
     );
 
     if (confirm != true) return;

@@ -26,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword      = true;
   bool _obscureConfirm       = true;
+  bool _errorClearScheduled = false;
 
   @override
   void dispose() {
@@ -185,6 +186,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (auth.error == null) {
+      _errorClearScheduled = false;
+    } else if (!_errorClearScheduled) {
+      _errorClearScheduled = true;
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted) context.read<AuthProvider>().clearError();
+      });
+    }
 
     return Scaffold(
       body: Container(

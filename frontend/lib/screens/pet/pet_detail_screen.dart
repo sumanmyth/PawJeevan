@@ -134,30 +134,16 @@ class _PetDetailScreenState extends State<PetDetailScreen>
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Delete Pet'),
-                  content:
-                      Text('Are you sure you want to delete "${_pet.name}"?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text(
-                        'Delete',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
+              final confirm = await Helpers.showBlurredConfirmationDialog(
+                context,
+                title: 'Delete Pet',
+                content: 'Are you sure you want to delete "${_pet.name}"?',
+                cancelLabel: 'Cancel',
+                confirmLabel: 'Delete',
+                confirmDestructive: true,
               );
               if (confirm == true && mounted) {
-                final ok =
-                    await context.read<PetProvider>().deletePet(_pet.id!);
+                final ok = await context.read<PetProvider>().deletePet(_pet.id!);
                 if (ok && mounted) {
                   Navigator.pop(context, true);
                 } else if (mounted) {

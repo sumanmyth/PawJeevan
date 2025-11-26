@@ -4,10 +4,14 @@ import '../../../providers/store_provider.dart';
 
 class PetTypeMenu extends StatelessWidget {
   final List<Map<String, String>> petTypes;
+  final String? selected;
+  final void Function(String)? onChanged;
 
   const PetTypeMenu({
     super.key,
     required this.petTypes,
+    this.selected,
+    this.onChanged,
   });
 
   @override
@@ -20,16 +24,21 @@ class PetTypeMenu extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: petTypes.map((petType) {
-          final isSelected = petType['id'] == provider.selectedPetType;
+          final current = selected ?? provider.selectedPetType;
+          final isSelected = petType['id'] == current;
           return ChoiceChip(
             label: Text(petType['label']!),
             selected: isSelected,
-            onSelected: (selected) {
-              if (selected) {
-                // Clear search when pet type changes
-                provider.setSearchQuery('');
-                provider.searchAdoptions();
-                provider.setSelectedPetType(petType['id']!);
+            onSelected: (sel) {
+              if (sel) {
+                if (onChanged != null) {
+                  onChanged!(petType['id']!);
+                } else {
+                  // Clear search when pet type changes
+                  provider.setSearchQuery('');
+                  provider.searchAdoptions();
+                  provider.setSelectedPetType(petType['id']!);
+                }
               }
             },
             selectedColor: const Color(0xFFE9D8FD),

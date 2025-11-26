@@ -243,6 +243,24 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({"message": "Password changed successfully"})
 
+    @action(detail=False, methods=["post"], url_path="reset-password")
+    def reset_password(self, request):
+        """Set a new password for the authenticated user.
+
+        This endpoint is intended to be used after OTP verification which
+        issues an authentication token. The client should call verify-otp,
+        receive tokens, include the access token in Authorization header,
+        then call this endpoint with the new password.
+        """
+        user = request.user
+        new_password = request.data.get('new_password')
+        if not new_password or len(new_password) < 6:
+            return Response({"error": "Password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password reset successfully"})
+
     @action(detail=False, methods=["get", "patch"], url_path="me", parser_classes=[MultiPartParser, FormParser, JSONParser])
     def me(self, request):
         user = request.user

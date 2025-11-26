@@ -1,69 +1,59 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+// helpers import removed (unused)
+import 'verify_otp_screen.dart';
+import 'reset_password_screen.dart';
 
-class VerifyOtpScreen extends StatefulWidget {
-  final String? email;
-  final int? userId;
-
-  const VerifyOtpScreen({super.key, this.email, this.userId});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _codeController = TextEditingController();
+  final _emailController = TextEditingController();
   final AuthService _auth = AuthService();
   bool _loading = false;
   String? _error;
 
   @override
   void dispose() {
-    _codeController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _verify() async {
+  Future<void> _sendOtp() async {
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final user = await _auth.verifyOtp(
-        email: widget.email,
-        userId: widget.userId,
-        code: _codeController.text.trim(),
+      await _auth.sendOtp(email: _emailController.text.trim());
+      if (!mounted) return;
+      // Navigate to verify screen. When verify succeeds it will return a User and
+      // AuthService will have stored tokens, allowing reset password call.
+      final user = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VerifyOtpScreen(email: _emailController.text.trim())),
       );
-      // On success, pop with the user object (caller can handle navigation)
-      Navigator.of(context).pop(user);
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      setState(() {
-        _loading = false;
-      });
-    }
-  }
 
-  Future<void> _resend() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await _auth.sendOtp(email: widget.email, userId: widget.userId);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent')));
+      if (user != null && mounted) {
+        // Move to reset password screen. We navigate to the named route
+        // so the reset screen can replace the current flow stack.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+        );
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();
       });
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -157,24 +147,25 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Verify your email',
+                              'Forgot password',
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED)),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Enter the 6-digit code sent to your email',
+                              'Enter the email associated with your account. We will send a verification code to reset your password.',
                               style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700]),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
 
                             TextFormField(
-                              controller: _codeController,
-                              keyboardType: TextInputType.number,
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
                               style: TextStyle(color: isDark ? Colors.white : Colors.black),
                               decoration: InputDecoration(
-                                labelText: 'Verification Code',
+                                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C3AED)),
+                                labelText: 'Email',
                                 labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 enabledBorder: OutlineInputBorder(
@@ -189,8 +180,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
                               ),
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty) return 'Please enter the code';
-                                if (v.trim().length < 4) return 'Please enter a valid code';
+                                if (v == null || v.trim().isEmpty) return 'Please enter your email';
+                                if (!v.contains('@')) return 'Please enter a valid email';
                                 return null;
                               },
                             ),
@@ -216,12 +207,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: _loading
-                                  ? null
-                                  : () async {
-                                      if (!_formKey.currentState!.validate()) return;
-                                      await _verify();
-                                    },
+                              onPressed: _loading ? null : _sendOtp,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF7C3AED),
                                 foregroundColor: Colors.white,
@@ -231,13 +217,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                               ),
                               child: _loading
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            ),
-
-                            const SizedBox(height: 8),
-                            TextButton(
-                              onPressed: _loading ? null : _resend,
-                              child: Text('Resend code', style: TextStyle(color: isDark ? Colors.grey[300] : const Color(0xFF7C3AED))),
+                                  : const Text('Send verification code', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
 
                             const SizedBox(height: 12),

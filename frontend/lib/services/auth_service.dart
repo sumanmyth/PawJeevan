@@ -61,8 +61,11 @@ class AuthService {
         } else if (body.keys.isNotEmpty) {
           final firstKey = body.keys.first;
           final val = body[firstKey];
-          if (val is List && val.isNotEmpty) message = val.first.toString();
-          else message = val.toString();
+          if (val is List && val.isNotEmpty) {
+            message = val.first.toString();
+          } else {
+            message = val.toString();
+          }
         }
       } else if (body is String) {
         message = body;
@@ -203,6 +206,18 @@ class AuthService {
     final resp = await _api.post(ApiConstants.sendOtp, data: data);
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw Exception('Failed to send OTP');
+    }
+  }
+
+  /// Reset password for a user (used after OTP verification which issues tokens).
+  /// Backend is expected to accept this request for an authenticated user.
+  Future<void> resetPassword({required String newPassword}) async {
+    final resp = await _api.post(
+      ApiConstants.resetPassword,
+      data: {'new_password': newPassword},
+    );
+    if (resp.statusCode != 200 && resp.statusCode != 204) {
+      throw Exception(resp.data?['message'] ?? 'Failed to reset password');
     }
   }
 

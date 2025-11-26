@@ -1,69 +1,54 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../utils/helpers.dart';
+import 'login_screen.dart';
 
-class VerifyOtpScreen extends StatefulWidget {
-  final String? email;
-  final int? userId;
-
-  const VerifyOtpScreen({super.key, this.email, this.userId});
+class ResetPasswordScreen extends StatefulWidget {
+  const ResetPasswordScreen({super.key});
 
   @override
-  State<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _codeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   final AuthService _auth = AuthService();
   bool _loading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   String? _error;
 
   @override
   void dispose() {
-    _codeController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
-  Future<void> _verify() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final user = await _auth.verifyOtp(
-        email: widget.email,
-        userId: widget.userId,
-        code: _codeController.text.trim(),
-      );
-      // On success, pop with the user object (caller can handle navigation)
-      Navigator.of(context).pop(user);
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      setState(() {
-        _loading = false;
-      });
+  Future<void> _reset() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_passwordController.text != _confirmController.text) {
+      setState(() => _error = 'Passwords do not match');
+      return;
     }
-  }
-
-  Future<void> _resend() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      await _auth.sendOtp(email: widget.email, userId: widget.userId);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent')));
+      await _auth.resetPassword(newPassword: _passwordController.text.trim());
+      if (!mounted) return;
+      Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Password reset successful')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      setState(() => _error = e.toString());
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -153,28 +138,29 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                   end: Alignment.bottomRight,
                                 ),
                               ),
-                              child: const Icon(Icons.mark_email_read_outlined, size: 36, color: Colors.white),
+                              child: const Icon(Icons.lock_outline, size: 36, color: Colors.white),
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Verify your email',
+                              'Set new password',
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED)),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Enter the 6-digit code sent to your email',
+                              'Enter a new password for your account',
                               style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700]),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
 
                             TextFormField(
-                              controller: _codeController,
-                              keyboardType: TextInputType.number,
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
                               style: TextStyle(color: isDark ? Colors.white : Colors.black),
                               decoration: InputDecoration(
-                                labelText: 'Verification Code',
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C3AED)),
+                                labelText: 'New password',
                                 labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                 enabledBorder: OutlineInputBorder(
@@ -187,10 +173,50 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 ),
                                 filled: true,
                                 fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                    color: const Color(0xFF7C3AED),
+                                  ),
+                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                ),
                               ),
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty) return 'Please enter the code';
-                                if (v.trim().length < 4) return 'Please enter a valid code';
+                                if (v == null || v.isEmpty) return 'Please enter a password';
+                                if (v.length < 6) return 'Password must be at least 6 characters';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _confirmController,
+                              obscureText: _obscureConfirm,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C3AED)),
+                                labelText: 'Confirm password',
+                                labelStyle: TextStyle(color: isDark ? Colors.grey[300] : null),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 2),
+                                ),
+                                filled: true,
+                                fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                    color: const Color(0xFF7C3AED),
+                                  ),
+                                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                ),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Please confirm your password';
                                 return null;
                               },
                             ),
@@ -216,12 +242,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: _loading
-                                  ? null
-                                  : () async {
-                                      if (!_formKey.currentState!.validate()) return;
-                                      await _verify();
-                                    },
+                              onPressed: _loading ? null : _reset,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF7C3AED),
                                 foregroundColor: Colors.white,
@@ -231,13 +252,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                               ),
                               child: _loading
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            ),
-
-                            const SizedBox(height: 8),
-                            TextButton(
-                              onPressed: _loading ? null : _resend,
-                              child: Text('Resend code', style: TextStyle(color: isDark ? Colors.grey[300] : const Color(0xFF7C3AED))),
+                                  : const Text('Set password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
 
                             const SizedBox(height: 12),
@@ -247,7 +262,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () {
+                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                },
                                 style: TextButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 48),
                                   shape: RoundedRectangleBorder(

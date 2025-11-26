@@ -165,7 +165,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FactProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
         ChangeNotifierProvider(create: (_) => PetProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()..init()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()..loadNotifications()),
       ],
