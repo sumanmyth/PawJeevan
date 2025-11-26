@@ -117,7 +117,9 @@ def send_otp_email(email, code):
         f"<p>If you did not request this, please ignore this email.</p>"
     )
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@pawjeevan.local')
+    # Use a dedicated OTP sender (friendly display name) if configured, otherwise fall back
+    # to the global DEFAULT_FROM_EMAIL.
+    from_email = getattr(settings, 'OTP_FROM_EMAIL', getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@pawjeevan.local'))
     send_mail(subject, message, from_email, [email], fail_silently=False, html_message=html_message)
 
 
