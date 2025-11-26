@@ -216,8 +216,8 @@ class _MyPetsScreenState extends State<MyPetsScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Add Pet'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),

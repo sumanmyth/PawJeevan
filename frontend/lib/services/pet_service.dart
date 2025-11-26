@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/pet/pet_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
+import '../utils/file_utils.dart';
 
 class PetService {
   final ApiService _api = ApiService();
@@ -45,13 +46,15 @@ class PetService {
     List<int>? imageBytes,
     String? fileName,
   }) async {
-    final form = FormData.fromMap({
-      ...pet.toJson(),
-      if (imageBytes != null)
-        'photo': MultipartFile.fromBytes(imageBytes, filename: fileName ?? 'pet.jpg')
-      else if (imagePath != null && imagePath.isNotEmpty && !kIsWeb)
-        'photo': await MultipartFile.fromFile(imagePath, filename: imagePath.split('/').last),
-    });
+    final data = {...pet.toJson()};
+    if (imageBytes != null) {
+      final mp = await multipartFileFromBytes(imageBytes, fileName ?? 'pet.jpg');
+      data['photo'] = mp;
+    } else if (imagePath != null && imagePath.isNotEmpty && !kIsWeb) {
+      final mp = await multipartFileFromPath(imagePath);
+      data['photo'] = mp;
+    }
+    final form = FormData.fromMap(data);
     final response = await _api.post(ApiConstants.pets, data: form);
     if (response.statusCode == 201 || response.statusCode == 200) {
       return PetModel.fromJson(response.data);
@@ -75,13 +78,15 @@ class PetService {
     List<int>? imageBytes,
     String? fileName,
   }) async {
-    final form = FormData.fromMap({
-      ...pet.toJson(),
-      if (imageBytes != null)
-        'photo': MultipartFile.fromBytes(imageBytes, filename: fileName ?? 'pet.jpg')
-      else if (imagePath != null && imagePath.isNotEmpty && !kIsWeb)
-        'photo': await MultipartFile.fromFile(imagePath, filename: imagePath.split('/').last),
-    });
+    final data = {...pet.toJson()};
+    if (imageBytes != null) {
+      final mp = await multipartFileFromBytes(imageBytes, fileName ?? 'pet.jpg');
+      data['photo'] = mp;
+    } else if (imagePath != null && imagePath.isNotEmpty && !kIsWeb) {
+      final mp = await multipartFileFromPath(imagePath);
+      data['photo'] = mp;
+    }
+    final form = FormData.fromMap(data);
     final response = await _api.patch('${ApiConstants.pets}$id/', data: form);
     if (response.statusCode == 200) {
       return PetModel.fromJson(response.data);

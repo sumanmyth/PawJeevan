@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../models/pet/lost_found_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../pet/widgets/full_screen_image.dart';
+import '../../../providers/community_provider.dart';
+import '../../profile/user_profile_screen.dart';
 
 class LostFoundDetailScreen extends StatelessWidget {
   final LostFoundReport report;
@@ -65,6 +69,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                         builder: (context) => FullScreenImage(
                           imageUrl: report.photo!,
                           title: report.petName ?? report.petType,
+                          heroTag: 'lostfound_photo_${report.id}',
                         ),
                       ),
                     );
@@ -331,7 +336,7 @@ class LostFoundDetailScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          _buildDetailRow(Icons.person, 'Reporter', report.reporterUsername),
+                          _buildReporterRow(context, report),
                           const SizedBox(height: 12),
                           // Call button
                           InkWell(
@@ -425,7 +430,7 @@ class LostFoundDetailScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey),
+        Icon(icon, size: 20, color: const Color(0xFF7C3AED)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -452,55 +457,74 @@ class LostFoundDetailScreen extends StatelessWidget {
       ],
     );
   }
-}
 
-// Full Screen Image Viewer for Lost & Found (same behavior as events)
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String title;
+  Widget _buildReporterRow(BuildContext context, LostFoundReport report) {
+    final community = context.watch<CommunityProvider>();
+    final user = community.user(report.reporterId);
 
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.white),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0),
+      child: Row(
+        children: [
+          const Icon(Icons.person, size: 20, color: Color(0xFF7C3AED)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfileScreen(userId: report.reporterId),
                   ),
+                );
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
+                    child: user?.avatarUrl == null
+                        ? Text(
+                            report.reporterUsername.isNotEmpty
+                                ? report.reporterUsername[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(color: Colors.white),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Reporter',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          report.reporterUsername,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
-              );
-            },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
+
+

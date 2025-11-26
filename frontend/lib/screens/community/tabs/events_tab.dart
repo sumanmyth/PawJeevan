@@ -695,7 +695,7 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                   // Date & Time
                                   Row(
                                     children: [
-                                      const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                                      const Icon(Icons.access_time, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Text(
                                         _formatEventDate(event.startDatetime),
@@ -707,7 +707,7 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                   // Location
                                   Row(
                                     children: [
-                                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                                      const Icon(Icons.location_on, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
@@ -723,7 +723,7 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                   // Attendees
                                   Row(
                                     children: [
-                                      const Icon(Icons.people, size: 16, color: Colors.grey),
+                                      const Icon(Icons.people, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Text(
                                         event.maxAttendees != null 
@@ -757,10 +757,40 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
                                     children: [
                                       if (isOrganizer) ...[
                                         Expanded(
-                                          child: OutlinedButton.icon(
-                                            icon: const Icon(Icons.more_horiz, size: 18),
-                                            label: const Text('Manage'),
-                                            onPressed: () => _showEventOptions(event),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.08),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(12),
+                                                onTap: () => _showEventOptions(event),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.more_horiz, size: 18, color: Colors.white),
+                                                      SizedBox(width: 8),
+                                                      Text('Manage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ] else if (isAttending) ...[

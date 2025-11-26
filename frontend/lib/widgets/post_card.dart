@@ -87,7 +87,7 @@ class PostCard extends StatelessWidget {
                   ? NetworkImage(post.authorAvatar!) 
                   : null,
               child: (post.authorAvatar == null || post.authorAvatar!.isEmpty) 
-                  ? Icon(Icons.person, color: primary) 
+                  ? const Icon(Icons.person, color: primary) 
                   : null,
             ),
           ),

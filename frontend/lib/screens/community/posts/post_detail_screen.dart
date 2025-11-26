@@ -6,6 +6,7 @@ import '../../../models/community/post_model.dart';
 import '../../../providers/community_provider.dart';
 import '../../../widgets/custom_app_bar.dart';
 import '../../profile/user_profile_screen.dart';
+import '../../pet/widgets/full_screen_image.dart';
 import 'edit_post_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -246,22 +247,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PostImageFullScreen(
+                          builder: (context) => FullScreenImage(
                             imageUrl: post.image!,
-                            authorName: post.authorUsername,
-                            authorAvatar: post.authorAvatar,
-                            content: post.content,
-                            timestamp: post.createdAt,
+                            title: post.authorUsername,
+                            heroTag: 'post_image_${post.id}',
                           ),
                         ),
                       );
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        post.image!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
+                      child: Hero(
+                        tag: 'post_image_${post.id}',
+                        child: Image.network(
+                          post.image!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       ),
                     ),
                   ),
@@ -428,7 +430,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                   child: Text(
                     comment.authorUsername,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                       color: primary,
@@ -479,7 +481,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           if (comment.isCurrentUserAuthor)
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.more_vert,
                 color: primary,
               ),
@@ -618,187 +620,4 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 }
 
-class PostImageFullScreen extends StatelessWidget {
-  final String imageUrl;
-  final String authorName;
-  final String? authorAvatar;
-  final String content;
-  final DateTime timestamp;
 
-  const PostImageFullScreen({
-    super.key,
-    required this.imageUrl,
-    required this.authorName,
-    this.authorAvatar,
-    required this.content,
-    required this.timestamp,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Image viewer
-          Center(
-            child: InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: Colors.white,
-                          size: 64,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Failed to load image',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Top overlay with post info
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.0),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 16,
-                right: 16,
-                bottom: 24,
-              ),
-              child: Row(
-                children: [
-                  // Back button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context),
-                      borderRadius: BorderRadius.circular(30),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Author info
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.white,
-                    backgroundImage: authorAvatar != null ? NetworkImage(authorAvatar!) : null,
-                    child: authorAvatar == null
-                        ? const Icon(Icons.person, color: Colors.grey)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          authorName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          timeago.format(timestamp),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Bottom overlay with caption
-          if (content.isNotEmpty)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.black.withOpacity(0.0),
-                    ],
-                  ),
-                ),
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
-                  top: 24,
-                ),
-                child: Text(
-                  content,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}

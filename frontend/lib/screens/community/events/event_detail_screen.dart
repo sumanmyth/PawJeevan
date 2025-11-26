@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../models/community/event_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../pet/widgets/full_screen_image.dart';
+import '../../../providers/community_provider.dart';
+import '../../profile/user_profile_screen.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final Event event;
@@ -15,14 +19,17 @@ class EventDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Event Details',
         showBackButton: true,
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        padding: EdgeInsets.only(top: topPadding, bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,7 +44,8 @@ class EventDetailScreen extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => FullScreenImage(
                           imageUrl: event.coverImage!,
-                          eventTitle: event.title,
+                          title: event.title,
+                          heroTag: 'event_cover_${event.id}',
                         ),
                       ),
                     );
@@ -280,58 +288,72 @@ class EventDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Organizer Card
+                  // Organizer Card (clickable - opens user profile)
                   Card(
                     elevation: 0,
                     color: isDark ? Colors.grey[850] : Colors.grey[100],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: const Color.fromRGBO(124, 58, 237, 0.1),
-                            backgroundImage: event.organizerAvatar != null && event.organizerAvatar!.isNotEmpty
-                              ? NetworkImage(event.organizerAvatar!)
-                              : null,
-                            child: event.organizerAvatar == null || event.organizerAvatar!.isEmpty
-                              ? Text(
-                                  event.organizerUsername.isNotEmpty 
-                                    ? event.organizerUsername[0].toUpperCase()
-                                    : 'O',
-                                  style: const TextStyle(
-                                    color: Color(0xFF7C3AED),
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Consumer<CommunityProvider>(
+                      builder: (context, community, child) {
+                        final user = community.user(event.organizerId);
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserProfileScreen(userId: event.organizerId),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
                               children: [
-                                const Text(
-                                  'Organized by',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: const Color.fromRGBO(124, 58, 237, 0.1),
+                                  backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : (event.organizerAvatar != null && event.organizerAvatar!.isNotEmpty ? NetworkImage(event.organizerAvatar!) : null),
+                                  child: (user?.avatarUrl == null && (event.organizerAvatar == null || event.organizerAvatar!.isEmpty))
+                                      ? Text(
+                                          event.organizerUsername.isNotEmpty
+                                              ? event.organizerUsername[0].toUpperCase()
+                                              : 'O',
+                                          style: const TextStyle(
+                                            color: Color(0xFF7C3AED),
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Organized by',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        event.organizerUsername,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  event.organizerUsername,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                const Icon(Icons.chevron_right, color: Colors.grey),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -364,53 +386,4 @@ class EventDetailScreen extends StatelessWidget {
   }
 }
 
-// Full Screen Image Viewer for Events
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String eventTitle;
 
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.eventTitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(eventTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}

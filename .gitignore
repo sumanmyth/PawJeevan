@@ -56,3 +56,6 @@ frontend/ios/.generated/
 # IDE files inside frontend
 frontend/*.iml
 frontend/.idea/
+
+# Local environment variables (do not commit secrets)
+backend/.env

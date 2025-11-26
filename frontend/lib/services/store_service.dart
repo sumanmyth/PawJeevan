@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/pet/adoption_listing_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
+import '../utils/file_utils.dart';
 
 class StoreService {
   final ApiService _api = ApiService();
@@ -93,14 +94,8 @@ class StoreService {
       ]);
 
       if (photo != null) {
-        final bytes = await photo.readAsBytes();
-        formData.files.add(MapEntry(
-          'photo',
-          MultipartFile.fromBytes(
-            bytes,
-            filename: photo.name,
-          ),
-        ));
+        final mp = await multipartFileFromXFile(photo);
+        formData.files.add(MapEntry('photo', mp));
       }
 
       final response = await _api.post(
@@ -156,14 +151,8 @@ class StoreService {
       if (status != null) formData.fields.add(MapEntry('status', status));
 
       if (photo != null) {
-        final bytes = await photo.readAsBytes();
-        formData.files.add(MapEntry(
-          'photo',
-          MultipartFile.fromBytes(
-            bytes,
-            filename: photo.name,
-          ),
-        ));
+        final mp = await multipartFileFromXFile(photo);
+        formData.files.add(MapEntry('photo', mp));
       }
 
       final response = await _api.patch(

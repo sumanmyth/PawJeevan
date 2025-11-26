@@ -8,6 +8,7 @@ import '../../../models/community/group_post_model.dart';
 import '../../../services/community_service.dart';
 import '../../profile/user_profile_screen.dart';
 import '../../../utils/helpers.dart';
+import '../../pet/widgets/full_screen_image.dart';
 
 class GroupPostsTab extends StatefulWidget {
   final Group group;
@@ -24,43 +25,30 @@ class GroupPostsTab extends StatefulWidget {
 }
 
 class _GroupPostsTabState extends State<GroupPostsTab> {
-  final TextEditingController _postController = TextEditingController();
-  final ScrollController _postsScrollController = ScrollController();
   final CommunityService _communityService = CommunityService();
-  final ImagePicker _picker = ImagePicker();
-  
   List<GroupPost> _posts = [];
   bool _isLoadingPosts = true;
+  final ScrollController _postsScrollController = ScrollController();
+  final TextEditingController _postController = TextEditingController();
   XFile? _selectedImage;
-  Timer? _refreshTimer;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _fetchGroupPosts();
-    
-    // Auto-refresh posts every 3 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _fetchGroupPosts(silent: true);
-    });
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
-    _postController.dispose();
     _postsScrollController.dispose();
+    _postController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchGroupPosts({bool silent = false}) async {
     final groupId = widget.group.id ?? 0;
     if (groupId == 0) {
-      if (!silent) {
-        setState(() {
-          _isLoadingPosts = false;
-        });
-      }
       return;
     }
 
@@ -601,32 +589,12 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
           if (post.image != null)
             GestureDetector(
               onTap: () {
-                // Show full screen image
-                showDialog(
-                  context: context,
-                  barrierColor: Colors.black87,
-                  builder: (context) => Dialog(
-                    backgroundColor: Colors.transparent,
-                    insetPadding: EdgeInsets.zero,
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: InteractiveViewer(
-                            child: Image.network(
-                              post.image!,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 40,
-                          right: 16,
-                          child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                      ],
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imageUrl: post.image!,
+                      heroTag: 'post_image_${post.id}',
                     ),
                   ),
                 );
@@ -636,11 +604,14 @@ class _GroupPostsTabState extends State<GroupPostsTab> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                child: Image.network(
-                  post.image!,
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
+                child: Hero(
+                  tag: 'post_image_${post.id}',
+                  child: Image.network(
+                    post.image!,
+                    width: double.infinity,
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),

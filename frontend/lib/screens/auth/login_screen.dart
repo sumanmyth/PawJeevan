@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
@@ -70,6 +71,55 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
               Expanded(child: Text(auth.error ?? 'Login failed')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.loginWithGoogle();
+
+    if (!mounted) return;
+
+    if (ok) {
+      Helpers.showInstantSnackBar(
+        context,
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 12),
+              Text('Welcome back, ${auth.user?.displayName ?? "User"}!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } else {
+      Helpers.showInstantSnackBar(
+        context,
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(auth.error ?? 'Google login failed')),
             ],
           ),
           backgroundColor: Colors.red,
@@ -351,7 +401,76 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                              const SizedBox(height: 12),
+
+                              // Google Sign-in button (beautiful style)
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed: auth.isLoading ? null : _handleGoogleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 6,
+                                    backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+                                    foregroundColor: isDark ? Colors.white : Colors.black87,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      color: isDark ? Colors.grey[850] : Colors.white,
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.06),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: Container(
+                                      height: 52,
+                                      alignment: Alignment.center,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          // Logo tile
+                                          Container(
+                                            width: 36,
+                                            height: 36,
+                                            margin: const EdgeInsets.only(right: 12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Center(
+                                              child: SvgPicture.asset(
+                                                'assets/icon/google_logo.svg',
+                                                width: 20,
+                                                height: 20,
+                                                semanticsLabel: 'Google logo',
+                                                placeholderBuilder: (context) => const SizedBox(width: 20, height: 20),
+                                              ),
+                                            ),
+                                          ),
+                                          // Text
+                                          Text(
+                                            'Continue with Google',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? Colors.white : Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
 
                             // Register link
                             Row(

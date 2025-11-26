@@ -52,4 +52,15 @@ class Helpers {
       return 'Just now';
     }
   }
+
+  // Parse a stored location string of the form "City, Country".
+  // Returns a map with keys 'city' and 'country' (may be null).
+  static Map<String, String?> parseLocation(String? location) {
+    if (location == null) return {'city': null, 'country': null};
+    final parts = location.split(',');
+    if (parts.isEmpty) return {'city': null, 'country': null};
+    final city = parts[0].trim();
+    final country = parts.length > 1 ? parts.sublist(1).join(',').trim() : null;
+    return {'city': city.isEmpty ? null : city, 'country': country == null || country.isEmpty ? null : country};
+  }
 }

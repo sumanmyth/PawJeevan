@@ -6,6 +6,7 @@ import '../../../providers/store_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../models/pet/adoption_listing_model.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/country_city_selector.dart';
 import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/app_form_card.dart';
 import 'dart:typed_data';
@@ -452,14 +453,25 @@ class _CreateAdoptionScreenState extends State<CreateAdoptionScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Location
+              // Location (country -> city selector)
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(
+                readOnly: true,
+                onTap: () async {
+                  final res = await showCountryCitySelector(context, initialLocation: _locationController.text);
+                  if (res != null) setState(() => _locationController.text = res);
+                },
+                decoration: InputDecoration(
                   labelText: 'Location *',
                   hintText: 'e.g., "New York, NY"',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.location_on),
+                  suffixIcon: _locationController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _locationController.clear()),
+                        )
+                      : null,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {

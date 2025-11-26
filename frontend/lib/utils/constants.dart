@@ -23,6 +23,9 @@ class ApiConstants {
   static const String register = '/api/users/register/';
   static const String profile = '/api/users/profiles/me/';
   static const String changePassword = '/api/users/profiles/change-password/';
+  static const String socialLogin = '/api/users/social-login/';
+  static const String sendOtp = '/api/users/send-otp/';
+  static const String verifyOtp = '/api/users/verify-otp/';
   
   // Pet endpoints
   static const String pets = '/api/users/pets/';

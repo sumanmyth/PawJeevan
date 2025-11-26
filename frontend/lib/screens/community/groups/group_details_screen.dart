@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/community/group_model.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/helpers.dart';
+import '../../pet/widgets/full_screen_image.dart';
 import 'group_chat_tab.dart';
 import 'group_posts_tab.dart';
 import 'edit_group_screen.dart';
@@ -24,9 +26,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
   @override
   void initState() {
     super.initState();
+    _group = widget.group;
     _tabController = TabController(length: 2, vsync: this);
     _loadUserId();
   }
+
+  late Group _group;
+
 
   @override
   void dispose() {
@@ -52,7 +58,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.group.name,
+              _group.name,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
             ),
             Text(
@@ -120,11 +126,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
         controller: _tabController,
         children: [
           GroupChatTab(
-            group: widget.group,
+            group: _group,
             currentUserId: _currentUserId,
           ),
           GroupPostsTab(
-            group: widget.group,
+            group: _group,
             currentUserId: _currentUserId,
           ),
         ],
@@ -188,7 +194,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Cover Image
-                      if (widget.group.coverImage != null && widget.group.coverImage!.isNotEmpty)
+                      if (_group.coverImage != null && _group.coverImage!.isNotEmpty)
                         Container(
                           height: 200,
                           width: double.infinity,
@@ -202,13 +208,29 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                               ),
                             ],
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              widget.group.coverImage!,
-                              fit: BoxFit.cover,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FullScreenImage(
+                                      imageUrl: _group.coverImage!,
+                                      heroTag: 'group_cover_${_group.slug}',
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Hero(
+                                tag: 'group_cover_${_group.slug}',
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    _group.coverImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
                         )
                       else
                         Container(
@@ -235,7 +257,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                       
                       // Group Name
                       Text(
-                        widget.group.name,
+                        _group.name,
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -249,15 +271,15 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                       _buildInfoCard(
                         icon: Icons.groups_outlined,
                         label: 'Members',
-                        value: '${widget.group.membersCount ?? 0}',
+                        value: '${_group.membersCount ?? 0}',
                         isDark: isDark,
                       ),
                       const SizedBox(height: 12),
                       
                       _buildInfoCard(
-                        icon: widget.group.isPrivate ? Icons.lock_outline : Icons.public_outlined,
+                        icon: _group.isPrivate ? Icons.lock_outline : Icons.public_outlined,
                         label: 'Privacy',
-                        value: widget.group.isPrivate ? 'Private' : 'Public',
+                        value: _group.isPrivate ? 'Private' : 'Public',
                         isDark: isDark,
                       ),
                       const SizedBox(height: 12),
@@ -265,16 +287,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                       _buildInfoCard(
                         icon: Icons.category_outlined,
                         label: 'Type',
-                        value: widget.group.groupTypeDisplay ?? _formatGroupType(widget.group.groupType),
+                        value: _group.groupTypeDisplay ?? _formatGroupType(_group.groupType),
                         isDark: isDark,
                       ),
                       
-                      if (widget.group.isPrivate && widget.group.joinKey != null) ...[
+                      if (_group.isPrivate && _group.joinKey != null) ...[
                         const SizedBox(height: 12),
                         _buildInfoCard(
                           icon: Icons.key_outlined,
                           label: 'Join Key',
-                          value: widget.group.joinKey!,
+                          value: _group.joinKey!,
                           isDark: isDark,
                           copyable: true,
                         ),
@@ -303,7 +325,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                           ),
                         ),
                         child: Text(
-                          widget.group.description,
+                          _group.description,
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.6,
@@ -315,7 +337,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                       const SizedBox(height: 24),
                       
                       // Action Buttons
-                      if (widget.group.creatorId == _currentUserId) ...[
+                      if (_group.creatorId == _currentUserId) ...[
                         // Admin options
                         _buildActionButton(
                           icon: Icons.edit_outlined,
@@ -325,10 +347,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EditGroupScreen(group: widget.group),
+                                builder: (context) => EditGroupScreen(group: _group),
                               ),
                             );
-                            // If group was updated, go back to refresh the list
+                            // If we got an updated Group back, refresh local state and reopen info
+                            if (result is Group && mounted) {
+                              setState(() {
+                                _group = result;
+                              });
+                              // Re-open the updated info sheet
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) _showGroupInfo();
+                              });
+                              return;
+                            }
+                            // fallback: if caller returned true, navigate back to groups list
                             if (result == true && mounted) {
                               Navigator.pop(context);
                             }
@@ -432,8 +465,27 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                 size: 20,
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
-              onPressed: () {
-                // TODO: Implement copy to clipboard
+              onPressed: () async {
+                try {
+                  await Clipboard.setData(ClipboardData(text: value));
+                  Helpers.showInstantSnackBar(
+                    context,
+                    const SnackBar(
+                      content: Text('Copied to clipboard'),
+                      duration: Duration(milliseconds: 900),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } catch (_) {
+                  Helpers.showInstantSnackBar(
+                    context,
+                    const SnackBar(
+                      content: Text('Failed to copy'),
+                      duration: Duration(milliseconds: 900),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
             ),
         ],
@@ -507,7 +559,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
         return AlertDialog(
           title: const Text('Delete Group'),
           content: Text(
-            'Are you sure you want to delete "${widget.group.name}"? This action cannot be undone.',
+            'Are you sure you want to delete "${_group.name}"? This action cannot be undone.',
           ),
           actions: [
             TextButton(
@@ -540,8 +592,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       builder: (context) {
         return AlertDialog(
           title: const Text('Leave Group'),
-          content: Text(
-            'Are you sure you want to leave "${widget.group.name}"?',
+            content: Text(
+            'Are you sure you want to leave "${_group.name}"?',
           ),
           actions: [
             TextButton(
@@ -566,7 +618,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
   
   Future<void> _deleteGroup() async {
     try {
-      await ApiService.deleteGroup(widget.group.slug);
+      await ApiService.deleteGroup(_group.slug);
       
       if (mounted) {
         widget.onGroupChanged?.call(); // Trigger refresh
@@ -594,7 +646,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
   
   Future<void> _leaveGroup() async {
     try {
-      await ApiService.leaveGroup(widget.group.slug);
+      await ApiService.leaveGroup(_group.slug);
       
       if (mounted) {
         widget.onGroupChanged?.call(); // Trigger refresh

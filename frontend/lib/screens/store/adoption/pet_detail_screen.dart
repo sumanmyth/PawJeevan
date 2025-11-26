@@ -5,6 +5,9 @@ import '../../../utils/helpers.dart';
 import '../../../models/pet/adoption_listing_model.dart';
 import '../../../services/store_service.dart';
 import '../../../widgets/custom_app_bar.dart';
+import '../../pet/widgets/full_screen_image.dart';
+import '../../../providers/community_provider.dart';
+import '../../profile/user_profile_screen.dart';
 import '../../../providers/store_provider.dart';
 
 class PetDetailScreen extends StatefulWidget {
@@ -40,6 +43,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         _adoption = adoption;
         _isLoading = false;
       });
+      // Prefetch poster user data so avatar loads immediately
+      if (adoption != null) {
+        // Use provider to fetch and cache user info asynchronously
+        try {
+          final community = context.read<CommunityProvider>();
+          community.getUser(adoption.poster);
+        } catch (_) {
+          // ignore errors; provider may not be available in some contexts
+        }
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -92,18 +105,19 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           if (adoption.photo != null)
             Padding(
               padding: const EdgeInsets.all(16),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FullScreenImage(
-                        imageUrl: adoption.photo!,
-                        petName: adoption.petName,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenImage(
+                          imageUrl: adoption.photo!,
+                          title: adoption.petName,
+                          heroTag: 'pet_photo_${adoption.id}',
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: AspectRatio(
@@ -252,7 +266,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                _buildContactRow(Icons.person, 'Posted by', adoption.posterUsername),
+                _buildPosterRow(adoption),
                 _buildContactRow(Icons.location_on, 'Location', adoption.location),
                 _buildContactRow(Icons.phone, 'Phone', adoption.contactPhone),
                 _buildContactRow(Icons.email, 'Email', adoption.contactEmail),
@@ -433,55 +447,73 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       ),
     );
   }
-}
 
-// Full Screen Image Viewer
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-  final String petName;
+  Widget _buildPosterRow(AdoptionListing adoption) {
+    final community = context.watch<CommunityProvider>();
+    final user = community.user(adoption.poster);
 
-  const FullScreenImage({
-    super.key,
-    required this.imageUrl,
-    required this.petName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(petName),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.white),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.person, size: 20, color: Color(0xFF7C3AED)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfileScreen(userId: adoption.poster),
                   ),
+                );
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
+                    child: user?.avatarUrl == null
+                        ? Text(
+                            adoption.posterUsername.isNotEmpty
+                                ? adoption.posterUsername[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(color: Colors.white),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Posted by',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          adoption.posterUsername,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
-              );
-            },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
+

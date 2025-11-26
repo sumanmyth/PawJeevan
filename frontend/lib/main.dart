@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'config.dart';
 
 // Providers
 import 'providers/auth_provider.dart';
@@ -18,6 +19,9 @@ void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load runtime config (e.g., GOOGLE_CLIENT_ID) from backend before app runs
+  await ConfigService.init();
+
   // Load any saved authentication token from storage before the app runs
   await ApiService().loadToken();
   runApp(const MyApp());
@@ -36,6 +40,11 @@ class MyApp extends StatelessWidget {
       ),
     );
     return base.copyWith(
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color(0xFF7C3AED),
+        selectionColor: Color(0x337C3AED),
+        selectionHandleColor: Color(0xFF7C3AED),
+      ),
       scaffoldBackgroundColor: const Color(0xFFF7FAFC),
       appBarTheme: const AppBarTheme(centerTitle: true),
       inputDecorationTheme: InputDecorationTheme(
@@ -55,8 +64,8 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(const Color(0xFF7C3AED)),
-          foregroundColor: WidgetStatePropertyAll(Colors.white),
+          backgroundColor: const WidgetStatePropertyAll(Color(0xFF7C3AED)),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
           elevation: const WidgetStatePropertyAll(8.0),
           shadowColor: const WidgetStatePropertyAll(Color.fromRGBO(124, 58, 237, 0.4)),
           shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
@@ -94,6 +103,11 @@ class MyApp extends StatelessWidget {
       ),
     );
     return base.copyWith(
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color(0xFF7C3AED),
+        selectionColor: Color(0x337C3AED),
+        selectionHandleColor: Color(0xFF7C3AED),
+      ),
       scaffoldBackgroundColor: const Color(0xFF121212),
       appBarTheme: const AppBarTheme(centerTitle: true),
       inputDecorationTheme: InputDecorationTheme(
@@ -113,8 +127,8 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(const Color(0xFF7C3AED)),
-          foregroundColor: WidgetStatePropertyAll(Colors.white),
+          backgroundColor: const WidgetStatePropertyAll(Color(0xFF7C3AED)),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
           elevation: const WidgetStatePropertyAll(8.0),
           shadowColor: const WidgetStatePropertyAll(Color.fromRGBO(107, 70, 193, 0.4)),
           shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

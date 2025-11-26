@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import '../../../utils/file_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/country_city_selector.dart';
 import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../../../utils/constants.dart';
@@ -130,14 +132,8 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
 
       // Add photo if a new one was selected
       if (_photo != null) {
-        final bytes = await _photo!.readAsBytes();
-        formData.files.add(MapEntry(
-          'photo',
-          MultipartFile.fromBytes(
-            bytes,
-            filename: _photo!.name,
-          ),
-        ));
+        final mp = await multipartFileFromXFile(_photo!);
+        formData.files.add(MapEntry('photo', mp));
       }
 
       await dio.patch(
@@ -370,14 +366,25 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Location
+                // Location (country -> city selector)
                 TextFormField(
                   controller: _locationController,
-                  decoration: const InputDecoration(
+                  readOnly: true,
+                  onTap: () async {
+                    final res = await showCountryCitySelector(context, initialLocation: _locationController.text);
+                    if (res != null) setState(() => _locationController.text = res);
+                  },
+                  decoration: InputDecoration(
                     labelText: 'Location *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_on),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.location_on),
                     hintText: 'e.g., Central Park',
+                    suffixIcon: _locationController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () => setState(() => _locationController.clear()),
+                          )
+                        : null,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

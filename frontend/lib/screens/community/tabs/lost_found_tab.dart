@@ -652,7 +652,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                                       padding: const EdgeInsets.only(bottom: 4),
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.pets, size: 16, color: Colors.grey),
+                                              const Icon(Icons.pets, size: 16, color: Color(0xFF7C3AED)),
                                           const SizedBox(width: 4),
                                           Text(
                                             '${report.petType} - ${report.breed}',
@@ -678,7 +678,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                                   // Color
                                   Row(
                                     children: [
-                                      const Icon(Icons.palette, size: 16, color: Colors.grey),
+                                      const Icon(Icons.palette, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Text(
                                         report.color,
@@ -690,7 +690,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                                   // Location
                                   Row(
                                     children: [
-                                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                                      const Icon(Icons.location_on, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
@@ -706,7 +706,7 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                                   // Date
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                                      const Icon(Icons.calendar_today, size: 16, color: Color(0xFF7C3AED)),
                                       const SizedBox(width: 4),
                                       Text(
                                         _formatDate(report.dateLostFound),
@@ -776,10 +776,40 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: OutlinedButton.icon(
-                                            icon: const Icon(Icons.more_horiz, size: 18),
-                                            label: const Text('Manage'),
-                                            onPressed: () => _showReportOptions(report),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.08),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(12),
+                                                onTap: () => _showReportOptions(report),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.more_horiz, size: 18, color: Colors.white),
+                                                      SizedBox(width: 8),
+                                                      Text('Manage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],

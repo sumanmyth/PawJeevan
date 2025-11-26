@@ -20,6 +20,13 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
+    <!-- Google Sign-In web client id (required for google_sign_in on web).
+      This will be set at runtime by a small script that fetches the
+      value from the backend. For local dev the backend runs at
+      http://localhost:8000. In production, ensure this endpoint is
+      reachable and CORS is configured. -->
+    <meta name="google-signin-client_id" content="">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -33,6 +40,25 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Fetch the google client id from the API and set the meta tag before
+    // the Google Sign-In library or Flutter web code initializes.
+    (async function() {
+      try {
+        const resp = await fetch('http://localhost:8000/api/config/google/');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const meta = document.querySelector('meta[name="google-signin-client_id"]');
+        if (meta && data && data.google_client_id) {
+          meta.setAttribute('content', data.google_client_id);
+          console.log('Set google client id from backend');
+        }
+      } catch (e) {
+        console.error('Failed to load google client id', e);
+      }
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

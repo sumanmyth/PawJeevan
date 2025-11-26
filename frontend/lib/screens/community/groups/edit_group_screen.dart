@@ -81,8 +81,8 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
         formData['cover_image'] = _coverImage!;
       }
 
-      await ApiService.updateGroup(widget.group.slug, formData);
-      
+      final updatedData = await ApiService.updateGroup(widget.group.slug, formData);
+      final updatedGroup = Group.fromJson(updatedData);
       if (mounted) {
         Helpers.showInstantSnackBar(
           context,
@@ -90,7 +90,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
         );
         // Wait a bit for the snackbar to show before popping
         await Future.delayed(const Duration(milliseconds: 500));
-        Navigator.pop(context, true);
+        Navigator.pop(context, updatedGroup);
       }
     } catch (e) {
       if (mounted) {

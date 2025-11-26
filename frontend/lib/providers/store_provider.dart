@@ -15,6 +15,7 @@ class StoreProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   String _selectedPetType = 'all';
+  String _selectedLocationFilter = 'all'; // values: all, my_location, my_city, my_country
   String _searchQuery = '';
   Set<int> _favoritePetIds = {};
 
@@ -23,6 +24,7 @@ class StoreProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get selectedPetType => _selectedPetType;
+  String get selectedLocationFilter => _selectedLocationFilter;
   String get searchQuery => _searchQuery;
   Set<int> get favoritePetIds => _favoritePetIds;
   
@@ -66,6 +68,40 @@ class StoreProvider extends ChangeNotifier {
     notifyListeners();
     if (!skipReload) {
       loadAdoptions();
+    }
+  }
+
+  /// Set location filter and notify. Valid values: 'all', 'my_location', 'my_city', 'my_country'
+  void setLocationFilter(String filter) {
+    _selectedLocationFilter = filter;
+    notifyListeners();
+  }
+
+  /// Return adoptions filtered by the current location filter using the provided userLocation string.
+  /// `userLocation` is expected to be a single string (e.g. "City, Country") or null.
+  List<AdoptionListing> filteredAdoptionsForLocation(String? userLocation) {
+    if (_selectedLocationFilter == 'all' || userLocation == null || userLocation.trim().isEmpty) {
+      return _adoptions;
+    }
+
+    final userLoc = userLocation.trim();
+    String? userCity;
+    String? userCountry;
+    final parts = userLoc.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    if (parts.isNotEmpty) userCity = parts.first;
+    if (parts.length > 1) userCountry = parts.last;
+
+    switch (_selectedLocationFilter) {
+      // Treat 'my_location' same as 'my_city' (user indicated they are the same)
+      case 'my_location':
+      case 'my_city':
+        if (userCity == null) return _adoptions;
+        return _adoptions.where((a) => a.location.split(',').first.trim() == userCity).toList();
+      case 'my_country':
+        if (userCountry == null) return _adoptions;
+        return _adoptions.where((a) => a.location.split(',').last.trim() == userCountry).toList();
+      default:
+        return _adoptions;
     }
   }
 

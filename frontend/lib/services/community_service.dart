@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../utils/file_utils.dart';
 import '../models/community/post_model.dart';
 import '../models/user/user_model.dart';
 import '../models/community/group_post_model.dart';
@@ -105,24 +107,23 @@ class CommunityService {
     final data = FormData.fromMap({'content': content});
     if (imagePath != null && imagePath.isNotEmpty) {
       if (kIsWeb) {
-        // For web, read as bytes
         final bytes = await _readFileBytes(imagePath);
-        // Generate a proper filename with extension for web
         final filename = _getProperFilename(imagePath);
-        data.files.add(
-          MapEntry(
-            'image',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: filename,
-            ),
-          ),
-        );
+        final mp = await multipartFileFromBytes(bytes, filename);
+        data.files.add(MapEntry('image', mp));
       } else {
-        // For mobile/desktop
-        data.files.add(
-          MapEntry('image', await MultipartFile.fromFile(imagePath)),
-        );
+        // Read local file bytes and create MultipartFile with proper content-type
+        try {
+          final bytes = await File(imagePath).readAsBytes();
+          final filename = imagePath.split('/').last;
+          final mp = await multipartFileFromBytes(bytes, filename);
+          data.files.add(MapEntry('image', mp));
+        } catch (e) {
+          // If reading bytes fails (rare), try to construct from path which will
+          // still attempt to compress but may fall back to uncompressed file.
+          final mp = await multipartFileFromPath(imagePath);
+          data.files.add(MapEntry('image', mp));
+        }
       }
     }
     final resp = await _api.patch('${ApiConstants.posts}$postId/', data: data);
@@ -133,27 +134,20 @@ class CommunityService {
     final data = FormData.fromMap({'content': content});
     if (imagePath != null && imagePath.isNotEmpty) {
       if (kIsWeb) {
-        // For web, read as bytes
         final bytes = await _readFileBytes(imagePath);
-        // Generate a proper filename with extension for web
         final filename = _getProperFilename(imagePath);
-        data.files.add(
-          MapEntry(
-            'image',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: filename,
-            ),
-          ),
-        );
+        final mp = await multipartFileFromBytes(bytes, filename);
+        data.files.add(MapEntry('image', mp));
       } else {
-        // For mobile/desktop
-        data.files.add(
-          MapEntry(
-            'image',
-            await MultipartFile.fromFile(imagePath, filename: imagePath.split('/').last),
-          ),
-        );
+        try {
+          final bytes = await File(imagePath).readAsBytes();
+          final filename = imagePath.split('/').last;
+          final mp = await multipartFileFromBytes(bytes, filename);
+          data.files.add(MapEntry('image', mp));
+        } catch (e) {
+          final mp = await multipartFileFromPath(imagePath);
+          data.files.add(MapEntry('image', mp));
+        }
       }
     }
     final resp = await _api.post(ApiConstants.posts, data: data);
@@ -371,16 +365,8 @@ class CommunityService {
       });
 
       if (imageFile != null) {
-        final bytes = await imageFile.readAsBytes();
-        formData.files.add(
-          MapEntry(
-            'image',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: imageFile.name,
-            ),
-          ),
-        );
+        final mp = await multipartFileFromXFile(imageFile);
+        formData.files.add(MapEntry('image', mp));
       }
 
       final resp = await _api.post(ApiConstants.groupPosts, data: formData);

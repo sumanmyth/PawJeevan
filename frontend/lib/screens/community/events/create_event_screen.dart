@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import '../../../utils/file_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import '../../../widgets/custom_app_bar.dart';
+import '../../../widgets/country_city_selector.dart';
 import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../../../widgets/app_form_card.dart';
@@ -136,14 +138,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       // Add cover image if selected
       if (_coverImage != null) {
-        final bytes = await _coverImage!.readAsBytes();
-        formData.files.add(MapEntry(
-          'cover_image',
-          MultipartFile.fromBytes(
-            bytes,
-            filename: _coverImage!.name,
-          ),
-        ));
+        final mp = await multipartFileFromXFile(_coverImage!);
+        formData.files.add(MapEntry('cover_image', mp));
       }
 
       await dio.post(
@@ -351,14 +347,25 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Location Name
+                // Location Name (use country->city selector)
                 TextFormField(
                   controller: _locationController,
-                  decoration: const InputDecoration(
+                  readOnly: true,
+                  onTap: () async {
+                    final res = await showCountryCitySelector(context, initialLocation: _locationController.text);
+                    if (res != null) setState(() => _locationController.text = res);
+                  },
+                  decoration: InputDecoration(
                     labelText: 'Location Name *',
                     hintText: 'e.g., Central Park',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_on),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.location_on),
+                    suffixIcon: _locationController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () => setState(() => _locationController.clear()),
+                          )
+                        : null,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

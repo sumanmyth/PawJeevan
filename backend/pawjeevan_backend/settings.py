@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,3 +136,24 @@ CSRF_TRUSTED_ORIGINS = [
     # "https://api.your-domain.com",
     # "https://your-domain.com",
 ]
+
+# Email settings (use .env via python-decouple). Defaults to console backend for dev.
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+EMAIL_PORT = config('EMAIL_PORT', cast=int, default=25)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@pawjeevan.local')
+
+# Social auth configuration (Google)
+# Provide a Google OAuth2 client ID for verifying ID tokens sent from the mobile app.
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
+# Optional: a comma-separated list of allowed OAuth client IDs (web + android clients).
+# If not provided, falls back to the single `GOOGLE_CLIENT_ID` value.
+raw_allowed = config('GOOGLE_ALLOWED_CLIENT_IDS', default='')
+if raw_allowed:
+    GOOGLE_ALLOWED_CLIENT_IDS = [c.strip() for c in raw_allowed.split(',') if c.strip()]
+else:
+    GOOGLE_ALLOWED_CLIENT_IDS = [GOOGLE_CLIENT_ID] if GOOGLE_CLIENT_ID else []
