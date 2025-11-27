@@ -75,9 +75,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ),
               );
               if (edited == true && mounted) {
-                final provider = context.read<CommunityProvider>();
-                await provider.fetchPosts();
-                await provider.getPostDetail(post.id, force: true);
+                    final provider = parentContext.read<CommunityProvider>();
+                    await provider.fetchPosts();
+                    await provider.getPostDetail(post.id, force: true);
               }
             },
           ),
@@ -96,7 +96,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               );
               if (confirm == true) {
                 if (!mounted) return;
-                final provider = context.read<CommunityProvider>();
+                final provider = parentContext.read<CommunityProvider>();
                 print('PostDetail: attempting to delete post ${post.id}');
                 final success = await provider.deletePost(post.id);
                 print('PostDetail: provider.deletePost returned: $success, error: ${provider.error}');
@@ -104,12 +104,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   // Ensure the main posts list is refreshed so the post disappears
                   // from any feed or list screens before popping the detail view.
                   await provider.fetchPosts();
-                  Navigator.pop(context);
+                  Navigator.pop(parentContext);
                 } else {
                   // Show user-facing feedback when delete fails
                   if (mounted) {
                     Helpers.showInstantSnackBar(
-                      context,
+                      parentContext,
                       SnackBar(content: Text('Failed to delete post: ${provider.error ?? 'Unknown error'}')),
                     );
                   }

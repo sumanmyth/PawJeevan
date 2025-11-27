@@ -261,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: const Color.fromRGBO(124, 58, 237, 1.0), width: 2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(124, 58, 237, 1.0), width: 2),
                                   ),
                                   prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C3AED)),
                                   filled: true,
@@ -292,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: const Color.fromRGBO(124, 58, 237, 1.0), width: 2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(124, 58, 237, 1.0), width: 2),
                                   ),
                                   prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C3AED)),
                                   filled: true,

@@ -59,7 +59,7 @@ class _FilterSheetState extends State<FilterSheet> {
               const Text('Type', style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               PetTypeMenu(
-                petTypes: [
+                petTypes: const [
                   {'id': 'all', 'label': 'All'},
                   {'id': 'dog', 'label': 'Dogs'},
                   {'id': 'cat', 'label': 'Cats'},
