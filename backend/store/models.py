@@ -324,6 +324,11 @@ class Wishlist(models.Model):
         related_name='wishlisted_by', 
         blank=True
     )
+    adoptions = models.ManyToManyField(
+        'AdoptionListing',
+        related_name='wishlisted_by',
+        blank=True
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

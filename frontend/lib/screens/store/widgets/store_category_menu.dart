@@ -21,14 +21,15 @@ class StoreCategoryMenu extends StatelessWidget {
       'Adoption': Icons.pets,
       'Food': Icons.restaurant,
       'Toys': Icons.sports_baseball,
+      'Others': Icons.more_horiz,
     };
     
     return SizedBox(
-      height: 50,
+      height: 44,
       child: Center(
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           shrinkWrap: true,
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -37,14 +38,14 @@ class StoreCategoryMenu extends StatelessWidget {
             final icon = categoryIcons[category] ?? Icons.category;
             
             return Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 8),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => onCategorySelected(category),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: isSelected 
                           ? const Color(0xFF7C3AED)
@@ -56,12 +57,12 @@ class StoreCategoryMenu extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 20,
+                          size: 18,
                           color: isSelected 
                               ? Colors.white 
                               : (isDark ? Colors.grey.shade400 : Colors.grey.shade700),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Text(
                           category,
                           style: TextStyle(
@@ -69,7 +70,7 @@ class StoreCategoryMenu extends StatelessWidget {
                                 ? Colors.white 
                                 : theme.textTheme.bodyLarge?.color,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 15,
+                            fontSize: 13,
                           ),
                         ),
                       ],

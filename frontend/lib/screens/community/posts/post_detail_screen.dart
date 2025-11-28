@@ -308,16 +308,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       child: Row(
         children: [
           Container(
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF7C3AED),
-                width: 2,
+                color: const Color(0xFF7C3AED).withOpacity(0.9),
+                width: 1.6,
               ),
             ),
             child: CircleAvatar(
               radius: 22,
-              backgroundColor: const Color(0xFF7C3AED),
+              backgroundColor: const Color(0xFF7C3AED).withOpacity(0.12),
               backgroundImage: post.authorAvatar != null ? NetworkImage(post.authorAvatar!) : null,
               child: post.authorAvatar == null 
                 ? const Icon(Icons.person, color: Color(0xFF7C3AED)) 
