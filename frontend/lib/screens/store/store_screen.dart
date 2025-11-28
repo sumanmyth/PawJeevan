@@ -6,8 +6,10 @@ import '../../widgets/custom_app_bar.dart';
 import 'adoption/pet_detail_screen.dart';
 import 'adoption/create_adoption_screen.dart';
 import 'adoption/all_pets_screen.dart';
+import 'products/all_products_screen.dart';
 import 'adoption/pet_grids.dart';
 import 'widgets/store_banner.dart';
+import 'dart:math';
 import 'widgets/store_tab_selector.dart';
 import 'widgets/store_category_menu.dart';
 import 'widgets/filter_button.dart';
@@ -34,11 +36,30 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
   int _currentTabIndex = 0;
   bool _showBanner = true;
   bool _isCheckingBanner = true;
+  int _bannerVariantIndex = 0;
+
+  final List<Map<String, dynamic>> _bannerVariants = [
+    {
+      'title': 'Give a Pet a Home',
+      'subtitle': 'Open your heart and home to a furry friend in need.',
+      'buttonText': 'Adopt a Pet Today',
+      'type': 'adopt',
+      'icon': Icons.favorite,
+    },
+    {
+      'title': 'Discover Your New Favorite',
+      'subtitle': 'Unlock a world of possibilities and treat yourself to something special.',
+      'buttonText': 'Shop Now and Save',
+      'type': 'shop',
+      'icon': Icons.store,
+    },
+  ];
  
 
   @override
   void initState() {
     super.initState();
+    _pickRandomBanner();
     _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
     _currentTabIndex = 1;
     _tabController.addListener(_handleTabChange);
@@ -51,6 +72,11 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
         });
       }
     });
+  }
+
+  void _pickRandomBanner() {
+    final rnd = Random();
+    _bannerVariantIndex = rnd.nextInt(_bannerVariants.length);
   }
 
   @override
@@ -95,6 +121,44 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
     setState(() {
       _showBanner = false;
     });
+  }
+
+  Future<void> _applyCategoryMatcher({required StoreProvider provider, List<String>? exactSlugs, List<String>? keywords, String? selectCategory}) async {
+    // Optionally update the selected category label in the UI
+    if (selectCategory != null) {
+      setState(() {
+        _selectedCategory = selectCategory;
+      });
+    }
+
+    try {
+      await provider.loadCategories();
+      final cats = provider.storeCategories;
+      final matches = <int>{};
+
+      if (exactSlugs != null && exactSlugs.isNotEmpty) {
+        for (final s in exactSlugs) {
+          matches.addAll(cats.where((c) => c.slug == s).map((c) => c.id));
+        }
+      }
+
+      if (matches.isEmpty && keywords != null && keywords.isNotEmpty) {
+        final lowKeywords = keywords.map((k) => k.toLowerCase()).toList();
+        for (final c in cats) {
+          final name = c.name.toLowerCase();
+          final slug = c.slug.toLowerCase();
+          if (lowKeywords.any((k) => name.contains(k) || slug.contains(k))) {
+            matches.add(c.id);
+          }
+        }
+      }
+
+      provider.setSelectedStoreCategoryIds(matches);
+      await provider.loadProducts();
+    } catch (e) {
+      provider.setSelectedStoreCategoryIds({});
+      await provider.loadProducts();
+    }
   }
 
   void _showSearchDialog() {
@@ -143,14 +207,30 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                 if (!_isCheckingBanner && _showBanner)
                   StoreBanner(
                     onDismiss: _dismissBanner,
-                    onAdoptClick: () {
-                      setState(() {
-                        _selectedCategory = 'Adoption';
-                        _tabController.animateTo(0);
-                        _currentTabIndex = 0;
-                      });
-                      context.read<StoreProvider>().loadAdoptions(showAllStatuses: false);
+                    onPrimaryAction: () async {
+                      final variant = _bannerVariants[_bannerVariantIndex];
+                      final provider = context.read<StoreProvider>();
+                      if (variant['type'] == 'shop') {
+                        // Switch the UI into the Food product view and load matching categories
+                        await _applyCategoryMatcher(
+                          provider: provider,
+                          exactSlugs: ['food-and-treats'],
+                          keywords: ['food', 'treat'],
+                          selectCategory: 'Food',
+                        );
+                      } else {
+                        setState(() {
+                          _selectedCategory = 'Adoption';
+                          _tabController.animateTo(0);
+                          _currentTabIndex = 0;
+                        });
+                        context.read<StoreProvider>().loadAdoptions(showAllStatuses: false);
+                      }
                     },
+                    title: _bannerVariants[_bannerVariantIndex]['title'],
+                    subtitle: _bannerVariants[_bannerVariantIndex]['subtitle'],
+                    buttonText: _bannerVariants[_bannerVariantIndex]['buttonText'],
+                    icon: _bannerVariants[_bannerVariantIndex]['icon'],
                   ),
                 
                 const SizedBox(height: 16),
@@ -247,56 +327,111 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                 ] else ...[
                   if (_selectedCategory == 'Food' || _selectedCategory == 'Toys') ...[
                     const SizedBox(height: 8),
-                    // Embed ProductContent inline so Food and Toys behave like Adoption
+                      // Section header for giving gifts (products)
+                      _buildSectionHeader('💜 Give a Gift of Joy'),
+                      const SizedBox(height: 8),
+                      // Show product filter button (pet type / weight / price) and product grid
+                      OthersFilterButton(provider: storeProvider),
+                    const SizedBox(height: 8),
+                    // Featured products (horizontal)
+                    if (storeProvider.featuredProducts.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Featured', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                        const SizedBox(height: 8),
+                          Builder(builder: (ctx) {
+                            final screenWidth = MediaQuery.of(ctx).size.width;
+                            final gridItemWidth = (screenWidth - 36) / 2; // padding 12+12 and spacing 12
+                            final gridItemHeight = (gridItemWidth / 0.72).floor().toDouble();
+                            return SizedBox(
+                              height: gridItemHeight,
+                              child: ListView.separated(
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (ctx2, i) {
+                                  final p = storeProvider.featuredProducts[i];
+                                  return SizedBox(
+                                    width: gridItemWidth,
+                                    child: ProductCard(
+                                      product: p,
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: p.slug)),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                                itemCount: storeProvider.featuredProducts.length,
+                              ),
+                            );
+                          }),
+                      const SizedBox(height: 12),
+                      // Shop header before product grid
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Shop', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.0),
                       child: ProductContent(),
                     ),
-                  ] else if (_selectedCategory == 'Others') ...[
+                    ] else if (_selectedCategory == 'Others') ...[
                     const SizedBox(height: 8),
                     // Others behaves like a product shopping view with category filters
-                    _buildSectionHeader('Shop'),
-                    const SizedBox(height: 12),
+                    _buildSectionHeader('💜 Give a Gift of Joy'),
+                    const SizedBox(height: 8),
+                    // Show product filter button (pet type / weight / price) and product grid
                     OthersFilterButton(provider: storeProvider),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Builder(
-                        builder: (ctx) {
-                          if (storeProvider.isLoading) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          if (storeProvider.products.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Center(child: Text('No products found', style: TextStyle(fontSize: 16))),
-                            );
-                          }
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.72,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                            ),
-                            itemCount: storeProvider.products.length,
-                            itemBuilder: (context, index) {
-                              final product = storeProvider.products[index];
-                              return ProductCard(
-                                product: product,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ProductDetailScreen(slug: product.slug),
+                    const SizedBox(height: 8),
+                    // Featured products (horizontal)
+                    if (storeProvider.featuredProducts.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Featured', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 8),
+                      Builder(builder: (ctx) {
+                        final screenWidth = MediaQuery.of(ctx).size.width;
+                        final gridItemWidth = (screenWidth - 36) / 2; // padding 12+12 and spacing 12
+                        final gridItemHeight = (gridItemWidth / 0.72).floor().toDouble();
+                        return SizedBox(
+                          height: gridItemHeight,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                            scrollDirection: Axis.horizontal,
+                            itemBuilder: (ctx2, i) {
+                              final p = storeProvider.featuredProducts[i];
+                              return SizedBox(
+                                width: gridItemWidth,
+                                child: ProductCard(
+                                  product: p,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: p.slug)),
                                   ),
                                 ),
                               );
                             },
-                          );
-                        },
+                            separatorBuilder: (_, __) => const SizedBox(width: 12),
+                            itemCount: storeProvider.featuredProducts.length,
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                      // Shop header before product grid
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('Shop', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
+                      const SizedBox(height: 8),
+                    ],
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: ProductContent(),
                     ),
                   ] else ...[
                     const Padding(
@@ -482,28 +617,40 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
     List<dynamic> pets;
     String title;
     
-    if (isDiscoverTab) {
-      pets = currentUserId != null
-          ? provider.adoptions
-              .where((adoption) => adoption.poster != currentUserId)
-              .toList()
-          : provider.adoptions;
-      title = 'All Available Pets';
-    } else {
-      pets = provider.adoptions
-          .where((adoption) => adoption.poster == currentUserId)
-          .toList();
-      title = 'All My Pets';
+    // If the selected category is Adoption, show the pets screen (discover or my pets)
+    if (_selectedCategory == 'Adoption') {
+      if (isDiscoverTab) {
+        pets = currentUserId != null
+            ? provider.adoptions
+                .where((adoption) => adoption.poster != currentUserId)
+                .toList()
+            : provider.adoptions;
+        title = 'All Available Pets';
+      } else {
+        pets = provider.adoptions
+            .where((adoption) => adoption.poster == currentUserId)
+            .toList();
+        title = 'All My Pets';
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AllPetsScreen(
+            pets: pets,
+            title: title,
+            isMyPets: !isDiscoverTab,
+          ),
+        ),
+      );
+      return;
     }
-    
+
+    // For non-Adoption categories (Products), navigate to the All Products screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AllPetsScreen(
-          pets: pets,
-          title: title,
-          isMyPets: !isDiscoverTab,
-        ),
+        builder: (context) => AllProductsScreen(title: 'All Products'),
       ),
     );
   }

@@ -3,6 +3,7 @@ import '../../../models/pet/pet_model.dart';
 import '../../../services/pet_service.dart';
 import '../../../utils/helpers.dart';
 import '../forms/edit_vaccination_screen.dart';
+import '../vaccination_detail_screen.dart';
 import 'empty_state_widget.dart';
 
 /// Vaccinations tab displaying vaccine records
@@ -32,7 +33,15 @@ class VaccinationTab extends StatelessWidget {
         itemCount: vaccinations.length,
         itemBuilder: (context, i) {
           final v = vaccinations[i];
-          return _buildVaccinationCard(context, v);
+          return GestureDetector(
+            onTap: () async {
+              await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => VaccinationDetailScreen(vaccination: v)),
+              );
+            },
+            child: _buildVaccinationCard(context, v),
+          );
         },
       ),
     );
@@ -111,6 +120,8 @@ class VaccinationTab extends StatelessWidget {
       'Date: ${_formatDate(v.vaccinationDate)}',
       if (v.nextDueDate != null) 'Next due: ${_formatDate(v.nextDueDate!)}',
       if (v.veterinarian != null && v.veterinarian!.isNotEmpty) 'Vet: ${v.veterinarian}',
+      if (v.clinicName != null && v.clinicName!.isNotEmpty) 'Clinic: ${v.clinicName}',
+      if (v.certificate != null && v.certificate!.isNotEmpty) 'Certificate: Yes',
       if (v.notes != null && v.notes!.isNotEmpty) 'Notes: ${v.notes}',
     ];
     return parts.join('\n');

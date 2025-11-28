@@ -437,8 +437,8 @@ class AdoptionListingViewSet(viewsets.ModelViewSet):
             # Don't filter by status, return all
             return qs
         elif status_param is None:
-            # Default: only show available pets
-            qs = qs.filter(status='available')
+            # Default: show available and adoption-pending pets (for discover)
+            qs = qs.filter(status__in=['available', 'pending'])
         else:
             # Filter by specific status if provided
             qs = qs.filter(status=status_param)

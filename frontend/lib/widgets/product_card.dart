@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../utils/currency.dart';
 import '../models/store/product_model.dart';
 import '../providers/store_provider.dart';
 
@@ -11,111 +12,212 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        clipBehavior: Clip.antiAlias,
+    final theme = Theme.of(context);
+
+    return Card(
+      clipBehavior: Clip.hardEdge,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: onTap,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top image with rounded top corners (slightly taller)
-            SizedBox(
-              height: 160,
+            // ---------------------------------------------------------
+            // IMAGE SECTION: Expanded
+            // This allows the image to grow if the card is tall (Featured),
+            // but ensures the text area below remains compact.
+            // ---------------------------------------------------------
+            Expanded(
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Positioned.fill(
-                    child: product.primaryImage != null
-                        ? ClipRRect(
-                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                            child: Image.network(product.primaryImage!, fit: BoxFit.cover),
-                          )
-                        : Container(color: Colors.grey[200]),
-                  ),
-                    // Favorite overlay (similar to adoption card)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Consumer<StoreProvider>(
-                        builder: (context, provider, child) {
-                          final isFavorite = provider.isProductFavorite(product.id);
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-                              color: isFavorite ? Colors.red : Colors.white,
-                              iconSize: 22,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                              onPressed: () {
-                                provider.toggleProductFavorite(product.id);
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                  product.primaryImage != null
+                      ? Image.network(
+                          product.primaryImage!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.shopping_bag,
+                                size: 48,
+                                color: theme.textTheme.bodyMedium?.color
+                                    ?.withOpacity(0.5),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
+                          child: Icon(
+                            Icons.shopping_bag,
+                            size: 48,
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withOpacity(0.5),
+                          ),
+                        ),
+                  // Favorite Button
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Consumer<StoreProvider>(
+                      builder: (context, provider, child) {
+                        final isFavorite =
+                            provider.isProductFavorite(product.id);
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border),
+                            color: isFavorite ? Colors.red : Colors.white,
+                            iconSize: 22,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                                minWidth: 40, minHeight: 40),
+                            onPressed: () {
+                              provider.toggleProductFavorite(product.id);
+                            },
+                          ),
+                        );
+                      },
                     ),
+                  ),
+                  // Discount Badge
                   if (product.hasDiscount)
                     Positioned(
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurpleAccent.withOpacity(0.95),
+                          color: const Color(0xFF7C3AED).withOpacity(0.95),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '-${product.discountPercent}%',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
                         ),
                       ),
                     ),
                 ],
               ),
             ),
+
+            // ---------------------------------------------------------
+            // CONTENT SECTION: Compact
+            // Uses MainAxisSize.min to keep everything tight at the bottom.
+            // ---------------------------------------------------------
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // Keep content compact
                 children: [
-                  Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  // Rating number (if available) - placed above price for emphasis
+                  // Name
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Rating
                   if (product.averageRating != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star, size: 14, color: Colors.amber),
-                          const SizedBox(width: 4),
-                          Text(product.averageRating!.toStringAsFixed(1), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      // Price: even bigger and bold
-                      Text('₹${product.finalPrice.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, color: Colors.green, fontWeight: FontWeight.bold)),
-                      if (product.hasDiscount) ...[
-                        const SizedBox(width: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 14, color: Colors.amber),
+                        const SizedBox(width: 4),
                         Text(
-                          '₹${product.price.toStringAsFixed(0)}',
+                          product.averageRating!.toStringAsFixed(1),
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  
+                  const SizedBox(height: 8),
+
+                  // ---------------------------------------------------
+                  // BOTTOM ROW: Price (Left) & Stock (Right)
+                  // Grouping these ensures they stay aligned regardless of card height
+                  // ---------------------------------------------------
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Price Section
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$kCurrencySymbol${product.finalPrice.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            if (product.hasDiscount) ...[
+                              const SizedBox(width: 6),
+                              Flexible(
+                                  child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: Text(
+                                    '$kCurrencySymbol${product.price.toStringAsFixed(0)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      decoration: TextDecoration.lineThrough,
+                                      decorationColor: theme
+                                          .textTheme.bodyMedium?.color
+                                          ?.withOpacity(0.6),
+                                      color: theme.textTheme.bodyMedium?.color
+                                          ?.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ]
+                          ],
+                        ),
+                      ),
+
+                      // Stock Status
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          product.stock > 0 ? 'In stock' : 'Out of stock',
                           style: TextStyle(
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: Colors.grey[700],
-                            color: Colors.grey[700],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: product.stock > 0
+                                ? Colors.greenAccent.shade400
+                                : Colors.redAccent.shade200,
                           ),
                         ),
-                      ]
+                      ),
                     ],
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

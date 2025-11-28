@@ -6,18 +6,20 @@ from .models import (
     Category, Brand, Product, ProductImage, Review,
     Cart, CartItem, Order, OrderItem, Wishlist, AdoptionListing
 )
+from django.utils.html import format_html
+from django.utils.html import conditional_escape
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'parent', 'created_at']
+    list_display = [f.name for f in Category._meta.fields]
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name']
 
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'created_at']
+    list_display = [f.name for f in Brand._meta.fields]
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name']
 
@@ -29,16 +31,32 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'sku', 'category', 'brand', 'price', 'stock', 'is_active']
+    # Replace the raw description field with a truncated version for list display
+    _field_names = [f.name for f in Product._meta.fields]
+    list_display = [('short_description' if n == 'description' else n) for n in _field_names]
     list_filter = ['category', 'brand', 'pet_type', 'is_active', 'is_featured']
     search_fields = ['name', 'sku']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline]
 
+    def short_description(self, obj):
+        if not obj.description:
+            return ''
+        full = str(obj.description)
+        # truncate to a reasonable length to keep rows compact
+        max_len = 120
+        if len(full) <= max_len:
+            esc = conditional_escape(full)
+            return format_html('<span title="{}">{}</span>', esc, esc)
+
+        truncated = full[:max_len].rsplit(' ', 1)[0] + '...'
+        return format_html('<span title="{}">{}</span>', conditional_escape(full), conditional_escape(truncated))
+    short_description.short_description = 'description'
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['product', 'user', 'rating', 'is_verified_purchase', 'created_at']
+    list_display = [f.name for f in Review._meta.fields]
     list_filter = ['rating', 'is_verified_purchase']
     search_fields = ['product__name', 'user__username']
 
@@ -51,7 +69,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'user', 'status', 'payment_status', 'total', 'created_at']
+    list_display = [f.name for f in Order._meta.fields]
     list_filter = ['status', 'payment_status', 'delivery_method']
     search_fields = ['order_number', 'user__email', 'tracking_number']
     readonly_fields = ['order_number', 'created_at']
@@ -60,13 +78,14 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ['user', 'items_count', 'total_price', 'updated_at']
+    # include model fields; keep custom count methods if present
+    list_display = [f.name for f in Cart._meta.fields]
     search_fields = ['user__username']
 
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ['user', 'products_count', 'adoptions_count', 'created_at']
+    list_display = [f.name for f in Wishlist._meta.fields] + ['products_count', 'adoptions_count']
     search_fields = ['user__username']
     filter_horizontal = ('products', 'adoptions')
 
@@ -81,6 +100,6 @@ class WishlistAdmin(admin.ModelAdmin):
 
 @admin.register(AdoptionListing)
 class AdoptionListingAdmin(admin.ModelAdmin):
-    list_display = ['pet_name', 'pet_type', 'breed', 'poster', 'status', 'location', 'created_at']
+    list_display = [f.name for f in AdoptionListing._meta.fields]
     list_filter = ['pet_type', 'status', 'created_at']
     search_fields = ['pet_name', 'breed', 'location']

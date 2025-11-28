@@ -11,7 +11,7 @@ from .models import (
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ['id', 'author', 'content_preview', 'has_media', 'likes_count', 'comments_count', 'is_public', 'created_at']
+    list_display = [f.name for f in Post._meta.fields] + ['content_preview', 'has_media', 'likes_count', 'comments_count']
     list_filter = ['is_public', 'created_at']
     search_fields = ['content', 'author__username', 'author__email']
     readonly_fields = ['created_at', 'updated_at', 'likes_count', 'comments_count']
@@ -50,7 +50,7 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'author', 'post_link', 'content_preview', 'likes_count', 'has_parent', 'created_at']
+    list_display = [f.name for f in Comment._meta.fields] + ['post_link', 'content_preview', 'likes_count', 'has_parent']
     list_filter = ['created_at']
     search_fields = ['content', 'author__username', 'author__email', 'post__content']
     readonly_fields = ['created_at', 'updated_at', 'likes_count']
@@ -87,7 +87,7 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'group_type', 'creator', 'members_count', 'is_private', 'is_active', 'created_at']
+    list_display = [f.name for f in Group._meta.fields] + ['members_count']
     list_filter = ['group_type', 'is_private', 'is_active', 'created_at']
     search_fields = ['name', 'description', 'creator__username']
     prepopulated_fields = {'slug': ('name',)}
@@ -118,7 +118,7 @@ class GroupAdmin(admin.ModelAdmin):
 
 @admin.register(GroupPost)
 class GroupPostAdmin(admin.ModelAdmin):
-    list_display = ['id', 'author', 'group', 'content_preview', 'is_pinned', 'has_image', 'created_at']
+    list_display = [f.name for f in GroupPost._meta.fields] + ['content_preview', 'has_image']
     list_filter = ['is_pinned', 'created_at', 'group']
     search_fields = ['content', 'author__username', 'group__name']
     readonly_fields = ['created_at', 'updated_at']
@@ -146,7 +146,7 @@ class GroupPostAdmin(admin.ModelAdmin):
 
 @admin.register(GroupMessage)
 class GroupMessageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'sender', 'group', 'content_preview', 'is_system_message', 'created_at']
+    list_display = [f.name for f in GroupMessage._meta.fields] + ['content_preview']
     list_filter = ['is_system_message', 'created_at', 'group']
     search_fields = ['content', 'sender__username', 'group__name']
     readonly_fields = ['created_at', 'updated_at']
@@ -170,7 +170,7 @@ class GroupMessageAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'event_type', 'organizer', 'location', 'start_datetime', 'end_datetime', 'attendees_count', 'is_full']
+    list_display = [f.name for f in Event._meta.fields] + ['attendees_count', 'is_full']
     list_filter = ['event_type', 'start_datetime', 'created_at']
     search_fields = ['title', 'location', 'organizer__username', 'description']
     readonly_fields = ['created_at', 'updated_at', 'attendees_count']
@@ -210,7 +210,7 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(LostFoundReport)
 class LostFoundReportAdmin(admin.ModelAdmin):
-    list_display = ['id', 'pet_name_display', 'pet_type', 'breed', 'report_type', 'status', 'location', 'date_lost_found', 'reporter', 'created_at']
+    list_display = [f.name for f in LostFoundReport._meta.fields] + ['pet_name_display']
     list_filter = ['report_type', 'status', 'pet_type', 'date_lost_found', 'created_at']
     search_fields = ['pet_name', 'pet_type', 'breed', 'location', 'reporter__username', 'description']
     readonly_fields = ['created_at', 'updated_at']

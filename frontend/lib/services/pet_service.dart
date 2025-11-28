@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import '../models/pet/pet_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 import '../utils/file_utils.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PetService {
   final ApiService _api = ApiService();
@@ -130,6 +131,43 @@ class PetService {
     throw Exception('Failed to add vaccination');
   }
 
+  /// Multipart add: supports uploading a certificate file alongside the vaccination.
+  Future<VaccinationModel> addVaccinationMultipart(
+    int petId,
+    VaccinationModel vaccination, {
+    List<XFile>? certificates,
+  }) async {
+    final raw = vaccination.toJson();
+    final data = _cleanPayload(
+      raw,
+      stringFields: {'veterinarian', 'notes'},
+      dateFields: {'next_due_date'},
+    );
+    data['pet'] = petId;
+
+    if (certificates != null && certificates.isNotEmpty) {
+      // Backwards-compatible: if only one certificate provided, send as 'certificate'
+      if (certificates.length == 1) {
+        final mp = await multipartFileFromXFile(certificates.first);
+        data['certificate'] = mp;
+      } else {
+        final List<MultipartFile> files = [];
+        for (final f in certificates) {
+          final mp = await multipartFileFromXFile(f);
+          files.add(mp);
+        }
+        data['certificates'] = files;
+      }
+    }
+
+    final form = FormData.fromMap(data);
+    final response = await _api.post(ApiConstants.vaccinations, data: form);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return VaccinationModel.fromJson(response.data);
+    }
+    throw Exception('Failed to add vaccination (multipart)');
+  }
+
   // PATCH instead of PUT (avoid serializer required fields such as pet)
   Future<VaccinationModel> updateVaccination(int id, VaccinationModel vaccination) async {
     final raw = vaccination.toJson();
@@ -144,6 +182,42 @@ class PetService {
       return VaccinationModel.fromJson(response.data);
     }
     throw Exception('Failed to update vaccination');
+  }
+
+  /// Multipart update: supports uploading a new certificate alongside the vaccination.
+  Future<VaccinationModel> updateVaccinationMultipart(
+    int id,
+    VaccinationModel vaccination, {
+    List<XFile>? certificates,
+  }) async {
+    final raw = vaccination.toJson();
+    final data = _cleanPayload(
+      raw,
+      stringFields: {'veterinarian', 'notes'},
+      dateFields: {'next_due_date'},
+    );
+
+    if (certificates != null && certificates.isNotEmpty) {
+      // Backwards-compatible: if only one certificate provided, send as 'certificate'
+      if (certificates.length == 1) {
+        final mp = await multipartFileFromXFile(certificates.first);
+        data['certificate'] = mp;
+      } else {
+        final List<MultipartFile> files = [];
+        for (final f in certificates) {
+          final mp = await multipartFileFromXFile(f);
+          files.add(mp);
+        }
+        data['certificates'] = files;
+      }
+    }
+
+    final form = FormData.fromMap(data);
+    final response = await _api.patch('${ApiConstants.vaccinations}$id/', data: form);
+    if (response.statusCode == 200) {
+      return VaccinationModel.fromJson(response.data);
+    }
+    throw Exception('Failed to update vaccination (multipart)');
   }
 
   Future<void> deleteVaccination(int id) async {
@@ -182,6 +256,46 @@ class PetService {
     throw Exception('Failed to add medical record');
   }
 
+  /// Multipart add: supports uploading attachments (images/files) alongside the record.
+  Future<MedicalRecordModel> addMedicalRecordMultipart(
+    int petId,
+    MedicalRecordModel record, {
+    List<XFile>? attachments,
+  }) async {
+    final raw = record.toJson();
+    final data = _cleanPayload(
+      raw,
+      stringFields: {'veterinarian'},
+      dropIfNull: {'cost'},
+    );
+    data['pet'] = petId;
+
+    // Prepare multipart attachments if provided
+    if (attachments != null && attachments.isNotEmpty) {
+      final List<MultipartFile> files = [];
+      for (final f in attachments) {
+        final mp = await multipartFileFromXFile(f);
+        files.add(mp);
+      }
+      data['attachments'] = files;
+    }
+
+    final form = FormData.fromMap(data);
+    if (kDebugMode) {
+      try {
+        print('-- addMedicalRecordMultipart FormData keys: ${form.fields.map((f) => f.key).toList()}');
+        print('-- addMedicalRecordMultipart files: ${form.files.map((f) => f.key + ':' + (f.value.filename ?? 'unknown')).toList()}');
+      } catch (e) {
+        print('debug print error: $e');
+      }
+    }
+    final response = await _api.post(ApiConstants.medicalRecords, data: form);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return MedicalRecordModel.fromJson(response.data);
+    }
+    throw Exception('Failed to add medical record (multipart)');
+  }
+
   // PATCH instead of PUT
   Future<MedicalRecordModel> updateMedicalRecord(int id, MedicalRecordModel record) async {
     final raw = record.toJson();
@@ -196,6 +310,44 @@ class PetService {
       return MedicalRecordModel.fromJson(response.data);
     }
     throw Exception('Failed to update medical record');
+  }
+
+  /// Multipart update: supports uploading new attachments alongside the record.
+  Future<MedicalRecordModel> updateMedicalRecordMultipart(
+    int id,
+    MedicalRecordModel record, {
+    List<XFile>? attachments,
+  }) async {
+    final raw = record.toJson();
+    final data = _cleanPayload(
+      raw,
+      stringFields: {'veterinarian'},
+      dropIfNull: {'cost'},
+    );
+
+    if (attachments != null && attachments.isNotEmpty) {
+      final List<MultipartFile> files = [];
+      for (final f in attachments) {
+        final mp = await multipartFileFromXFile(f);
+        files.add(mp);
+      }
+      data['attachments'] = files;
+    }
+
+    final form = FormData.fromMap(data);
+    if (kDebugMode) {
+      try {
+        print('-- updateMedicalRecordMultipart FormData keys: ${form.fields.map((f) => f.key).toList()}');
+        print('-- updateMedicalRecordMultipart files: ${form.files.map((f) => f.key + ':' + (f.value.filename ?? 'unknown')).toList()}');
+      } catch (e) {
+        print('debug print error: $e');
+      }
+    }
+    final response = await _api.patch('${ApiConstants.medicalRecords}$id/', data: form);
+    if (response.statusCode == 200) {
+      return MedicalRecordModel.fromJson(response.data);
+    }
+    throw Exception('Failed to update medical record (multipart)');
   }
 
   Future<void> deleteMedicalRecord(int id) async {

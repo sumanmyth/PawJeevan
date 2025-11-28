@@ -5,6 +5,10 @@ import '../../../widgets/custom_app_bar.dart';
 import '../../../widgets/app_dropdown_field.dart';
 import '../../../widgets/app_form_card.dart';
 import '../../../utils/helpers.dart';
+import '../../../utils/currency.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show File;
 
 class AddMedicalRecordScreen extends StatefulWidget {
   final int petId;
@@ -19,7 +23,10 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _vetController = TextEditingController();
+  final _clinicController = TextEditingController();
+  final _prescriptionController = TextEditingController();
   final _costController = TextEditingController();
+  XFile? _attachment;
   String _recordType = 'checkup';
   DateTime _date = DateTime.now();
   bool _isSaving = false;
@@ -31,6 +38,8 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     _titleController.dispose();
     _descController.dispose();
     _vetController.dispose();
+    _clinicController.dispose();
+    _prescriptionController.dispose();
     _costController.dispose();
     super.dispose();
   }
@@ -47,6 +56,60 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     }
   }
 
+  Future<void> _pickFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) setState(() => _attachment = picked);
+    } catch (e) {
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error picking attachment: $e')));
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(source: ImageSource.camera);
+      if (picked != null) setState(() => _attachment = picked);
+    } catch (e) {
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error picking attachment: $e')));
+    }
+  }
+
+  Future<void> _showAttachmentOptions() async {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pick from Gallery'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -61,8 +124,14 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
         cost: _costController.text.trim().isEmpty
             ? null
             : double.tryParse(_costController.text.trim()),
+          clinicName: _clinicController.text.trim().isEmpty ? null : _clinicController.text.trim(),
+          prescription: _prescriptionController.text.trim().isEmpty ? null : _prescriptionController.text.trim(),
       );
-      await _service.addMedicalRecord(widget.petId, rec);
+      if (_attachment != null) {
+        await _service.addMedicalRecordMultipart(widget.petId, rec, attachments: [_attachment!]);
+      } else {
+        await _service.addMedicalRecord(widget.petId, rec);
+      }
       if (!mounted) return;
       Helpers.showInstantSnackBar(
         context,
@@ -148,13 +217,71 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
               ),
               const SizedBox(height: 12),
 
+                TextFormField(
+                  controller: _clinicController,
+                  decoration: const InputDecoration(
+                    labelText: 'Clinic Name (optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.local_hospital),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                TextFormField(
+                  controller: _prescriptionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Prescription (optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.medical_information),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Attachments picker and preview
+                if (_attachment != null)
+                  SizedBox(
+                    height: 84,
+                    child: Row(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.grey.shade200),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: kIsWeb ? Image.network(_attachment!.path, fit: BoxFit.cover) : Image.file(File(_attachment!.path), fit: BoxFit.cover),
+                          ),
+                        ),
+                        Expanded(child: Text(_attachment!.name)),
+                        IconButton(onPressed: () => setState(() => _attachment = null), icon: const Icon(Icons.close)),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _showAttachmentOptions,
+                    icon: const Icon(Icons.attach_file),
+                    label: const Text('Add Attachment (optional)'),
+                  ),
+                ),
+                const SizedBox(height: 12),
               TextFormField(
                 controller: _costController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Cost (optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 8),
+                    child: Text(
+                      kCurrencySymbol,
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 24),
                 ),
               ),
               const SizedBox(height: 20),

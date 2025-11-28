@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../services/pet_service.dart';
 import '../../../utils/helpers.dart';
+import '../../../utils/currency.dart';
 import '../forms/edit_medical_record_screen.dart';
+import '../medical_record_detail_screen.dart';
 import 'empty_state_widget.dart';
 
 /// Medical records tab displaying health records
@@ -32,7 +34,15 @@ class MedicalTab extends StatelessWidget {
         itemCount: medicalRecords.length,
         itemBuilder: (context, i) {
           final m = medicalRecords[i];
-          return _buildMedicalCard(context, m);
+          return GestureDetector(
+            onTap: () async {
+              await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => MedicalRecordDetailScreen(record: m)),
+              );
+            },
+            child: _buildMedicalCard(context, m),
+          );
         },
       ),
     );
@@ -110,7 +120,10 @@ class MedicalTab extends StatelessWidget {
     final parts = <String>[
       'Date: ${_formatDate(m.date)}',
       if (m.veterinarian != null && m.veterinarian!.isNotEmpty) 'Vet: ${m.veterinarian}',
-      if (m.cost != null) 'Cost: ${m.cost}',
+      if (m.clinicName != null && m.clinicName!.isNotEmpty) 'Clinic: ${m.clinicName}',
+      if (m.cost != null) 'Cost: ${kCurrencySymbol}${m.cost!.toStringAsFixed(2)}',
+      if (m.prescription != null && m.prescription!.isNotEmpty) 'Prescription: ${m.prescription}',
+      if (m.attachments != null && m.attachments!.isNotEmpty) 'Attachments: ${m.attachments!.length}',
       if (m.description.isNotEmpty) m.description,
     ];
     return parts.join('\n');

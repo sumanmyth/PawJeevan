@@ -54,6 +54,11 @@ class StoreService {
     int page = 1,
     int? categoryId,
     List<int>? categoryIds,
+    double? weightMin,
+    double? weightMax,
+    double? priceMin,
+    double? priceMax,
+    bool? isFeatured,
   }) async {
     try {
       final queryParams = <String, dynamic>{'page': page};
@@ -61,6 +66,11 @@ class StoreService {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category'] = categoryId;
       if (categoryIds != null && categoryIds.isNotEmpty) queryParams['category__in'] = categoryIds.join(',');
+      if (weightMin != null) queryParams['weight_min'] = weightMin;
+      if (weightMax != null) queryParams['weight_max'] = weightMax;
+      if (priceMin != null) queryParams['price_min'] = priceMin;
+      if (priceMax != null) queryParams['price_max'] = priceMax;
+      if (isFeatured != null) queryParams['is_featured'] = isFeatured ? '1' : '0';
 
       final response = await _api.get(
         ApiConstants.products,
