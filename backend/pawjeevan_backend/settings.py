@@ -146,6 +146,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@pawjeevan.local')
+# Friendly sender used specifically for OTP and verification messages. Can be overridden
+# via environment variable `OTP_FROM_EMAIL` (e.g. "PawJeevan <no-reply@pawjeevan.com>").
+OTP_FROM_EMAIL = config('OTP_FROM_EMAIL', default='PawJeevan <no-reply@pawjeevan.com>')
 
 # Social auth configuration (Google)
 # Provide a Google OAuth2 client ID for verifying ID tokens sent from the mobile app.

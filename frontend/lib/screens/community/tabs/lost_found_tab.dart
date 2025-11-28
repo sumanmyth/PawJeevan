@@ -155,23 +155,13 @@ class _LostFoundTabState extends State<LostFoundTab> with SingleTickerProviderSt
   }
 
   Future<void> _deleteReport(LostFoundReport report) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Report'),
-        content: Text('Are you sure you want to delete this ${report.reportTypeDisplay.toLowerCase()}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await Helpers.showBlurredConfirmationDialog(
+      context,
+      title: 'Delete Report',
+      content: 'Are you sure you want to delete this ${report.reportTypeDisplay.toLowerCase()}?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      confirmDestructive: true,
     );
 
     if (confirmed == true) {

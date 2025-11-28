@@ -265,4 +265,10 @@ class AuthProvider extends ChangeNotifier {
     _user = updated;
     notifyListeners();
   }
+
+  /// Clear any stored error message and notify listeners.
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 }

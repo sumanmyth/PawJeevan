@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../models/community/post_model.dart';
 import '../providers/community_provider.dart';
 import '../screens/community/posts/edit_post_screen.dart';
-import '../services/community_service.dart';
 import '../utils/helpers.dart';
 
 class PostOptionsMenu extends StatefulWidget {
@@ -97,8 +96,8 @@ class _PostOptionsMenuState extends State<PostOptionsMenu> {
 
     // Show confirmation dialog with built-in state management
     print('Showing delete confirmation dialog');
-    final bool? success = await showDialog<bool>(
-      context: context,
+    final bool? success = await Helpers.showBlurredDialog<bool>(
+      context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) => StatefulBuilder(
         builder: (BuildContext context, StateSetter setDialogState) {
@@ -107,22 +106,25 @@ class _PostOptionsMenuState extends State<PostOptionsMenu> {
           void handleDelete() async {
             try {
               setDialogState(() => isDeleting = true);
-              
-              print('Starting delete operation...');
-              final service = CommunityService();
-              await service.deletePost(widget.post.id);
-              
-              print('Delete successful');
-              
-              // Ensure we're still mounted before proceeding
-              if (!dialogContext.mounted) return;
-              
-              // Get provider and refresh posts list before closing dialog
+
+              print('Starting delete operation via provider...');
               final provider = Provider.of<CommunityProvider>(context, listen: false);
-              await provider.fetchPosts();
-              
-              // Only close dialog after posts are refreshed
-              Navigator.pop(dialogContext, true);
+              final success = await provider.deletePost(widget.post.id);
+
+              print('Provider delete returned: $success');
+
+              if (!dialogContext.mounted) return;
+
+              if (success) {
+                // Close dialog and indicate success
+                Navigator.pop(dialogContext, true);
+              } else {
+                Helpers.showInstantSnackBar(
+                  dialogContext,
+                  const SnackBar(content: Text('Failed to delete post')),
+                );
+                Navigator.pop(dialogContext, false);
+              }
             } catch (e) {
               print('Error during delete: $e');
               if (dialogContext.mounted) {

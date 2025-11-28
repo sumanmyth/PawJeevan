@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/pet/pet_model.dart';
 import '../../../services/pet_service.dart';
+import '../../../utils/helpers.dart';
 import '../forms/edit_vaccination_screen.dart';
 import 'empty_state_widget.dart';
 
@@ -129,22 +130,10 @@ class VaccinationTab extends StatelessWidget {
           );
           if (ok == true) onRefresh();
         } else if (value == 'delete') {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: const Text('Delete Vaccination'),
-              content: Text('Delete "${v.vaccineName}"?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                ),
-              ],
-            ),
+          final confirm = await Helpers.showBlurredConfirmationDialog(
+            context,
+            title: 'Delete Vaccination',
+            content: 'Delete "${v.vaccineName}"?',
           );
           if (confirm == true) {
             await PetService().deleteVaccination(v.id!);

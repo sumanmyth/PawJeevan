@@ -56,21 +56,21 @@ class PetActions {
     required dynamic adoption,
     required VoidCallback onConfirm,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+    Helpers.showBlurredDialog(
+      context,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Pet Listing'),
         content: Text(
           'Are you sure you want to delete ${adoption.petName}\'s adoption listing?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               onConfirm();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),

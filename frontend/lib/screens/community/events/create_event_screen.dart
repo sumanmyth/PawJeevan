@@ -48,7 +48,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _selectDateTime(bool isStart) async {
-    final date = await showDatePicker(
+    final date = await Helpers.showBlurredDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),

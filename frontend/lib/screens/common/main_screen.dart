@@ -2,6 +2,7 @@ import 'dart:ui'; // Required for ImageFilter
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/fact_provider.dart';
+import '../../providers/store_provider.dart';
 import '../tabs/home_tab.dart';
 import '../tabs/store_tab.dart';
 import '../tabs/ai_tab.dart';
@@ -74,8 +75,31 @@ class _MainScreenState extends State<MainScreen> {
             setState(() {
               _currentIndex = idx;
             });
+            // When leaving the Store tab, reset filters to defaults so
+            // Discover shows 'All' when user returns from other tabs.
+            if (idx != 1) {
+              // Reset store filters when navigating away from Store tab
+              try {
+                final store = Provider.of<StoreProvider>(context, listen: false);
+                store.setSelectedPetType('all', skipReload: true);
+                store.setLocationFilter('all');
+                store.setSearchQuery('');
+              } catch (_) {
+                // If StoreProvider isn't available in this context, ignore
+              }
+            }
+
             if (idx == 0) {
               Provider.of<FactProvider>(context, listen: false).nextFact();
+            }
+            // When entering the Store tab, ensure adoptions are loaded with current filters
+            if (idx == 1) {
+              try {
+                final store = Provider.of<StoreProvider>(context, listen: false);
+                store.loadAdoptions();
+              } catch (_) {
+                // ignore
+              }
             }
           },
           children: _navItems.map((e) => e.page).toList(),

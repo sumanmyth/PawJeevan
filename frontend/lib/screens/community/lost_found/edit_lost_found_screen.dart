@@ -81,7 +81,7 @@ class _EditLostFoundScreenState extends State<EditLostFoundScreen> {
   }
 
   Future<void> _selectDate() async {
-    final date = await showDatePicker(
+    final date = await Helpers.showBlurredDatePicker(
       context: context,
       initialDate: _dateLostFound,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),

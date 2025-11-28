@@ -131,22 +131,13 @@ class _GroupsTabState extends State<GroupsTab> with SingleTickerProviderStateMix
   }
 
   Future<void> _deleteGroup(Group group) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Group'),
-        content: Text('Are you sure you want to delete "${group.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirm = await Helpers.showBlurredConfirmationDialog(
+      context,
+      title: 'Delete Group',
+      content: 'Are you sure you want to delete "${group.name}"?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      confirmDestructive: true,
     );
 
     if (confirm == true) {

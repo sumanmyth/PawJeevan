@@ -26,9 +26,9 @@ class PetCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image Section
-                SizedBox(
-                  height: constraints.maxHeight * 0.65,
+                // Image Section - use flex to avoid fractional pixel overflow
+                Expanded(
+                  flex: 65,
                   child: Stack(
                     children: [
                       SizedBox.expand(
@@ -95,8 +95,9 @@ class PetCard extends StatelessWidget {
                 ),
                 // Content Section
                 Expanded(
+                  flex: 35,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import '../../../providers/store_provider.dart';
 
 class LocationFilterMenu extends StatelessWidget {
-  const LocationFilterMenu({super.key});
+  final String? selected;
+  final void Function(String)? onChanged;
+
+  const LocationFilterMenu({super.key, this.selected, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +24,18 @@ class LocationFilterMenu extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: items.map((it) {
-          final isSelected = it['id'] == provider.selectedLocationFilter;
+          final current = selected ?? provider.selectedLocationFilter;
+          final isSelected = it['id'] == current;
           return ChoiceChip(
             label: Text(it['label']!),
             selected: isSelected,
             onSelected: (s) {
               if (s) {
-                provider.setLocationFilter(it['id']!);
+                if (onChanged != null) {
+                  onChanged!(it['id']!);
+                } else {
+                  provider.setLocationFilter(it['id']!);
+                }
               }
             },
             selectedColor: const Color(0xFFE9D8FD),

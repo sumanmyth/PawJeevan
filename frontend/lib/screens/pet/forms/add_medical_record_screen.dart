@@ -36,7 +36,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   }
 
   Future<void> _pickDate() async {
-    final dt = await showDatePicker(
+    final dt = await Helpers.showBlurredDatePicker(
       context: context,
       initialDate: _date,
       firstDate: DateTime(2000),

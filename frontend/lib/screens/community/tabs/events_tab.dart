@@ -151,22 +151,13 @@ class _EventsTabState extends State<EventsTab> with SingleTickerProviderStateMix
   }
 
   Future<void> _deleteEvent(Event event) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: Text('Are you sure you want to delete "${event.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirm = await Helpers.showBlurredConfirmationDialog(
+      context,
+      title: 'Delete Event',
+      content: 'Are you sure you want to delete "${event.title}"?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      confirmDestructive: true,
     );
 
     if (confirm == true) {

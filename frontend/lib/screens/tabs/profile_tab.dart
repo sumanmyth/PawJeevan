@@ -391,17 +391,23 @@ class _StatItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double hPad = constraints.maxWidth < 72
+              ? 8.0
+              : (constraints.maxWidth < 100 ? 12.0 : 20.0);
+
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
+            decoration: BoxDecoration(
           color: const Color.fromRGBO(255, 255, 255, 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: const Color.fromRGBO(255, 255, 255, 0.2),
             width: 1.5,
           ),
-        ),
-        child: Column(
+            ),
+            child: Column(
           children: [
             Text(
               value,
@@ -415,6 +421,10 @@ class _StatItem extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
               style: const TextStyle(
                 color: Color(0xE6FFFFFF),
                 fontSize: 13,
@@ -423,7 +433,9 @@ class _StatItem extends StatelessWidget {
               ),
             ),
           ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }
