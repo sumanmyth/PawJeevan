@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/store_provider.dart';
+import '../../widgets/product_card.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../store/adoption/pet_detail_screen.dart';
 
@@ -21,6 +22,8 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
     // Load adoptions to get favorite pets data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StoreProvider>().loadAdoptions(showAllStatuses: false);
+      // also load products to populate product wishlist
+      context.read<StoreProvider>().loadProducts();
     });
   }
 
@@ -75,34 +78,64 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
   }
 
   Widget _buildProductsTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.shopping_bag_outlined,
-            size: 80,
-            color: Colors.grey.shade400,
+    return Consumer<StoreProvider>(builder: (context, provider, child) {
+      if (provider.isLoading && provider.products.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final favoriteProducts = provider.products.where((p) => provider.isProductFavorite(p.id)).toList();
+
+      if (favoriteProducts.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.shopping_bag_outlined,
+                size: 80,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No favorite products yet',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Start adding products to your wishlist',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'No favorite products yet',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start adding products to your wishlist',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
-          ),
-        ],
-      ),
-    );
+        );
+      }
+
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.68,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: favoriteProducts.length,
+        itemBuilder: (context, index) {
+          final product = favoriteProducts[index];
+          return ProductCard(
+            product: product,
+            onTap: () {
+              Navigator.pushNamed(context, '/store/product/${product.slug}');
+            },
+          );
+        },
+      );
+    });
   }
 
   Widget _buildPetsTab() {
@@ -235,8 +268,9 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    // Name
                     Text(
                       pet.petName,
                       style: const TextStyle(
@@ -246,15 +280,85 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      pet.breed,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 6),
+
+                    // Compact details row: breed • gender • location (truncated)
+                    Row(
+                      children: [
+                        // Breed takes remaining space, truncated if needed
+                        Flexible(
+                          child: Text(
+                            pet.breed ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+
+                        // Pet type badge (e.g., Dog, Cat)
+                        if (pet.petType != null && (pet.petType as String).isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.pets,
+                                  size: 14,
+                                  color: Color(0xFF7C3AED),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  // Prefer a nicely formatted display if available
+                                  (pet.petTypeDisplay ?? pet.petType) as String,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[200] : Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(width: 6),
+
+                        // Gender icon + text
+                        if (pet.gender != null && (pet.gender as String).isNotEmpty)
+                          Row(
+                            children: [
+                              Icon(
+                                pet.gender.toString().toLowerCase() == 'male' ? Icons.male : Icons.female,
+                                size: 14,
+                                color: const Color(0xFF7C3AED),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                pet.gender ?? '',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[200] : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
+
+                    const SizedBox(height: 8),
+
+                    // Age chip
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -264,13 +368,20 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
                         color: const Color(0xFFE9D8FD),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        pet.ageDisplay,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF7C3AED),
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.cake, size: 14, color: Color(0xFF7C3AED)),
+                          const SizedBox(width: 6),
+                          Text(
+                            pet.ageDisplay,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

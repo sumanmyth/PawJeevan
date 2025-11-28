@@ -114,15 +114,52 @@ class PetCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${adoption.breed} • ${adoption.ageDisplay}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 4),
+                            // Compact details row: breed (truncated) + gender icon/text + age
+                            Row(
+                              children: [
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: Text(
+                                    adoption.breed ?? '',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                if (adoption.gender != null && (adoption.gender as String).isNotEmpty)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        adoption.gender.toString().toLowerCase() == 'male' ? Icons.male : Icons.female,
+                                        size: 12,
+                                        color: const Color(0xFF7C3AED),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        adoption.gender.toString().toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: theme.brightness == Brightness.dark
+                                              ? Colors.grey[200]
+                                              : const Color(0xFF2D3748),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                  ),
+                                Text(
+                                  adoption.ageDisplay,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

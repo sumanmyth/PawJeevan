@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/store/product_model.dart';
 import '../models/pet/adoption_listing_model.dart';
-import '../services/api_service.dart';
+import '../models/store/category_model.dart';
 import '../services/store_service.dart';
-import '../utils/constants.dart';
 
 class StoreProvider extends ChangeNotifier {
-  final ApiService _api = ApiService();
   final StoreService _storeService = StoreService();
 
   List<Product> _products = [];
@@ -18,6 +16,9 @@ class StoreProvider extends ChangeNotifier {
   String _selectedLocationFilter = 'all'; // values: all, my_location, my_city, my_country
   String _searchQuery = '';
   Set<int> _favoritePetIds = {};
+  Set<int> _favoriteProductIds = {};
+  List<Category> _storeCategories = [];
+  Set<int> _selectedStoreCategoryIds = {};
 
   List<Product> get products => _products;
   List<AdoptionListing> get adoptions => _adoptions;
@@ -27,6 +28,9 @@ class StoreProvider extends ChangeNotifier {
   String get selectedLocationFilter => _selectedLocationFilter;
   String get searchQuery => _searchQuery;
   Set<int> get favoritePetIds => _favoritePetIds;
+  Set<int> get favoriteProductIds => _favoriteProductIds;
+  List<Category> get storeCategories => _storeCategories;
+  Set<int> get selectedStoreCategoryIds => _selectedStoreCategoryIds;
   
   List<AdoptionListing> get favoritePets {
     return _adoptions.where((pet) => _favoritePetIds.contains(pet.id)).toList();
@@ -34,6 +38,47 @@ class StoreProvider extends ChangeNotifier {
 
   StoreProvider() {
     _loadFavoritePets();
+    _loadFavoriteProducts();
+    // Kick off a background sync from server to reconcile any server-side wishlist state.
+    _syncFavoritesFromServer();
+    // Load categories for the store filters
+    loadCategories().catchError((_) {});
+  }
+
+  /// Attempt to fetch the user's wishlist from server and merge into local favorites.
+  Future<void> _syncFavoritesFromServer() async {
+    try {
+      final data = await _storeService.fetchWishlist();
+      if (data != null) {
+        // Expecting server response like: { 'products': [ {id:..}, ... ], 'adoptions': [...] }
+        final serverProducts = <int>{};
+        final serverPets = <int>{};
+
+        try {
+          final prodList = data['products'] as List<dynamic>? ?? [];
+          for (final p in prodList) {
+            if (p is Map && p['id'] != null) serverProducts.add(p['id'] as int);
+          }
+        } catch (_) {}
+
+        try {
+          final petList = data['adoptions'] as List<dynamic>? ?? [];
+          for (final p in petList) {
+            if (p is Map && p['id'] != null) serverPets.add(p['id'] as int);
+          }
+        } catch (_) {}
+
+        // Replace local sets with server's authoritative sets to avoid divergence.
+        _favoriteProductIds = serverProducts;
+        _favoritePetIds = serverPets;
+        await _saveFavoriteProducts();
+        await _saveFavoritePets();
+        notifyListeners();
+      }
+    } catch (e) {
+      // Ignore sync errors for now; keep local state.
+      debugPrint('Error syncing favorites from server: $e');
+    }
   }
 
   Future<void> _loadFavoritePets() async {
@@ -49,18 +94,77 @@ class StoreProvider extends ChangeNotifier {
     await prefs.setStringList('favorite_pet_ids', favoriteIds);
   }
 
+  Future<void> _saveFavoriteProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favoriteIds = _favoriteProductIds.map((id) => id.toString()).toList();
+    await prefs.setStringList('favorite_product_ids', favoriteIds);
+  }
+
+  Future<void> _loadFavoriteProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favoriteIds = prefs.getStringList('favorite_product_ids') ?? [];
+    _favoriteProductIds = favoriteIds.map((id) => int.parse(id)).toSet();
+    notifyListeners();
+  }
+
   bool isPetFavorite(int petId) {
     return _favoritePetIds.contains(petId);
   }
 
+  bool isProductFavorite(int productId) {
+    return _favoriteProductIds.contains(productId);
+  }
+
   Future<void> togglePetFavorite(int petId) async {
-    if (_favoritePetIds.contains(petId)) {
+    final wasFavorite = _favoritePetIds.contains(petId);
+    // Optimistic update
+    if (wasFavorite) {
       _favoritePetIds.remove(petId);
     } else {
       _favoritePetIds.add(petId);
     }
     await _saveFavoritePets();
     notifyListeners();
+
+    try {
+      await _storeService.toggleWishlistPet(petId);
+    } catch (e) {
+      // Rollback on error
+      if (wasFavorite) {
+        _favoritePetIds.add(petId);
+      } else {
+        _favoritePetIds.remove(petId);
+      }
+      await _saveFavoritePets();
+      _error = 'Failed to update wishlist: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleProductFavorite(int productId) async {
+    final wasFavorite = _favoriteProductIds.contains(productId);
+    // Optimistic update
+    if (wasFavorite) {
+      _favoriteProductIds.remove(productId);
+    } else {
+      _favoriteProductIds.add(productId);
+    }
+    await _saveFavoriteProducts();
+    notifyListeners();
+
+    try {
+      await _storeService.toggleWishlistProduct(productId);
+    } catch (e) {
+      // Rollback on error
+      if (wasFavorite) {
+        _favoriteProductIds.add(productId);
+      } else {
+        _favoriteProductIds.remove(productId);
+      }
+      await _saveFavoriteProducts();
+      _error = 'Failed to update wishlist: ${e.toString()}';
+      notifyListeners();
+    }
   }
 
   void setSelectedPetType(String petType, {bool skipReload = false}) {
@@ -120,18 +224,38 @@ class StoreProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _api.get(ApiConstants.products);
-      if (response.statusCode == 200) {
-        final List<dynamic> results = response.data['results'] ?? [];
-        _products = results.map((json) => Product.fromJson(json)).toList();
-        _error = null;
-      }
+      final categoryIds = _selectedStoreCategoryIds.isEmpty ? null : _selectedStoreCategoryIds.toList();
+      final result = await _storeService.fetchProducts(
+        page: 1,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+        categoryIds: categoryIds,
+      );
+
+      final List<Product> products = List<Product>.from(result['results'] ?? []);
+      _products = products;
+      _error = null;
     } catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      final raw = await _storeService.fetchCategories();
+      _storeCategories = raw.map((j) => Category.fromJson(j)).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading categories: $e');
+    }
+  }
+
+  void setSelectedStoreCategoryIds(Set<int> ids, {bool skipLoad = false}) {
+    _selectedStoreCategoryIds = ids;
+    notifyListeners();
+    if (!skipLoad) loadProducts();
   }
 
   Future<void> loadAdoptions({bool showAllStatuses = false}) async {

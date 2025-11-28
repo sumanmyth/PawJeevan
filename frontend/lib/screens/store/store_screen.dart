@@ -11,10 +11,14 @@ import 'widgets/store_banner.dart';
 import 'widgets/store_tab_selector.dart';
 import 'widgets/store_category_menu.dart';
 import 'widgets/filter_button.dart';
+import 'widgets/others_filter_button.dart';
+import '../../widgets/product_card.dart';
+import 'products/product_detail_screen.dart';
 import 'dialogs/search_dialog.dart';
 import 'dialogs/manage_pet_modal.dart';
 import 'utils/banner_manager.dart';
 import 'utils/pet_actions.dart';
+import 'products/product_content.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -24,7 +28,7 @@ class StoreScreen extends StatefulWidget {
 }
 
 class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStateMixin {
-  final List<String> _categories = ['Adoption', 'Food', 'Toys'];
+  final List<String> _categories = ['Adoption', 'Food', 'Toys', 'Others'];
   String _selectedCategory = 'Adoption';
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -122,7 +126,11 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => storeProvider.loadAdoptions(showAllStatuses: _currentTabIndex == 1),
+        onRefresh: () {
+          // Don't perform refresh when the inline Food tab is selected
+          if (_selectedCategory == 'Food') return Future.value();
+          return storeProvider.loadAdoptions(showAllStatuses: _currentTabIndex == 1);
+        },
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           // FIXED: Reduced the top offset from +16 to +4 to decrease the visual gap
@@ -151,11 +159,61 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                   categories: _categories,
                   selectedCategory: _selectedCategory,
                   onCategorySelected: (category) {
-                    context.read<StoreProvider>().setSearchQuery('');
-                    context.read<StoreProvider>().searchAdoptions();
+                    // Reset search and trigger appropriate content load
+                    final provider = context.read<StoreProvider>();
+                    provider.setSearchQuery('');
                     setState(() {
                       _selectedCategory = category;
                     });
+
+                    // Robust category matcher: try matching by slug first, then by keywords in name/slug.
+                    Future<void> applyCategoryMatcher({List<String>? exactSlugs, List<String>? keywords}) async {
+                      try {
+                        await provider.loadCategories();
+                        final cats = provider.storeCategories;
+                        final matches = <int>{};
+
+                        if (exactSlugs != null && exactSlugs.isNotEmpty) {
+                          for (final s in exactSlugs) {
+                            matches.addAll(cats.where((c) => c.slug == s).map((c) => c.id));
+                          }
+                        }
+
+                        if ((matches.isEmpty) && keywords != null && keywords.isNotEmpty) {
+                          final lowKeywords = keywords.map((k) => k.toLowerCase()).toList();
+                          for (final c in cats) {
+                            final name = c.name.toLowerCase();
+                            final slug = c.slug.toLowerCase();
+                            if (lowKeywords.any((k) => name.contains(k) || slug.contains(k))) {
+                              matches.add(c.id);
+                            }
+                          }
+                        }
+
+                        provider.setSelectedStoreCategoryIds(matches);
+                        await provider.loadProducts();
+                      } catch (e) {
+                        provider.setSelectedStoreCategoryIds({});
+                        await provider.loadProducts();
+                      }
+                    }
+
+                    if (category == 'Adoption') {
+                      provider.loadAdoptions(showAllStatuses: false);
+                    } else if (category == 'Food') {
+                      // Prefer exact slug, fallback to keywords 'food' or 'treat'
+                      applyCategoryMatcher(exactSlugs: ['food-and-treats'], keywords: ['food', 'treat']);
+                    } else if (category == 'Toys') {
+                      applyCategoryMatcher(exactSlugs: ['toys'], keywords: ['toy']);
+                    } else if (category == 'Others') {
+                      applyCategoryMatcher(exactSlugs: [
+                        'health-and-wellness',
+                        'grooming-supplies',
+                        'bedding-and-furniture',
+                        'travel-and-carriers',
+                        'collars-leashes-harnesses',
+                      ], keywords: ['health', 'groom', 'bedding', 'travel', 'collar', 'leash', 'harness']);
+                    }
                   },
                 ),
                 
@@ -187,12 +245,67 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
                     ),
                   ],
                 ] else ...[
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: Text('Coming Soon!', style: TextStyle(fontSize: 18)),
+                  if (_selectedCategory == 'Food' || _selectedCategory == 'Toys') ...[
+                    const SizedBox(height: 8),
+                    // Embed ProductContent inline so Food and Toys behave like Adoption
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: ProductContent(),
                     ),
-                  ),
+                  ] else if (_selectedCategory == 'Others') ...[
+                    const SizedBox(height: 8),
+                    // Others behaves like a product shopping view with category filters
+                    _buildSectionHeader('Shop'),
+                    const SizedBox(height: 12),
+                    OthersFilterButton(provider: storeProvider),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Builder(
+                        builder: (ctx) {
+                          if (storeProvider.isLoading) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if (storeProvider.products.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: Text('No products found', style: TextStyle(fontSize: 16))),
+                            );
+                          }
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.72,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                            ),
+                            itemCount: storeProvider.products.length,
+                            itemBuilder: (context, index) {
+                              final product = storeProvider.products[index];
+                              return ProductCard(
+                                product: product,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ProductDetailScreen(slug: product.slug),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ] else ...[
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: Text('Coming Soon!', style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ],
                 ],
               ],
             ),

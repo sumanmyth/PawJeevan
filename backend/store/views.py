@@ -62,6 +62,22 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             qs = qs.filter(price__gte=min_price)
         if max_price:
             qs = qs.filter(price__lte=max_price)
+        # Support filtering by multiple categories via query params like
+        # ?category__in=1,2,3 or by slug ?category__slug__in=food-and-treats,toys
+        cat_in = self.request.query_params.get('category__in')
+        if cat_in:
+            try:
+                ids = [int(x) for x in cat_in.split(',') if x.strip()]
+                if ids:
+                    qs = qs.filter(category__id__in=ids)
+            except ValueError:
+                pass
+
+        cat_slug_in = self.request.query_params.get('category__slug__in')
+        if cat_slug_in:
+            slugs = [x.strip() for x in cat_slug_in.split(',') if x.strip()]
+            if slugs:
+                qs = qs.filter(category__slug__in=slugs)
         return qs
 
     @action(detail=False, methods=["get"])
@@ -316,6 +332,19 @@ class WishlistViewSet(viewsets.ViewSet):
         return Response(ser.data)
 
     @action(detail=False, methods=["post"])
+    def add_pet(self, request):
+        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        pet_id = request.data.get("pet_id")
+        try:
+            pet = AdoptionListing.objects.get(id=pet_id)
+        except AdoptionListing.DoesNotExist:
+            return Response({"error": "Pet not found"}, status=404)
+
+        wishlist.adoptions.add(pet)
+        ser = WishlistSerializer(wishlist, context={"request": request})
+        return Response(ser.data)
+
+    @action(detail=False, methods=["post"])
     def remove(self, request):
         wishlist = Wishlist.objects.get(user=request.user)
         product_id = request.data.get("product_id")
@@ -325,6 +354,19 @@ class WishlistViewSet(viewsets.ViewSet):
             return Response({"error": "Product not found"}, status=404)
 
         wishlist.products.remove(product)
+        ser = WishlistSerializer(wishlist, context={"request": request})
+        return Response(ser.data)
+
+    @action(detail=False, methods=["post"])
+    def remove_pet(self, request):
+        wishlist = Wishlist.objects.get(user=request.user)
+        pet_id = request.data.get("pet_id")
+        try:
+            pet = AdoptionListing.objects.get(id=pet_id)
+        except AdoptionListing.DoesNotExist:
+            return Response({"error": "Pet not found"}, status=404)
+
+        wishlist.adoptions.remove(pet)
         ser = WishlistSerializer(wishlist, context={"request": request})
         return Response(ser.data)
 
@@ -342,6 +384,25 @@ class WishlistViewSet(viewsets.ViewSet):
             action = "removed"
         else:
             wishlist.products.add(product)
+            action = "added"
+
+        ser = WishlistSerializer(wishlist, context={"request": request})
+        return Response({"action": action, "wishlist": ser.data})
+
+    @action(detail=False, methods=["post"])
+    def toggle_pet(self, request):
+        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        pet_id = request.data.get("pet_id")
+        try:
+            pet = AdoptionListing.objects.get(id=pet_id)
+        except AdoptionListing.DoesNotExist:
+            return Response({"error": "Pet not found"}, status=404)
+
+        if wishlist.adoptions.filter(id=pet_id).exists():
+            wishlist.adoptions.remove(pet)
+            action = "removed"
+        else:
+            wishlist.adoptions.add(pet)
             action = "added"
 
         ser = WishlistSerializer(wishlist, context={"request": request})

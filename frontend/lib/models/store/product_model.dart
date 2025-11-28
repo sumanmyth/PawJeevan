@@ -8,6 +8,7 @@ class Product {
   final String? categoryName;
   final String? brandName;
   final int stock;
+  final double? averageRating;
 
   Product({
     required this.id,
@@ -19,6 +20,7 @@ class Product {
     this.categoryName,
     this.brandName,
     required this.stock,
+    this.averageRating,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,9 @@ class Product {
       categoryName: json['category_name'],
       brandName: json['brand_name'],
       stock: json['stock'] ?? 0,
+      averageRating: json['average_rating'] != null
+          ? double.tryParse(json['average_rating'].toString())
+          : (json['averageRating'] != null ? double.tryParse(json['averageRating'].toString()) : null),
     );
   }
 

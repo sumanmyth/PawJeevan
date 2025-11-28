@@ -66,8 +66,17 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ['user', 'created_at']
+    list_display = ['user', 'products_count', 'adoptions_count', 'created_at']
     search_fields = ['user__username']
+    filter_horizontal = ('products', 'adoptions')
+
+    def products_count(self, obj):
+        return obj.products.count()
+    products_count.short_description = 'Products'
+
+    def adoptions_count(self, obj):
+        return obj.adoptions.count()
+    adoptions_count.short_description = 'Pets'
 
 
 @admin.register(AdoptionListing)

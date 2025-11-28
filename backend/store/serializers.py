@@ -40,6 +40,11 @@ class ProductSerializer(serializers.ModelSerializer):
     primary_image = serializers.SerializerMethodField()
     category_name = serializers.CharField(source="category.name", read_only=True)
     brand_name = serializers.CharField(source="brand.name", read_only=True)
+    # Include nested objects and logo fields so API returns logos in product detail
+    category = CategorySerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
+    category_logo = AbsoluteURLImageField(source='category.logo', read_only=True)
+    brand_logo = AbsoluteURLImageField(source='brand.logo', read_only=True)
     average_rating = serializers.ReadOnlyField()
 
     class Meta:
@@ -63,7 +68,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             "id", "name", "slug", "price", "discount_price",
-            "primary_image", "stock", "is_active", "is_featured",
+            "primary_image", "stock", "is_active", "is_featured", "average_rating",
         ]
 
     def get_primary_image(self, obj):
@@ -122,10 +127,16 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class WishlistSerializer(serializers.ModelSerializer):
     products = ProductListSerializer(many=True, read_only=True)
+    adoptions = serializers.SerializerMethodField()
 
     class Meta:
         model = Wishlist
         fields = "__all__"
+
+    def get_adoptions(self, obj):
+        # Use AdoptionListingSerializer here to avoid forward-reference issues
+        ser = AdoptionListingSerializer(obj.adoptions.all(), many=True, context=self.context)
+        return ser.data
 
 
 class AdoptionListingSerializer(serializers.ModelSerializer):

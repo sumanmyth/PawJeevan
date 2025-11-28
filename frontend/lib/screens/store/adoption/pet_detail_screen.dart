@@ -356,11 +356,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   Widget _buildInfoChip(IconData icon, String label, ThemeData theme) {
     return Chip(
-      avatar: Icon(icon, size: 18),
+      avatar: Icon(icon, size: 18, color: const Color(0xFF7C3AED)),
       label: Text(label),
       backgroundColor: const Color(0xFFE9D8FD),
       labelStyle: const TextStyle(
-        color: Color(0xFF7C3AED),
+        color: Colors.black,
         fontWeight: FontWeight.w500,
       ),
     );

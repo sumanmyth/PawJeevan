@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
 import '../models/pet/adoption_listing_model.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 import '../utils/file_utils.dart';
+import '../models/store/product_model.dart';
+import '../models/store/product_detail_model.dart';
 
 class StoreService {
   final ApiService _api = ApiService();
@@ -20,26 +23,143 @@ class StoreService {
       if (status != null) queryParams['status'] = status;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-      print('Fetching adoptions with params: $queryParams');
+      debugPrint('Fetching adoptions with params: $queryParams');
       
       final response = await _api.get(
         ApiConstants.adoptions,
         params: queryParams,
       );
 
-      print('Adoption response status: ${response.statusCode}');
-      print('Adoption response data: ${response.data}');
+      debugPrint('Adoption response status: ${response.statusCode}');
+      debugPrint('Adoption response data: ${response.data}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List 
             ? response.data 
             : (response.data['results'] ?? []);
-        print('Found ${data.length} adoptions');
+        debugPrint('Found ${data.length} adoptions');
         return data.map((json) => AdoptionListing.fromJson(json)).toList();
       }
       return [];
     } catch (e) {
-      print('Error fetching adoptions: $e');
+      debugPrint('Error fetching adoptions: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetch products (paginated). Returns a map with keys: count, next, previous, results(List<Product>)
+  Future<Map<String, dynamic>> fetchProducts({
+    String? petType,
+    String? search,
+    int page = 1,
+    int? categoryId,
+    List<int>? categoryIds,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{'page': page};
+      if (petType != null && petType != 'all') queryParams['pet_type'] = petType;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (categoryId != null) queryParams['category'] = categoryId;
+      if (categoryIds != null && categoryIds.isNotEmpty) queryParams['category__in'] = categoryIds.join(',');
+
+      final response = await _api.get(
+        ApiConstants.products,
+        params: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final List<dynamic> items = data is List ? data : (data['results'] ?? []);
+        final products = items.map((j) => Product.fromJson(j)).toList();
+        return {
+          'count': data is Map ? data['count'] ?? products.length : products.length,
+          'next': data is Map ? data['next'] : null,
+          'previous': data is Map ? data['previous'] : null,
+          'results': products,
+        };
+      }
+      return {'count': 0, 'next': null, 'previous': null, 'results': <Product>[]};
+    } catch (e) {
+      debugPrint('Error fetching products: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetch store categories
+  Future<List<Map<String, dynamic>>> fetchCategories() async {
+    try {
+      final response = await _api.get(ApiConstants.categories);
+      if (response.statusCode == 200) {
+        final data = response.data is List ? response.data : (response.data['results'] ?? []);
+        return List<Map<String, dynamic>>.from(data as List<dynamic>);
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetch product detail by slug
+  Future<ProductDetail?> fetchProductDetail(String slug) async {
+    try {
+      final response = await _api.get('${ApiConstants.products}$slug/');
+      if (response.statusCode == 200) {
+        return ProductDetail.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching product detail: $e');
+      return null;
+    }
+  }
+
+  /// Fetch current user's wishlist (products + adoptions)
+  Future<Map<String, dynamic>?> fetchWishlist() async {
+    try {
+      final response = await _api.get(ApiConstants.wishlist);
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching wishlist: $e');
+      return null;
+    }
+  }
+
+  /// Toggle product in wishlist
+  Future<Map<String, dynamic>?> toggleWishlistProduct(int productId) async {
+    try {
+      final response = await _api.post('${ApiConstants.wishlist}toggle/', data: {'product_id': productId});
+      if (response.statusCode == 200) return response.data;
+      return null;
+    } catch (e) {
+      debugPrint('Error toggling wishlist product: $e');
+      rethrow;
+    }
+  }
+
+  /// Toggle adoption (pet) in wishlist
+  Future<Map<String, dynamic>?> toggleWishlistPet(int petId) async {
+    try {
+      final response = await _api.post('${ApiConstants.wishlist}toggle_pet/', data: {'pet_id': petId});
+      if (response.statusCode == 200) return response.data;
+      return null;
+    } catch (e) {
+      debugPrint('Error toggling wishlist pet: $e');
+      rethrow;
+    }
+  }
+
+  /// Add product to cart (requires auth)
+  Future<bool> addToCart({required int productId, int quantity = 1}) async {
+    try {
+      final data = {'product_id': productId, 'quantity': quantity};
+      final response = await _api.post('${ApiConstants.cart}add_item/', data: data);
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('Error adding to cart: $e');
       rethrow;
     }
   }
@@ -53,7 +173,7 @@ class StoreService {
       }
       return null;
     } catch (e) {
-      print('Error fetching adoption: $e');
+      debugPrint('Error fetching adoption: $e');
       return null;
     }
   }
@@ -108,7 +228,7 @@ class StoreService {
       }
       return null;
     } catch (e) {
-      print('Error creating adoption: $e');
+      debugPrint('Error creating adoption: $e');
       rethrow;
     }
   }
@@ -165,7 +285,7 @@ class StoreService {
       }
       return null;
     } catch (e) {
-      print('Error updating adoption: $e');
+      debugPrint('Error updating adoption: $e');
       rethrow;
     }
   }
@@ -176,7 +296,7 @@ class StoreService {
       final response = await _api.delete('${ApiConstants.adoptions}$id/');
       return response.statusCode == 204 || response.statusCode == 200;
     } catch (e) {
-      print('Error deleting adoption: $e');
+      debugPrint('Error deleting adoption: $e');
       return false;
     }
   }

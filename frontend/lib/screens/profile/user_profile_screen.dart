@@ -171,32 +171,33 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               children: [
                 // Avatar
                 GestureDetector(
-                    onTap: () {
-                      if (user.avatarUrl != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FullScreenImage(
-                              imageUrl: user.avatarUrl!,
-                              heroTag: 'user_avatar_${user.id}',
-                            ),
+                  onTap: () {
+                    if (user.avatarUrl != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImage(
+                            imageUrl: user.avatarUrl!,
+                            heroTag: 'user_avatar_${user.id}',
                           ),
-                        );
-                      }
-                    },
+                        ),
+                      );
+                    }
+                  },
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                        colors: [Color(0xFF7C3AED), Color.fromRGBO(124, 58, 237, 0.85)],
+                      border: Border.all(
+                        color: const Color(0xFF7C3AED).withOpacity(0.9),
+                        width: 1.6,
                       ),
                     ),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF7C3AED).withOpacity(0.12),
                       backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-                      child: user.avatarUrl == null
+                        child: user.avatarUrl == null
                           ? const Icon(Icons.person, size: 50, color: Colors.white)
                           : null,
                     ),
