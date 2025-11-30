@@ -1,14 +1,20 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/fact_provider.dart';
+import '../../providers/store_provider.dart';
+import '../../models/store/product_model.dart';
+import '../../utils/currency.dart';
+import '../../screens/store/products/all_products_screen.dart';
 import '../../providers/notification_provider.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
+import '../../screens/store/products/product_detail_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -28,6 +34,13 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _checkWelcomeStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Ensure featured products are loaded for Home tab (ignore any category/product filters)
+      try {
+        final provider = context.read<StoreProvider>();
+        provider.loadFeaturedProducts(ignoreFilters: true);
+      } catch (_) {}
+    });
   }
 
   Future<void> _checkWelcomeStatus() async {
@@ -353,9 +366,10 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Helpers.showInstantSnackBar(
+                          // Navigate to AllProductsScreen showing featured products
+                          Navigator.push(
                             context,
-                            const SnackBar(content: Text('Shop - Coming soon!')),
+                            MaterialPageRoute(builder: (_) => const AllProductsScreen(title: 'Featured Products', featured: true)),
                           );
                         },
                         child: const Text('See All'),
@@ -365,14 +379,25 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 5,
-                      itemBuilder: (context, index) {
-                        return _FeaturedProductCard(index: index);
-                      },
-                    ),
+                    child: Builder(builder: (ctx) {
+                      final storeProvider = ctx.watch<StoreProvider>();
+                      final featuredList = List<Product>.from(storeProvider.featuredProducts);
+                      // Shuffle locally for an extra random order on each build
+                      featuredList.shuffle(math.Random());
+                      final count = math.min(5, featuredList.length);
+                      if (count == 0) {
+                        return const Center(child: Text('No featured products'));
+                      }
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: count,
+                        itemBuilder: (context, index) {
+                          final product = featuredList[index];
+                          return _FeaturedProductCard(product: product);
+                        },
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -474,8 +499,8 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 class _FeaturedProductCard extends StatelessWidget {
-  final int index;
-  const _FeaturedProductCard({required this.index});
+  final Product? product;
+  const _FeaturedProductCard({this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -499,10 +524,17 @@ class _FeaturedProductCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
            onTap: () {
-             Helpers.showInstantSnackBar(
-              context,
-              SnackBar(content: Text('Product ${index + 1} - Coming soon!')),
-             );
+             if (product != null) {
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: product!.slug)),
+               );
+             } else {
+               Helpers.showInstantSnackBar(
+                 context,
+                 const SnackBar(content: Text('Product - Coming soon!')),
+               );
+             }
            },
           borderRadius: BorderRadius.circular(12),
           child: Column(
@@ -510,15 +542,28 @@ class _FeaturedProductCard extends StatelessWidget {
             children: [
               Container(
                 height: 120,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(124, 58, 237, 0.1),
-                  borderRadius: BorderRadius.vertical(
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(124, 58, 237, 0.1),
+                  borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
                 ),
-                child: const Center(
-                    child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
-                ),
+                child: (product != null && product!.primaryImage != null && product!.primaryImage!.isNotEmpty)
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: Image.network(
+                          product!.primaryImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 120,
+                          errorBuilder: (ctx, err, stack) => const Center(
+                            child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
+                          ),
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -526,7 +571,7 @@ class _FeaturedProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Product ${index + 1}',
+                      product?.name ?? 'Product',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -535,7 +580,7 @@ class _FeaturedProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${(index + 1) * 10}.99',
+                      product != null ? '${kCurrencySymbol}${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
                       style: const TextStyle(
                         color: _kPrimaryPurple,
                         fontWeight: FontWeight.bold,

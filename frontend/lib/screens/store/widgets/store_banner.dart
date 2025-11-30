@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 
 class StoreBanner extends StatelessWidget {
   final VoidCallback onDismiss;
-  final VoidCallback onAdoptClick;
+  final VoidCallback onPrimaryAction;
+  final String title;
+  final String subtitle;
+  final String buttonText;
+  final IconData? icon;
 
   const StoreBanner({
     super.key,
     required this.onDismiss,
-    required this.onAdoptClick,
+    required this.onPrimaryAction,
+    required this.title,
+    required this.subtitle,
+    required this.buttonText,
+    this.icon,
   });
 
   @override
@@ -78,17 +86,17 @@ class StoreBanner extends StatelessWidget {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.favorite,
+                            child: Icon(
+                              icon ?? Icons.favorite,
                               color: Colors.white,
                               size: 24,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Give a Pet a Home',
-                              style: TextStyle(
+                              title,
+                              style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -100,7 +108,7 @@ class StoreBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Open your heart and home to a furry friend in need.',
+                        subtitle,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withOpacity(0.9),
@@ -109,7 +117,7 @@ class StoreBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: onAdoptClick,
+                        onPressed: onPrimaryAction,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF7C3AED),
@@ -119,18 +127,18 @@ class StoreBanner extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Adopt a Pet Today',
-                              style: TextStyle(
+                              buttonText,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                               ),
                             ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward, size: 18),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 18),
                           ],
                         ),
                       ),

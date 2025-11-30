@@ -15,7 +15,7 @@ except Exception:
 
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(admin.ModelAdmin):
-    list_display = ['key', 'value', 'updated_at']
+    list_display = [f.name for f in SystemSettings._meta.fields]
     search_fields = ['key', 'description']
 
 
@@ -37,7 +37,7 @@ def blacklist_outstanding_tokens(modeladmin, request, queryset):
 
 if OutstandingToken is not None:
     class OutstandingTokenAdmin(admin.ModelAdmin):
-        list_display = ['jti', 'user', 'created_at']
+        list_display = [f.name for f in OutstandingToken._meta.fields]
         search_fields = ['jti', 'user__email', 'user__username']
         readonly_fields = ('jti', 'user', 'created_at')
         actions = [blacklist_outstanding_tokens]

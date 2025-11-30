@@ -4,6 +4,9 @@ import '../../../services/pet_service.dart';
 import '../../../utils/helpers.dart';
 import '../../../widgets/custom_app_bar.dart';
 import '../../../widgets/app_form_card.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show File;
 
 class EditVaccinationScreen extends StatefulWidget {
   final VaccinationModel vaccination;
@@ -18,6 +21,8 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
   late TextEditingController _vaccineController;
   late TextEditingController _vetController;
   late TextEditingController _notesController;
+  late TextEditingController _clinicController;
+  XFile? _newCertificate;
   late DateTime _vaccinationDate;
   DateTime? _nextDueDate;
   bool _isSaving = false;
@@ -31,6 +36,7 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
     _vaccineController = TextEditingController(text: v.vaccineName);
     _vetController = TextEditingController(text: v.veterinarian ?? '');
     _notesController = TextEditingController(text: v.notes ?? '');
+    _clinicController = TextEditingController(text: v.clinicName ?? '');
     _vaccinationDate = v.vaccinationDate;
     _nextDueDate = v.nextDueDate;
   }
@@ -40,6 +46,7 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
     _vaccineController.dispose();
     _vetController.dispose();
     _notesController.dispose();
+    _clinicController.dispose();
     super.dispose();
   }
 
@@ -61,6 +68,62 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
     }
   }
 
+  Future<void> _pickAttachments() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        setState(() => _newCertificate = picked);
+      }
+    } catch (e) {
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error picking certificate: $e')));
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(source: ImageSource.camera);
+      if (picked != null) setState(() => _newCertificate = picked);
+    } catch (e) {
+      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error picking certificate: $e')));
+    }
+  }
+
+  Future<void> _showAttachmentOptions() async {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pick from Gallery'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickAttachments();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -72,8 +135,13 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
         nextDueDate: _nextDueDate,
         veterinarian: _vetController.text.trim(),
         notes: _notesController.text.trim(),
+        clinicName: _clinicController.text.trim().isEmpty ? null : _clinicController.text.trim(),
       );
-      await _service.updateVaccination(widget.vaccination.id!, updated);
+      if (_newCertificate != null) {
+        await _service.updateVaccinationMultipart(widget.vaccination.id!, updated, certificates: [_newCertificate!]);
+      } else {
+        await _service.updateVaccination(widget.vaccination.id!, updated);
+      }
       if (!mounted) return;
       Helpers.showInstantSnackBar(
         context,
@@ -139,12 +207,76 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
               const SizedBox(height: 12),
 
               TextFormField(
+                controller: _clinicController,
+                decoration: const InputDecoration(
+                  labelText: 'Clinic Name (optional)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.local_hospital),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
                 controller: _notesController,
                 maxLines: 3,
                 decoration: const InputDecoration(
                   labelText: 'Notes (optional)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.note_alt_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Existing certificate preview (if any)
+              if (widget.vaccination.certificate != null && widget.vaccination.certificate!.isNotEmpty)
+                SizedBox(
+                  height: 84,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.grey.shade200),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(widget.vaccination.certificate!, fit: BoxFit.cover),
+                        ),
+                      ),
+                      const Expanded(child: Text('Existing certificate')),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+
+              // New certificate picker (supports multiple)
+              if (_newCertificate != null)
+                SizedBox(
+                  height: 84,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.grey.shade200),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: kIsWeb ? Image.network(_newCertificate!.path, fit: BoxFit.cover) : Image.file(File(_newCertificate!.path), fit: BoxFit.cover),
+                        ),
+                      ),
+                      Expanded(child: Text(_newCertificate!.name)),
+                      IconButton(onPressed: () => setState(() => _newCertificate = null), icon: const Icon(Icons.close)),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _showAttachmentOptions,
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Add/Replace Certificate (optional)'),
                 ),
               ),
               const SizedBox(height: 20),

@@ -73,7 +73,8 @@ class _PetDetailScreenState extends State<PetDetailScreen>
       final m = await _service.getMedicalRecords(_pet.id!);
       setState(() {
         _vaccinations = v;
-        _medicalRecords = m;
+        // Ensure records belong to this pet (defensive in case API returns others)
+        _medicalRecords = m.where((r) => r.petId == _pet.id).toList();
       });
     } catch (e) {
       setState(() {

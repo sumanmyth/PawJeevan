@@ -6,6 +6,7 @@ import '../../../widgets/custom_app_bar.dart';
 import '../../pet/widgets/full_screen_image.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/store_provider.dart';
+import '../../../utils/currency.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String slug;
@@ -359,10 +360,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('₹${_product!.finalPrice.toStringAsFixed(0)}', style: const TextStyle(fontSize: 28, color: Colors.green, fontWeight: FontWeight.bold)),
+                                Text('$kCurrencySymbol${_product!.finalPrice.toStringAsFixed(0)}', style: const TextStyle(fontSize: 28, color: Colors.green, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 14),
                                 if (_product!.discountPrice != null)
-                                  Text('Was ₹${_product!.price.toStringAsFixed(0)}', style: TextStyle(decoration: TextDecoration.lineThrough, color: mutedColor, fontSize: subtitleSize)),
+                                  Text('Was $kCurrencySymbol${_product!.price.toStringAsFixed(0)}', style: TextStyle(decoration: TextDecoration.lineThrough, color: mutedColor, fontSize: subtitleSize)),
                                 const SizedBox(width: 8),
                                 if (_product!.discountPrice != null)
                                   Container(

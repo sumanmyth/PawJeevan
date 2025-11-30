@@ -83,7 +83,13 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
         return const Center(child: CircularProgressIndicator());
       }
 
-      final favoriteProducts = provider.products.where((p) => provider.isProductFavorite(p.id)).toList();
+        // Prefer server-provided wishlist product objects when available so all
+        // loved products are shown even if the global products list doesn't contain them.
+        final favoriteProducts = (provider.wishlistProducts.isNotEmpty
+            ? provider.wishlistProducts
+            : provider.products.where((p) => provider.isProductFavorite(p.id)).toList())
+          .where((p) => provider.isProductFavorite(p.id))
+          .toList();
 
       if (favoriteProducts.isEmpty) {
         return Center(

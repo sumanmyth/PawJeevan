@@ -9,6 +9,7 @@ class StoreProvider extends ChangeNotifier {
   final StoreService _storeService = StoreService();
 
   List<Product> _products = [];
+  List<Product> _wishlistProducts = [];
   List<AdoptionListing> _adoptions = [];
   bool _isLoading = false;
   String? _error;
@@ -19,8 +20,15 @@ class StoreProvider extends ChangeNotifier {
   Set<int> _favoriteProductIds = {};
   List<Category> _storeCategories = [];
   Set<int> _selectedStoreCategoryIds = {};
+  // Product-specific filters
+  String _selectedProductPetType = 'all';
+  double _productWeightMin = 0.0;
+  double _productWeightMax = 200.0;
+  double _productPriceMin = 0.0;
+  double _productPriceMax = 10000.0;
 
   List<Product> get products => _products;
+  List<Product> get wishlistProducts => _wishlistProducts;
   List<AdoptionListing> get adoptions => _adoptions;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -31,6 +39,13 @@ class StoreProvider extends ChangeNotifier {
   Set<int> get favoriteProductIds => _favoriteProductIds;
   List<Category> get storeCategories => _storeCategories;
   Set<int> get selectedStoreCategoryIds => _selectedStoreCategoryIds;
+  String get selectedProductPetType => _selectedProductPetType;
+  double get productWeightMin => _productWeightMin;
+  double get productWeightMax => _productWeightMax;
+  double get productPriceMin => _productPriceMin;
+  double get productPriceMax => _productPriceMax;
+  List<Product> _featuredProducts = [];
+  List<Product> get featuredProducts => _featuredProducts;
   
   List<AdoptionListing> get favoritePets {
     return _adoptions.where((pet) => _favoritePetIds.contains(pet.id)).toList();
@@ -71,6 +86,15 @@ class StoreProvider extends ChangeNotifier {
         // Replace local sets with server's authoritative sets to avoid divergence.
         _favoriteProductIds = serverProducts;
         _favoritePetIds = serverPets;
+        // Also store the product objects returned by the wishlist endpoint so
+        // UI can render favorites even if the global product list doesn't contain them.
+        try {
+          final prodList = data['products'] as List<dynamic>? ?? [];
+          final List<Product> items = prodList.map((j) => Product.fromJson(j as Map<String, dynamic>)).toList();
+          _wishlistProducts = items;
+        } catch (_) {
+          _wishlistProducts = [];
+        }
         await _saveFavoriteProducts();
         await _saveFavoritePets();
         notifyListeners();
@@ -229,15 +253,55 @@ class StoreProvider extends ChangeNotifier {
         page: 1,
         search: _searchQuery.isEmpty ? null : _searchQuery,
         categoryIds: categoryIds,
+        petType: _selectedProductPetType == 'all' ? null : _selectedProductPetType,
+        weightMin: _productWeightMin,
+        weightMax: _productWeightMax,
+        priceMin: _productPriceMin,
+        priceMax: _productPriceMax,
       );
 
       final List<Product> products = List<Product>.from(result['results'] ?? []);
+      // Randomize shop product order so the Shop view appears fresh each load
+      products.shuffle();
       _products = products;
       _error = null;
+      // Also load featured products for the current category/filter selection
+      await loadFeaturedProducts();
     } catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Load featured products. When [ignoreFilters] is true, do not apply
+  /// category/petType filters so callers (e.g. Home tab) get a global set.
+  Future<void> loadFeaturedProducts({bool ignoreFilters = false}) async {
+    try {
+      final categoryIds = (!ignoreFilters && _selectedStoreCategoryIds.isNotEmpty)
+          ? _selectedStoreCategoryIds.toList()
+          : null;
+      final petType = (!ignoreFilters && _selectedProductPetType != 'all')
+          ? _selectedProductPetType
+          : null;
+
+      final result = await _storeService.fetchProducts(
+        page: 1,
+        categoryIds: categoryIds,
+        petType: petType,
+        isFeatured: true,
+      );
+
+      final List<Product> items = List<Product>.from(result['results'] ?? []);
+      // Randomize featured products order each time they're loaded
+      items.shuffle();
+      _featuredProducts = items;
+      // Notify listeners so UI (e.g. Home tab) updates when featured products arrive
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading featured products: $e');
+      _featuredProducts = [];
       notifyListeners();
     }
   }
@@ -258,6 +322,40 @@ class StoreProvider extends ChangeNotifier {
     if (!skipLoad) loadProducts();
   }
 
+  /// Set product-specific pet type filter
+  void setSelectedProductPetType(String petType, {bool skipLoad = false}) {
+    _selectedProductPetType = petType;
+    notifyListeners();
+    if (!skipLoad) loadProducts();
+  }
+
+  /// Set product weight range (kilograms)
+  void setProductWeightRange(double minKg, double maxKg, {bool skipLoad = false}) {
+    _productWeightMin = minKg;
+    _productWeightMax = maxKg;
+    notifyListeners();
+    if (!skipLoad) loadProducts();
+  }
+
+  /// Set product price range
+  void setProductPriceRange(double minPrice, double maxPrice, {bool skipLoad = false}) {
+    _productPriceMin = minPrice;
+    _productPriceMax = maxPrice;
+    notifyListeners();
+    if (!skipLoad) loadProducts();
+  }
+
+  /// Set multiple product filters at once
+  void setProductFilters({String? petType, double? weightMin, double? weightMax, double? priceMin, double? priceMax, bool skipLoad = false}) {
+    if (petType != null) _selectedProductPetType = petType;
+    if (weightMin != null) _productWeightMin = weightMin;
+    if (weightMax != null) _productWeightMax = weightMax;
+    if (priceMin != null) _productPriceMin = priceMin;
+    if (priceMax != null) _productPriceMax = priceMax;
+    notifyListeners();
+    if (!skipLoad) loadProducts();
+  }
+
   Future<void> loadAdoptions({bool showAllStatuses = false}) async {
     _isLoading = true;
     _error = null;
@@ -268,7 +366,9 @@ class StoreProvider extends ChangeNotifier {
       _adoptions = await _storeService.fetchAdoptions(
         petType: _selectedPetType == 'all' ? null : _selectedPetType,
         search: _searchQuery.isEmpty ? null : _searchQuery,
-        status: showAllStatuses ? 'all' : 'available',
+        // When showAllStatuses is false (Discover), don't send a status param so
+        // backend default (available + pending) applies. When true, request 'all'.
+        status: showAllStatuses ? 'all' : null,
       );
       print('StoreProvider: Loaded ${_adoptions.length} adoptions');
       _error = null;
