@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 import uuid
+from decimal import Decimal
 
 from .models import (
     Category, Brand, Product, Review,
@@ -17,6 +18,81 @@ from .serializers import (
     CartSerializer, CartItemSerializer, OrderSerializer, WishlistSerializer,
     AdoptionListingSerializer
 )
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
+from django.template import defaultfilters
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def send_order_confirmation_email(order, request=None):
+    """Send a simple order confirmation email (plain + html) to order.billing_email.
+
+    This is non-blocking (exceptions are caught and logged). Uses DEFAULT_FROM_EMAIL
+    if available in settings, otherwise falls back to a sensible no-reply address.
+    """
+    try:
+        to_email = (order.billing_email or "").strip()
+        if not to_email:
+            return
+
+        # Prefer explicit OTP_FROM_EMAIL (allows 'Name <email>') then DEFAULT_FROM_EMAIL
+        from_email = getattr(settings, "OTP_FROM_EMAIL", None) or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@pawjeevan.local")
+        # strip accidental surrounding quotes from env values like 'PawJeevan Support <no-reply@pawjeevan.com>'
+        if isinstance(from_email, str):
+            from_email = from_email.strip().strip('"\'')
+        subject = f"Order Confirmation - {order.order_number}"
+
+        # Build plain text and HTML body
+        lines = []
+        lines.append(f"Thank you for your order, {order.user.username}!")
+        lines.append("")
+        lines.append(f"Order number: {order.order_number}")
+        lines.append("")
+        lines.append("Items:")
+        for it in order.items.all():
+            name = it.product_name
+            qty = it.quantity
+            price = it.product_price
+            lines.append(f" - {name} x{qty} @ {price} = {defaultfilters.floatformat(it.subtotal, 2)}")
+
+        lines.append("")
+        lines.append(f"Subtotal: {order.subtotal}")
+        lines.append(f"Shipping: {order.shipping_cost}")
+        lines.append(f"Tax: {order.tax}")
+        lines.append(f"Total: {order.total}")
+        lines.append("")
+        lines.append("Shipping address:")
+        lines.append(order.shipping_address or "-")
+        lines.append("")
+        lines.append("If you have any questions, reply to this email or contact support.")
+
+        text_body = "\n".join(lines)
+
+        # Basic HTML version
+        html_lines = [f"<p>Thank you for your order, <strong>{order.user.username}</strong>!</p>",
+                  f"<p><strong>Order number:</strong> {order.order_number}</p>",
+                      "<h4>Items</h4>",
+                      "<ul>"]
+        for it in order.items.all():
+            html_lines.append(f"<li>{it.product_name} &times; {it.quantity} — {defaultfilters.floatformat(it.subtotal, 2)}</li>")
+        html_lines.extend([
+            "</ul>",
+            f"<p><strong>Subtotal:</strong> {order.subtotal}<br><strong>Shipping:</strong> {order.shipping_cost}<br><strong>Tax:</strong> {order.tax}<br><strong>Total:</strong> {order.total}</p>",
+            f"<p><strong>Shipping address:</strong><br>{order.shipping_address or '-'} </p>",
+            f"<p>If you have any questions, reply to this email or contact support.</p>",
+        ])
+
+        html_body = "\n".join(html_lines)
+
+        msg = EmailMultiAlternatives(subject=subject, body=text_body, from_email=from_email, to=[to_email])
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
+    except Exception as e:
+        # Don't let email failures break order creation; log for later inspection
+        logger.exception("Failed to send order confirmation email for order %s: %s", getattr(order, 'order_number', 'unknown'), str(e))
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -162,13 +238,25 @@ class CartViewSet(viewsets.ViewSet):
         if product.stock < quantity:
             return Response({"error": f"Only {product.stock} items available"}, status=400)
 
+        # create or update cart item while snapshotting product data
         item, created = CartItem.objects.get_or_create(
-            cart=cart, product=product, defaults={"quantity": quantity}
+            cart=cart,
+            product=product,
+            defaults={
+                "quantity": quantity,
+                "product_name": product.name,
+                "product_price": product.discount_price or product.price,
+            },
         )
         if not created:
             item.quantity += quantity
             if item.quantity > product.stock:
                 return Response({"error": f"Cannot add more than {product.stock} items"}, status=400)
+            # ensure snapshot fields are present
+            if not item.product_name:
+                item.product_name = product.name
+            if item.product_price is None:
+                item.product_price = product.discount_price or product.price
             item.save()
 
         ser = CartSerializer(cart, context={"request": request})
@@ -192,6 +280,11 @@ class CartViewSet(viewsets.ViewSet):
             return Response({"error": f"Only {item.product.stock} items available"}, status=400)
 
         item.quantity = quantity
+        # ensure snapshot price and name remain in sync when updating
+        if not item.product_name and item.product:
+            item.product_name = item.product.name
+        if item.product_price is None and item.product:
+            item.product_price = item.product.discount_price or item.product.price
         item.save()
         ser = CartSerializer(cart, context={"request": request})
         return Response(ser.data)
@@ -234,9 +327,10 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def create(self, request):
-        cart = Cart.objects.get(user=request.user)
-        if not cart.items.exists():
-            return Response({"error": "Cart is empty"}, status=400)
+        # Support two flows:
+        # 1) If the client sends an explicit 'items' list in the payload (Buy Now flow),
+        #    create an order only for those items and DO NOT clear the user's server cart.
+        # 2) Otherwise, create an order from the authenticated user's server cart (existing behavior).
 
         delivery_method = request.data.get("delivery_method", "shipping")
         shipping_address = request.data.get("shipping_address", "")
@@ -246,10 +340,102 @@ class OrderViewSet(viewsets.ModelViewSet):
         shipping_phone = request.data.get("shipping_phone", "")
         payment_method = request.data.get("payment_method", "cod")
 
+        shipping_cost = Decimal(str(request.data.get("shipping_cost", 0)))
+        tax = Decimal(str(request.data.get("tax", 0)))
+
+        items_payload = request.data.get("items")
+        order = None
+
+        if items_payload and isinstance(items_payload, list):
+            # Build order from provided items
+            subtotal = Decimal('0')
+            line_items = []
+            for it in items_payload:
+                try:
+                    pid = int(it.get('product_id'))
+                except Exception:
+                    return Response({"error": "Invalid product_id in items"}, status=400)
+
+                qty = int(it.get('quantity', 1))
+                price = Decimal(str(it.get('product_price', 0)))
+
+                try:
+                    prod = Product.objects.get(id=pid, is_active=True)
+                except Product.DoesNotExist:
+                    prod = None
+
+                prod_name = prod.name if prod else it.get('product_name', '')
+                prod_sku = prod.sku if prod else ''
+                prod_meta = {
+                    'category': prod.category.slug if prod and prod.category else None,
+                    'brand': prod.brand.name if prod and prod.brand else None,
+                }
+
+                subtotal += price * qty
+                line_items.append({'prod': prod, 'name': prod_name, 'sku': prod_sku, 'meta': prod_meta, 'price': price, 'qty': qty})
+
+            total = subtotal + shipping_cost + tax
+
+            # Prefer billing_email from payload, fallback to authenticated user's email
+            billing_email = request.data.get('billing_email') or (getattr(request.user, 'email', '') if request.user else '')
+
+            order = Order.objects.create(
+                user=request.user,
+                order_number=f"ORD-{uuid.uuid4().hex[:8].upper()}",
+                delivery_method=delivery_method,
+                shipping_address=shipping_address,
+                shipping_city=shipping_city,
+                shipping_state=shipping_state,
+                shipping_zip=shipping_zip,
+                shipping_phone=shipping_phone,
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                tax=tax,
+                total=total,
+                payment_method=payment_method,
+                billing_email=billing_email,
+            )
+
+            for li in line_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=li['prod'],
+                    product_name=li['name'],
+                    product_sku=li['sku'],
+                    product_meta=li['meta'],
+                    product_price=li['price'],
+                    quantity=li['qty'],
+                )
+                # reduce stock on provided product if present
+                if li['prod']:
+                    # ensure we don't reduce below zero (double-check availability)
+                    if li['prod'].stock is not None and li['prod'].stock < li['qty']:
+                        # return an error which will abort the transaction
+                        return Response({"error": f"Only {li['prod'].stock} items available for product {li['name']}"}, status=400)
+                    li['prod'].stock -= li['qty']
+                    if li['prod'].stock < 0:
+                        li['prod'].stock = 0
+                    li['prod'].save()
+
+            ser = OrderSerializer(order, context={"request": request})
+            # Send confirmation receipt to the user's billing email (best-effort)
+            try:
+                send_order_confirmation_email(order, request)
+            except Exception:
+                # helper already logs failures; swallow here to be safe
+                pass
+            return Response(ser.data, status=201)
+
+        # Fallback: create from server-side cart
+        cart = Cart.objects.get(user=request.user)
+        if not cart.items.exists():
+            return Response({"error": "Cart is empty"}, status=400)
+
         subtotal = cart.total_price
-        shipping_cost = float(request.data.get("shipping_cost", 0))
-        tax = float(request.data.get("tax", 0))
-        total = float(subtotal) + shipping_cost + tax
+        total = Decimal(str(subtotal)) + shipping_cost + tax
+
+        # Prefer billing_email from payload, fallback to authenticated user's email
+        billing_email = request.data.get('billing_email') or (getattr(request.user, 'email', '') if request.user else '')
 
         order = Order.objects.create(
             user=request.user,
@@ -265,24 +451,45 @@ class OrderViewSet(viewsets.ModelViewSet):
             tax=tax,
             total=total,
             payment_method=payment_method,
+            billing_email=billing_email,
         )
 
         for item in cart.items.select_related("product"):
+            prod = item.product
+            prod_price = item.product_price if item.product_price is not None else (prod.discount_price or prod.price if prod else 0)
+            prod_name = item.product_name or (prod.name if prod else '')
+            prod_sku = prod.sku if prod else ''
+            prod_meta = {
+                'category': prod.category.slug if prod and prod.category else None,
+                'brand': prod.brand.name if prod and prod.brand else None,
+            }
             OrderItem.objects.create(
                 order=order,
-                product=item.product,
-                product_name=item.product.name,
-                product_price=item.product.discount_price or item.product.price,
+                product=prod,
+                product_name=prod_name,
+                product_sku=prod_sku,
+                product_meta=prod_meta,
+                product_price=prod_price,
                 quantity=item.quantity,
             )
-            # reduce stock
-            item.product.stock -= item.quantity
-            item.product.save()
+            # reduce stock (double-check availability)
+            if prod:
+                if prod.stock is not None and prod.stock < item.quantity:
+                    return Response({"error": f"Only {prod.stock} items available for product {prod.name}"}, status=400)
+                prod.stock -= item.quantity
+                if prod.stock < 0:
+                    prod.stock = 0
+                prod.save()
 
         # clear cart
         cart.items.all().delete()
 
         ser = OrderSerializer(order, context={"request": request})
+        # Send confirmation receipt to the user's billing email (best-effort)
+        try:
+            send_order_confirmation_email(order, request)
+        except Exception:
+            pass
         return Response(ser.data, status=201)
 
     @action(detail=True, methods=["post"])

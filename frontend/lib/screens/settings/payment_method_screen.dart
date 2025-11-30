@@ -9,7 +9,8 @@ class PaymentMethodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final methods = ['Card', 'UPI', 'NetBanking', 'COD'];
+    // Only expose Cash on delivery for now. Store value as 'COD'.
+    final methods = {'COD': 'Cash on delivery'};
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
@@ -20,13 +21,15 @@ class PaymentMethodScreen extends StatelessWidget {
         itemCount: methods.length,
         separatorBuilder: (_, __) => const Divider(),
         itemBuilder: (ctx, i) {
-          final m = methods[i];
-          final selected = (settings.paymentMethod == m);
+          final entry = methods.entries.elementAt(i);
+          final code = entry.key;
+          final label = entry.value;
+          final selected = (settings.paymentMethod == code);
           return ListTile(
-            title: Text(m),
-              trailing: selected ? const Icon(Icons.check, color: Color(0xFF7C3AED)) : null,
+            title: Text(label),
+            trailing: selected ? const Icon(Icons.check, color: Color(0xFF7C3AED)) : null,
             onTap: () async {
-              await context.read<SettingsProvider>().setPaymentMethod(m);
+              await context.read<SettingsProvider>().setPaymentMethod(code);
               if (ctx.mounted) {
                 Navigator.pop(ctx, true);
               }

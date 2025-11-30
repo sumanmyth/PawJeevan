@@ -15,6 +15,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
 import '../../screens/store/products/product_detail_screen.dart';
+import '../../screens/store/cart_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -138,10 +139,7 @@ class _HomeTabState extends State<HomeTab> {
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {
-              Helpers.showInstantSnackBar(
-                context,
-                const SnackBar(content: Text('Cart - Coming soon!')),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()));
             },
           ),
         ],

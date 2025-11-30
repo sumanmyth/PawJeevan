@@ -2,30 +2,34 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+/// Show a SnackBar immediately by hiding any current one first.
+/// Use this across the app to avoid snackbars queuing.
+void showAppSnackBar(BuildContext context, SnackBar snackBar) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar(reason: SnackBarClosedReason.dismiss);
+  messenger.showSnackBar(snackBar);
+}
+
+/// Convenience helper to show a plain message.
+void showAppMessage(BuildContext context, String message, {SnackBarBehavior behavior = SnackBarBehavior.floating, Duration? duration}) {
+  showAppSnackBar(
+    context,
+    SnackBar(
+      content: Text(message),
+      behavior: behavior,
+      duration: duration ?? const Duration(seconds: 3),
+    ),
+  );
+}
+
 class Helpers {
   static void showSnackBar(BuildContext context, String message, {bool isError = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    // Remove any current snackbar immediately so the new one doesn't queue.
-    messenger.removeCurrentSnackBar();
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        // Short, noticeable duration. Adjust as needed.
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    showAppMessage(context, message, behavior: SnackBarBehavior.floating, duration: const Duration(seconds: 2));
   }
 
   // Show a custom SnackBar immediately by removing any current one first.
   static void showInstantSnackBar(BuildContext context, SnackBar snackBar) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(snackBar);
+    showAppSnackBar(context, snackBar);
   }
 
   static void showLoadingDialog(BuildContext context) {
