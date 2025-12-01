@@ -19,12 +19,13 @@ class StoreService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (petType != null && petType != 'all') queryParams['pet_type'] = petType;
+      if (petType != null && petType != 'all')
+        queryParams['pet_type'] = petType;
       if (status != null) queryParams['status'] = status;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
       debugPrint('Fetching adoptions with params: $queryParams');
-      
+
       final response = await _api.get(
         ApiConstants.adoptions,
         params: queryParams,
@@ -34,8 +35,8 @@ class StoreService {
       debugPrint('Adoption response data: ${response.data}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data is List 
-            ? response.data 
+        final List<dynamic> data = response.data is List
+            ? response.data
             : (response.data['results'] ?? []);
         debugPrint('Found ${data.length} adoptions');
         return data.map((json) => AdoptionListing.fromJson(json)).toList();
@@ -62,15 +63,18 @@ class StoreService {
   }) async {
     try {
       final queryParams = <String, dynamic>{'page': page};
-      if (petType != null && petType != 'all') queryParams['pet_type'] = petType;
+      if (petType != null && petType != 'all')
+        queryParams['pet_type'] = petType;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category'] = categoryId;
-      if (categoryIds != null && categoryIds.isNotEmpty) queryParams['category__in'] = categoryIds.join(',');
+      if (categoryIds != null && categoryIds.isNotEmpty)
+        queryParams['category__in'] = categoryIds.join(',');
       if (weightMin != null) queryParams['weight_min'] = weightMin;
       if (weightMax != null) queryParams['weight_max'] = weightMax;
       if (priceMin != null) queryParams['price_min'] = priceMin;
       if (priceMax != null) queryParams['price_max'] = priceMax;
-      if (isFeatured != null) queryParams['is_featured'] = isFeatured ? '1' : '0';
+      if (isFeatured != null)
+        queryParams['is_featured'] = isFeatured ? '1' : '0';
 
       final response = await _api.get(
         ApiConstants.products,
@@ -79,16 +83,23 @@ class StoreService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        final List<dynamic> items = data is List ? data : (data['results'] ?? []);
+        final List<dynamic> items =
+            data is List ? data : (data['results'] ?? []);
         final products = items.map((j) => Product.fromJson(j)).toList();
         return {
-          'count': data is Map ? data['count'] ?? products.length : products.length,
+          'count':
+              data is Map ? data['count'] ?? products.length : products.length,
           'next': data is Map ? data['next'] : null,
           'previous': data is Map ? data['previous'] : null,
           'results': products,
         };
       }
-      return {'count': 0, 'next': null, 'previous': null, 'results': <Product>[]};
+      return {
+        'count': 0,
+        'next': null,
+        'previous': null,
+        'results': <Product>[]
+      };
     } catch (e) {
       debugPrint('Error fetching products: $e');
       rethrow;
@@ -100,7 +111,9 @@ class StoreService {
     try {
       final response = await _api.get(ApiConstants.categories);
       if (response.statusCode == 200) {
-        final data = response.data is List ? response.data : (response.data['results'] ?? []);
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
         return List<Map<String, dynamic>>.from(data as List<dynamic>);
       }
       return [];
@@ -124,6 +137,26 @@ class StoreService {
     }
   }
 
+  /// Fetch a product by numeric id via the products list endpoint.
+  /// Some backends don't expose an ID-based detail route; this queries
+  /// the list endpoint with `?id=` and returns the first matching product.
+  Future<ProductDetail?> fetchProductById(int id) async {
+    try {
+      final response = await _api.get('${ApiConstants.products}?id=$id');
+      if (response.statusCode == 200) {
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
+        final items = data as List<dynamic>;
+        if (items.isNotEmpty) return ProductDetail.fromJson(items[0]);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching product by id: $e');
+      return null;
+    }
+  }
+
   /// Fetch current user's wishlist (products + adoptions)
   Future<Map<String, dynamic>?> fetchWishlist() async {
     try {
@@ -141,7 +174,8 @@ class StoreService {
   /// Toggle product in wishlist
   Future<Map<String, dynamic>?> toggleWishlistProduct(int productId) async {
     try {
-      final response = await _api.post('${ApiConstants.wishlist}toggle/', data: {'product_id': productId});
+      final response = await _api.post('${ApiConstants.wishlist}toggle/',
+          data: {'product_id': productId});
       if (response.statusCode == 200) return response.data;
       return null;
     } catch (e) {
@@ -153,7 +187,8 @@ class StoreService {
   /// Toggle adoption (pet) in wishlist
   Future<Map<String, dynamic>?> toggleWishlistPet(int petId) async {
     try {
-      final response = await _api.post('${ApiConstants.wishlist}toggle_pet/', data: {'pet_id': petId});
+      final response = await _api
+          .post('${ApiConstants.wishlist}toggle_pet/', data: {'pet_id': petId});
       if (response.statusCode == 200) return response.data;
       return null;
     } catch (e) {
@@ -166,7 +201,8 @@ class StoreService {
   Future<bool> addToCart({required int productId, int quantity = 1}) async {
     try {
       final data = {'product_id': productId, 'quantity': quantity};
-      final response = await _api.post('${ApiConstants.cart}add_item/', data: data);
+      final response =
+          await _api.post('${ApiConstants.cart}add_item/', data: data);
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       debugPrint('Error adding to cart: $e');
@@ -187,10 +223,12 @@ class StoreService {
   }
 
   /// Update a cart item quantity
-  Future<bool> updateCartItem({required int itemId, required int quantity}) async {
+  Future<bool> updateCartItem(
+      {required int itemId, required int quantity}) async {
     try {
       final data = {'item_id': itemId, 'quantity': quantity};
-      final response = await _api.post('${ApiConstants.cart}update_item/', data: data);
+      final response =
+          await _api.post('${ApiConstants.cart}update_item/', data: data);
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       debugPrint('Error updating cart item: $e');
@@ -202,7 +240,8 @@ class StoreService {
   Future<bool> removeFromCart({required int itemId}) async {
     try {
       final data = {'item_id': itemId};
-      final response = await _api.post('${ApiConstants.cart}remove_item/', data: data);
+      final response =
+          await _api.post('${ApiConstants.cart}remove_item/', data: data);
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       debugPrint('Error removing cart item: $e');
@@ -223,11 +262,13 @@ class StoreService {
 
   /// Create an order / checkout
   /// Returns the created order data (Map) on success, otherwise null
-  Future<Map<String, dynamic>?> createOrder({required Map<String, dynamic> payload}) async {
+  Future<Map<String, dynamic>?> createOrder(
+      {required Map<String, dynamic> payload}) async {
     try {
       final response = await _api.post(ApiConstants.orders, data: payload);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (response.data is Map<String, dynamic>) return Map<String, dynamic>.from(response.data);
+        if (response.data is Map<String, dynamic>)
+          return Map<String, dynamic>.from(response.data);
         return response.data as Map<String, dynamic>?;
       }
       return null;
@@ -237,18 +278,323 @@ class StoreService {
     }
   }
 
+  /// Create a review for a product.
+  /// Returns the created review map on success, otherwise null.
+  Future<Map<String, dynamic>?> createReview({
+    required int productId,
+    required int rating,
+    String? title,
+    String? comment,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'product': productId,
+        'rating': rating,
+      };
+      if (title != null) data['title'] = title;
+      if (comment != null) data['comment'] = comment;
+
+      final response = await _api.post(ApiConstants.reviews, data: data);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data is Map<String, dynamic>)
+          return Map<String, dynamic>.from(response.data);
+        return response.data as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error creating review: $e');
+      rethrow;
+    }
+  }
+
+  /// Update an existing review (partial allowed). Returns updated review map on success.
+  Future<Map<String, dynamic>?> updateReview({
+    required int reviewId,
+    int? rating,
+    String? title,
+    String? comment,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (rating != null) data['rating'] = rating;
+      if (title != null) data['title'] = title;
+      if (comment != null) data['comment'] = comment;
+
+      final response =
+          await _api.patch('${ApiConstants.reviews}$reviewId/', data: data);
+      if (response.statusCode == 200) {
+        if (response.data is Map<String, dynamic>)
+          return Map<String, dynamic>.from(response.data);
+        return response.data as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error updating review: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetch all reviews for a given product
+  Future<List<Map<String, dynamic>>> fetchReviewsForProduct(
+      int productId) async {
+    try {
+      final response =
+          await _api.get('${ApiConstants.reviews}?product=$productId');
+      if (response.statusCode == 200) {
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
+        return List<Map<String, dynamic>>.from(data as List<dynamic>);
+      }
+      return <Map<String, dynamic>>[];
+    } catch (e) {
+      debugPrint('Error fetching product reviews: $e');
+      rethrow;
+    }
+  }
+
+  /// Toggle a review as helpful (server will toggle and return marked state)
+  /// Returns a map with keys: 'helpful_count' (int) and 'marked' (bool) on success, otherwise null.
+  Future<Map<String, dynamic>?> markReviewHelpful(int reviewId) async {
+    try {
+      final response =
+          await _api.post('${ApiConstants.reviews}$reviewId/helpful/');
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final count = data['helpful_count'] is int
+            ? data['helpful_count'] as int
+            : int.tryParse(data['helpful_count']?.toString() ?? '0');
+        final marked = data['marked'] == true;
+        return {'helpful_count': count, 'marked': marked};
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error marking review helpful: $e');
+      rethrow;
+    }
+  }
+
   /// Fetch orders for current user
   Future<List<Map<String, dynamic>>> fetchOrders() async {
     try {
       final response = await _api.get(ApiConstants.orders);
       if (response.statusCode == 200) {
-        final data = response.data is List ? response.data : (response.data['results'] ?? []);
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
         return List<Map<String, dynamic>>.from(data as List<dynamic>);
       }
       return <Map<String, dynamic>>[];
     } catch (e) {
       debugPrint('Error fetching orders: $e');
       rethrow;
+    }
+  }
+
+  /// Check whether the current user has any delivered order containing the product
+  Future<bool> isProductVerifiedPurchase(int productId) async {
+    try {
+      final orders = await fetchOrders();
+      for (final order in orders) {
+        // Consider delivered if status looks like 'delivered' or if delivered_at present
+        final status = (order['status'] ?? '').toString().toLowerCase();
+        final deliveredAt = order['delivered_at'];
+        final bool isDelivered = status.contains('deliv') ||
+            (deliveredAt != null && deliveredAt.toString().isNotEmpty);
+        if (isDelivered) {
+          final items = order['items'] is List
+              ? order['items'] as List<dynamic>
+              : <dynamic>[];
+          for (final it in items) {
+            try {
+              if (it == null) continue;
+              dynamic prod;
+              if (it is Map) {
+                if (it.containsKey('product'))
+                  prod = it['product'];
+                else if (it.containsKey('product_id'))
+                  prod = it['product_id'];
+                else
+                  prod = null;
+              } else {
+                prod = null;
+              }
+
+              if (prod == null) continue;
+              if (prod is Map) {
+                final idVal = prod['id'] ?? prod['pk'] ?? prod['product_id'];
+                final idInt = idVal is int
+                    ? idVal
+                    : int.tryParse(idVal?.toString() ?? '');
+                if (idInt != null && idInt == productId) return true;
+              } else if (prod is int) {
+                if (prod == productId) return true;
+              } else {
+                final parsed = int.tryParse(prod.toString());
+                if (parsed != null && parsed == productId) return true;
+              }
+            } catch (e) {
+              // ignore item parsing errors
+            }
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error checking verified purchase: $e');
+      return false;
+    }
+  }
+
+  /// Check whether the current user already reviewed this product
+  Future<bool> hasUserReviewedProduct(int productId, int userId) async {
+    try {
+      final response =
+          await _api.get('${ApiConstants.reviews}?product=$productId');
+      if (response.statusCode == 200) {
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
+        final items = List<Map<String, dynamic>>.from(data as List<dynamic>);
+        for (final r in items) {
+          try {
+            if (r['user'] != null && r['user'] == userId) return true;
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error fetching reviews for check: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetch reviews for the current user (or optionally filter by user id)
+  Future<List<Map<String, dynamic>>> fetchUserReviews({int? userId}) async {
+    try {
+      final params = userId != null ? {'user': userId} : null;
+      final uri = userId != null
+          ? '${ApiConstants.reviews}?user=$userId'
+          : ApiConstants.reviews;
+      final response = await _api.get(uri, params: params);
+      if (response.statusCode == 200) {
+        final data = response.data is List
+            ? response.data
+            : (response.data['results'] ?? []);
+        return List<Map<String, dynamic>>.from(data as List<dynamic>);
+      }
+      return <Map<String, dynamic>>[];
+    } catch (e) {
+      debugPrint('Error fetching user reviews: $e');
+      rethrow;
+    }
+  }
+
+  /// Return a list of purchased products (from delivered orders) that the user
+  /// can potentially review. If `userId` is provided, exclude products the
+  /// user has already reviewed.
+  Future<List<Map<String, dynamic>>> getEligibleProductsForReview(
+      {int? userId}) async {
+    try {
+      final orders = await fetchOrders();
+      final Map<int, Map<String, dynamic>> found = {};
+
+      for (final order in orders) {
+        final status = (order['status'] ?? '').toString().toLowerCase();
+        final deliveredAt = order['delivered_at'];
+        final bool isDelivered = status.contains('deliv') ||
+            (deliveredAt != null && deliveredAt.toString().isNotEmpty);
+        if (!isDelivered) continue;
+
+        final items =
+            order['items'] is List ? order['items'] as List : <dynamic>[];
+        for (final it in items) {
+          try {
+            if (it == null) continue;
+            dynamic prod;
+            if (it is Map) {
+              if (it.containsKey('product'))
+                prod = it['product'];
+              else if (it.containsKey('product_id'))
+                prod = it['product_id'];
+              else
+                prod = null;
+            } else {
+              prod = null;
+            }
+            if (prod == null) continue;
+
+            int? id;
+            String label = '';
+            String? thumb;
+
+            if (prod is Map) {
+              final idVal = prod['id'] ?? prod['pk'] ?? prod['product_id'];
+              id = idVal is int ? idVal : int.tryParse(idVal?.toString() ?? '');
+              label = (prod['title'] ?? prod['name'] ?? prod['slug'] ?? '')
+                  .toString();
+              thumb =
+                  (prod['thumbnail'] ?? prod['image'] ?? prod['photo'] ?? '')
+                      ?.toString();
+            } else if (prod is int) {
+              id = prod;
+            } else {
+              id = int.tryParse(prod.toString());
+            }
+
+            if (id == null) continue;
+            if (!found.containsKey(id)) {
+              found[id] = {
+                'id': id,
+                'label': label.isNotEmpty ? label : 'Product #$id',
+                'thumbnail': thumb
+              };
+            }
+          } catch (e) {
+            // ignore individual item parsing errors
+          }
+        }
+      }
+
+      var products = found.values.toList();
+
+      // Exclude already-reviewed products if userId provided
+      if (userId != null) {
+        try {
+          final reviewed = await fetchUserReviews(userId: userId);
+          final Set<int> rids = {};
+          for (final r in reviewed) {
+            try {
+              final p = r['product'];
+              if (p == null) continue;
+              if (p is Map) {
+                final idVal = p['id'] ?? p['pk'] ?? p['product_id'];
+                final parsed = idVal is int
+                    ? idVal
+                    : int.tryParse(idVal?.toString() ?? '');
+                if (parsed != null) rids.add(parsed);
+              } else if (p is int) {
+                rids.add(p);
+              } else {
+                final parsed = int.tryParse(p.toString());
+                if (parsed != null) rids.add(parsed);
+              }
+            } catch (e) {}
+          }
+          products =
+              products.where((p) => !rids.contains(p['id'] as int)).toList();
+        } catch (e) {
+          // If we fail to fetch reviews, just return the purchased products (safer UX)
+          debugPrint('Failed to filter reviewed products: $e');
+        }
+      }
+
+      return List<Map<String, dynamic>>.from(products);
+    } catch (e) {
+      debugPrint('Error getting eligible products for review: $e');
+      return <Map<String, dynamic>>[];
     }
   }
 
@@ -342,19 +688,25 @@ class StoreService {
   }) async {
     try {
       final formData = FormData();
-      
+
       if (title != null) formData.fields.add(MapEntry('title', title));
       if (petName != null) formData.fields.add(MapEntry('pet_name', petName));
       if (petType != null) formData.fields.add(MapEntry('pet_type', petType));
       if (breed != null) formData.fields.add(MapEntry('breed', breed));
       if (age != null) formData.fields.add(MapEntry('age', age.toString()));
       if (gender != null) formData.fields.add(MapEntry('gender', gender));
-      if (description != null) formData.fields.add(MapEntry('description', description));
-      if (healthStatus != null) formData.fields.add(MapEntry('health_status', healthStatus));
-      if (vaccinationStatus != null) formData.fields.add(MapEntry('vaccination_status', vaccinationStatus));
-      if (isNeutered != null) formData.fields.add(MapEntry('is_neutered', isNeutered.toString()));
-      if (contactPhone != null) formData.fields.add(MapEntry('contact_phone', contactPhone));
-      if (contactEmail != null) formData.fields.add(MapEntry('contact_email', contactEmail));
+      if (description != null)
+        formData.fields.add(MapEntry('description', description));
+      if (healthStatus != null)
+        formData.fields.add(MapEntry('health_status', healthStatus));
+      if (vaccinationStatus != null)
+        formData.fields.add(MapEntry('vaccination_status', vaccinationStatus));
+      if (isNeutered != null)
+        formData.fields.add(MapEntry('is_neutered', isNeutered.toString()));
+      if (contactPhone != null)
+        formData.fields.add(MapEntry('contact_phone', contactPhone));
+      if (contactEmail != null)
+        formData.fields.add(MapEntry('contact_email', contactEmail));
       if (location != null) formData.fields.add(MapEntry('location', location));
       if (status != null) formData.fields.add(MapEntry('status', status));
 

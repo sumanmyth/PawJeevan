@@ -3,6 +3,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 import uuid
@@ -198,14 +199,62 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return ctx
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # Determine if this review should be marked as a verified purchase.
+        # A review is verified if the requesting user has an order with status
+        # 'delivered' that contains the product being reviewed.
+        try:
+            product = serializer.validated_data.get('product')
+        except Exception:
+            product = None
+
+        is_verified = False
+        try:
+            if product is not None and self.request.user and self.request.user.is_authenticated:
+                is_verified = Order.objects.filter(
+                    user=self.request.user,
+                    status__iexact='delivered',
+                    items__product=product,
+                ).exists()
+        except Exception:
+            # Don't let verification checks block review creation; default to False
+            is_verified = False
+
+        serializer.save(user=self.request.user, is_verified_purchase=is_verified)
+
+    def perform_update(self, serializer):
+        # Only the review owner may update
+        obj = self.get_object()
+        if obj.user != self.request.user:
+            raise PermissionDenied("You do not have permission to edit this review")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Only the review owner may delete
+        if instance.user != self.request.user:
+            raise PermissionDenied("You do not have permission to delete this review")
+        instance.delete()
 
     @action(detail=True, methods=["post"])
     def helpful(self, request, pk=None):
         review = self.get_object()
-        review.helpful_count += 1
+        user = request.user
+        # require authentication for voting
+        if not user or not user.is_authenticated:
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Toggle user's helpful vote: if present remove, otherwise add
+        if review.helpful_users.filter(id=user.id).exists():
+            review.helpful_users.remove(user)
+            review.helpful_count = review.helpful_users.count()
+            review.save()
+            return Response({"helpful_count": review.helpful_count, "marked": False})
+
+        # Add user and update count
+        review.helpful_users.add(user)
+        # Keep helpful_count in sync with actual related set
+        review.helpful_count = review.helpful_users.count()
         review.save()
-        return Response({"helpful_count": review.helpful_count})
+        return Response({"helpful_count": review.helpful_count, "marked": True})
 
 
 class CartViewSet(viewsets.ViewSet):

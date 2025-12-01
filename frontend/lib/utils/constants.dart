@@ -25,7 +25,7 @@ class ApiConstants {
       return 'http://localhost:8000';
     }
   }
-  
+
   // Auth endpoints
   static const String login = '/api/users/login/';
   static const String register = '/api/users/register/';
@@ -35,20 +35,21 @@ class ApiConstants {
   static const String sendOtp = '/api/users/send-otp/';
   static const String verifyOtp = '/api/users/verify-otp/';
   static const String resetPassword = '/api/users/profiles/reset-password/';
-  
+
   // Pet endpoints
   static const String pets = '/api/users/pets/';
   static const String vaccinations = '/api/users/vaccinations/';
   static const String medicalRecords = '/api/users/medical-records/';
-  
+
   // Store endpoints
   static const String products = '/api/store/products/';
+  static const String reviews = '/api/store/reviews/';
   static const String wishlist = '/api/store/wishlist/';
   static const String categories = '/api/store/categories/';
   static const String cart = '/api/store/cart/';
   static const String orders = '/api/store/orders/';
   static const String adoptions = '/api/store/adoptions/';
-  
+
   // Community endpoints
   static const String users = '/api/users/profiles/';
   static const String posts = '/api/community/posts/';
@@ -57,11 +58,11 @@ class ApiConstants {
   static const String groupPosts = '/api/community/group-posts/';
   static const String events = '/api/community/events/';
   static const String lostFound = '/api/community/lost-found/';
-  
+
   // AI endpoints
   static const String breedDetection = '/api/ai/breed-detection/';
   static const String chatbot = '/api/ai/chat-sessions/';
-  
+
   // Notifications endpoint
   static const String notifications = '/api/users/notifications/';
 }
