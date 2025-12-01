@@ -10,7 +10,7 @@ class VaccinationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Vaccination', showBackButton: true),
+      appBar: const CustomAppBar(title: 'Vaccination', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

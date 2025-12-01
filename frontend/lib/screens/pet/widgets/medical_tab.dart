@@ -121,7 +121,7 @@ class MedicalTab extends StatelessWidget {
       'Date: ${_formatDate(m.date)}',
       if (m.veterinarian != null && m.veterinarian!.isNotEmpty) 'Vet: ${m.veterinarian}',
       if (m.clinicName != null && m.clinicName!.isNotEmpty) 'Clinic: ${m.clinicName}',
-      if (m.cost != null) 'Cost: ${kCurrencySymbol}${m.cost!.toStringAsFixed(2)}',
+      if (m.cost != null) 'Cost: $kCurrencySymbol${m.cost!.toStringAsFixed(2)}',
       if (m.prescription != null && m.prescription!.isNotEmpty) 'Prescription: ${m.prescription}',
       if (m.attachments != null && m.attachments!.isNotEmpty) 'Attachments: ${m.attachments!.length}',
       if (m.description.isNotEmpty) m.description,

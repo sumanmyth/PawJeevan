@@ -56,7 +56,7 @@ class _CartScreenState extends State<CartScreen> {
       await _store.updateCartItem(itemId: item.id, quantity: newQty);
       await _loadCart();
     } catch (e) {
-      if (mounted) Helpers.showInstantSnackBar(context, SnackBar(content: Text('Failed to update quantity')));
+      if (mounted) Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Failed to update quantity')));
     }
   }
 
@@ -67,7 +67,7 @@ class _CartScreenState extends State<CartScreen> {
       await _store.removeFromCart(itemId: item.id);
       await _loadCart();
     } catch (e) {
-      if (mounted) Helpers.showInstantSnackBar(context, SnackBar(content: Text('Failed to remove item')));
+      if (mounted) Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Failed to remove item')));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
@@ -239,7 +239,7 @@ class _CartScreenState extends State<CartScreen> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(color: deleteColor, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.18 : 0.08), blurRadius: 6, offset: const Offset(0, 2))]),
-                  child: Icon(Icons.delete, size: 18, color: Colors.white),
+                  child: const Icon(Icons.delete, size: 18, color: Colors.white),
                 ),
               ),
             ),

@@ -75,11 +75,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
       thumbUrl = null;
     }
 
-    String _fullImageUrl(String? url) {
+    String fullImageUrl(String? url) {
       if (url == null || url.isEmpty) return '';
       // If already absolute, return as is
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
-      return ApiConstants.baseUrl.replaceAll(RegExp(r'/$'), '') + '/' + url.replaceAll(RegExp(r'^/+'), '');
+      return '${ApiConstants.baseUrl.replaceAll(RegExp(r'/$'), '')}/${url.replaceAll(RegExp(r'^/+'), '')}';
     }
 
     final brightness = Theme.of(context).brightness;
@@ -112,13 +112,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 borderRadius: BorderRadius.circular(10),
                 child: thumbUrl != null && thumbUrl.isNotEmpty
                     ? Image.network(
-                        _fullImageUrl(thumbUrl),
+                        fullImageUrl(thumbUrl),
                         width: 56,
                         height: 56,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, progress) {
                           if (progress == null) return child;
-                          return Container(width: 56, height: 56, color: Theme.of(context).dividerColor, child: Center(child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))));
+                          return Container(width: 56, height: 56, color: Theme.of(context).dividerColor, child: const Center(child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))));
                         },
                         errorBuilder: (context, error, stackTrace) => Container(width: 56, height: 56, color: Theme.of(context).dividerColor, child: Icon(Icons.pets, color: Theme.of(context).primaryColor)),
                       )
@@ -136,7 +136,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       children: [
                         Text('Order', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12)),
                         const SizedBox(height: 4),
-                        Text(orderNo, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(orderNo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                     const SizedBox(height: 6),

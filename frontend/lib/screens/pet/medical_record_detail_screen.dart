@@ -11,7 +11,7 @@ class MedicalRecordDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Medical Record', showBackButton: true),
+      appBar: const CustomAppBar(title: 'Medical Record', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

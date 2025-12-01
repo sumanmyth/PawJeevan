@@ -650,7 +650,7 @@ class _StoreScreenState extends State<StoreScreen> with SingleTickerProviderStat
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AllProductsScreen(title: 'All Products'),
+        builder: (context) => const AllProductsScreen(title: 'All Products'),
       ),
     );
   }

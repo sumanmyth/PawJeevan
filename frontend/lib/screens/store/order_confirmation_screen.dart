@@ -37,7 +37,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                   color: accent.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Center(
+                child: const Center(
                   child: Icon(Icons.check_circle, size: 48, color: accent),
                 ),
               ),
@@ -78,7 +78,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     if (address.isNotEmpty) ...[
                       const Divider(height: 18),
-                      Text('Shipping Address', style: TextStyle(fontWeight: FontWeight.w600)),
+                      const Text('Shipping Address', style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       Text(address, style: Theme.of(context).textTheme.bodySmall),
                     ],

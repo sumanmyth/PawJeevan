@@ -540,9 +540,9 @@ class _FeaturedProductCard extends StatelessWidget {
             children: [
               Container(
                 height: 120,
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(124, 58, 237, 0.1),
-                  borderRadius: const BorderRadius.vertical(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(124, 58, 237, 0.1),
+                  borderRadius: BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
                 ),
@@ -578,7 +578,7 @@ class _FeaturedProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      product != null ? '${kCurrencySymbol}${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
+                      product != null ? '$kCurrencySymbol${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
                       style: const TextStyle(
                         color: _kPrimaryPurple,
                         fontWeight: FontWeight.bold,

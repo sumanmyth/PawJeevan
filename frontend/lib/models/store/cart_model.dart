@@ -19,19 +19,19 @@ class CartItem {
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     // Helper to safely extract an int ID from various shapes
-    int _extractId(dynamic val) {
+    int extractId(dynamic val) {
       if (val == null) return 0;
       if (val is int) return val;
       if (val is String) return int.tryParse(val) ?? 0;
       if (val is Map) {
         // common keys
-        if (val['id'] != null) return _extractId(val['id']);
-        if (val['pk'] != null) return _extractId(val['pk']);
+        if (val['id'] != null) return extractId(val['id']);
+        if (val['pk'] != null) return extractId(val['pk']);
       }
       return 0;
     }
 
-    String _extractName(dynamic productField) {
+    String extractName(dynamic productField) {
       if (productField == null) return 'Product';
       if (productField is String) return productField;
       if (productField is Map) {
@@ -41,7 +41,7 @@ class CartItem {
       return 'Product';
     }
 
-    double _extractPrice(dynamic json, dynamic productField) {
+    double extractPrice(dynamic json, dynamic productField) {
       // try direct fields first
       final cand = json['product_price'] ?? json['price'] ?? json['unit_price'];
       if (cand != null) {
@@ -55,17 +55,17 @@ class CartItem {
       return 0.0;
     }
 
-    final productField = json['product'] ?? json['product_data'] ?? null;
+    final productField = json['product'] ?? json['product_data'];
     return CartItem(
-      id: _extractId(json['id']),
-      productId: _extractId(productField ?? json['product_id']),
+      id: extractId(json['id']),
+      productId: extractId(productField ?? json['product_id']),
       productSlug: (productField is Map)
           ? (productField['slug'] ?? productField['product_slug'] ?? productField['slug_name']) as String?
           : (json['product_slug'] ?? json['slug']) as String?,
       productName: json['product_name'] is String
           ? json['product_name']
-          : _extractName(productField ?? json['product_name']),
-      productPrice: _extractPrice(json, productField),
+          : extractName(productField ?? json['product_name']),
+      productPrice: extractPrice(json, productField),
       quantity: (json['quantity'] is int) ? json['quantity'] : int.tryParse((json['quantity'] ?? '1').toString()) ?? 1,
       imageUrl: (productField is Map)
           ? (productField['primary_image'] ?? productField['image'] ?? productField['thumbnail']) as String?

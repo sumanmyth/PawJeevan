@@ -284,7 +284,7 @@ class PetService {
     if (kDebugMode) {
       try {
         print('-- addMedicalRecordMultipart FormData keys: ${form.fields.map((f) => f.key).toList()}');
-        print('-- addMedicalRecordMultipart files: ${form.files.map((f) => f.key + ':' + (f.value.filename ?? 'unknown')).toList()}');
+        print('-- addMedicalRecordMultipart files: ${form.files.map((f) => '${f.key}:${f.value.filename ?? 'unknown'}').toList()}');
       } catch (e) {
         print('debug print error: $e');
       }
@@ -338,7 +338,7 @@ class PetService {
     if (kDebugMode) {
       try {
         print('-- updateMedicalRecordMultipart FormData keys: ${form.fields.map((f) => f.key).toList()}');
-        print('-- updateMedicalRecordMultipart files: ${form.files.map((f) => f.key + ':' + (f.value.filename ?? 'unknown')).toList()}');
+        print('-- updateMedicalRecordMultipart files: ${form.files.map((f) => '${f.key}:${f.value.filename ?? 'unknown'}').toList()}');
       } catch (e) {
         print('debug print error: $e');
       }

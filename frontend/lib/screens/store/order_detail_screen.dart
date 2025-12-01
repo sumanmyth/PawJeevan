@@ -165,8 +165,11 @@ class OrderDetailScreen extends StatelessWidget {
       print('OrderDetailScreen: order id=${order['id'] ?? order['order_number'] ?? 'unknown'} status=${order['status'] ?? ''} items_count=${previewItems.length}');
       if (previewItems.isNotEmpty) {
         final sample = previewItems.first;
-        if (sample is Map) print('OrderDetailScreen: sample item keys=${sample.keys.toList()}');
-        else print('OrderDetailScreen: sample item value=$sample');
+        if (sample is Map) {
+          print('OrderDetailScreen: sample item keys=${sample.keys.toList()}');
+        } else {
+          print('OrderDetailScreen: sample item value=$sample');
+        }
       }
     } catch (e) {
       print('OrderDetailScreen: debug print failed: $e');
@@ -245,7 +248,7 @@ class OrderDetailScreen extends StatelessWidget {
                               width: 72,
                               height: 72,
                               fit: BoxFit.cover,
-                              loadingBuilder: (c, child, progress) => progress == null ? child : Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                              loadingBuilder: (c, child, progress) => progress == null ? child : const Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
                               errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 36, color: Theme.of(context).primaryColor),
                             );
                           }
@@ -259,13 +262,13 @@ class OrderDetailScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Order #$orderNo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('Order #$orderNo', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(height: 6),
                           Text(items.isNotEmpty ? (items.first['product_name'] ?? '') : '', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Text('$kCurrencySymbol${double.tryParse((order['total'] ?? order['subtotal'] ?? 0).toString())?.toStringAsFixed(2) ?? '0.00'}', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('$kCurrencySymbol${double.tryParse((order['total'] ?? order['subtotal'] ?? 0).toString())?.toStringAsFixed(2) ?? '0.00'}', style: const TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(width: 8),
                               Text('$itemCount item${itemCount == 1 ? '' : 's'}', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
                             ],

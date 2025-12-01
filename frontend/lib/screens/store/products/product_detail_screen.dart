@@ -80,7 +80,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
         borderRadius: BorderRadius.circular(6),
       ),
       alignment: Alignment.center,
-      child: Text(initials(), style: TextStyle(color: txtColor, fontWeight: FontWeight.bold)),
+      child: Text(initials(), style: const TextStyle(color: txtColor, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -611,10 +611,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
                                               ),
                                             ),
                                             const SizedBox(width: 12),
-                                            Column(
+                                            const Column(
                                               mainAxisSize: MainAxisSize.min,
                                               crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: const [
+                                              children: [
                                                 Text('Buy Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                                                 SizedBox(height: 2),
                                                 Text('Fast checkout', style: TextStyle(color: Colors.white70, fontSize: 12)),
