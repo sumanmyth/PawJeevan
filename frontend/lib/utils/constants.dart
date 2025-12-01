@@ -46,6 +46,7 @@ class ApiConstants {
   static const String wishlist = '/api/store/wishlist/';
   static const String categories = '/api/store/categories/';
   static const String cart = '/api/store/cart/';
+  static const String orders = '/api/store/orders/';
   static const String adoptions = '/api/store/adoptions/';
   
   // Community endpoints

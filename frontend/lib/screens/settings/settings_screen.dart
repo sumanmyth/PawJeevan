@@ -120,7 +120,7 @@ class SettingsScreen extends StatelessWidget {
               _Divider(isDark: isDark),
               _ModernListTile(
                 title: 'Payment Method',
-                subtitle: settings.paymentMethod,
+                subtitle: settings.paymentMethodLabel,
                 icon: Icons.payment,
                 isDark: isDark,
                 onTap: () async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/helpers.dart';
 import '../../services/auth_service.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     });
     try {
       await _auth.sendOtp(email: widget.email, userId: widget.userId);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent')));
+      showAppMessage(context, 'OTP resent');
     } catch (e) {
       setState(() {
         _error = e.toString();

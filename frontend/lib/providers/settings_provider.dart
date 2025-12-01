@@ -21,7 +21,8 @@ class SettingsProvider extends ChangeNotifier {
   bool _darkMode = false;
   bool _profileLocked = false;
   String _language = 'English';
-  String _paymentMethod = 'Card';
+  // store payment method as an internal code; default to COD for now
+  String _paymentMethod = 'COD';
 
   bool get pushNotifications => _pushNotifications;
   bool get promoNotifications => _promoNotifications;
@@ -31,6 +32,16 @@ class SettingsProvider extends ChangeNotifier {
   String get language => _language;
   String get paymentMethod => _paymentMethod;
 
+  /// Human-friendly label for the currently selected payment method
+  String get paymentMethodLabel {
+    switch (_paymentMethod) {
+      case 'COD':
+        return 'Cash on delivery';
+      default:
+        return _paymentMethod;
+    }
+  }
+
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _pushNotifications = prefs.getBool(_kPush) ?? true;
@@ -39,7 +50,7 @@ class SettingsProvider extends ChangeNotifier {
     _darkMode = prefs.getBool(_kDarkMode) ?? false;
     _profileLocked = prefs.getBool(_kProfileLocked) ?? false;
     _language = prefs.getString(_kLanguage) ?? 'English';
-    _paymentMethod = prefs.getString(_kPaymentMethod) ?? 'Card';
+    _paymentMethod = prefs.getString(_kPaymentMethod) ?? 'COD';
     notifyListeners();
   }
 

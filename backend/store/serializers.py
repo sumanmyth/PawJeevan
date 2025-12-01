@@ -91,7 +91,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["id", "product", "product_id", "quantity", "subtotal", "created_at"]
+        fields = ["id", "product", "product_id", "product_name", "product_price", "quantity", "subtotal", "created_at"]
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -104,11 +104,14 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ["id", "items", "total_price", "items_count", "created_at", "updated_at"]
 
     def get_items_count(self, obj):
-        return obj.items.count()
+        # Return total quantity across items (sum of quantities)
+        return obj.items_count
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     subtotal = serializers.ReadOnlyField()
+    # Include a lightweight nested product representation so clients can show images
+    product = ProductListSerializer(read_only=True)
 
     class Meta:
         model = OrderItem

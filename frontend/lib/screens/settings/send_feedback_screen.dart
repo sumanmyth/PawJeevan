@@ -5,7 +5,10 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/app_form_card.dart';
 
 class SendFeedbackScreen extends StatefulWidget {
-  const SendFeedbackScreen({super.key});
+  final String? initialSubject;
+  final String? initialMessage;
+
+  const SendFeedbackScreen({super.key, this.initialSubject, this.initialMessage});
 
   @override
   State<SendFeedbackScreen> createState() => _SendFeedbackScreenState();
@@ -22,6 +25,18 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     _subjectController.dispose();
     _messageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill if provided
+    if (widget.initialSubject != null && widget.initialSubject!.isNotEmpty) {
+      _subjectController.text = widget.initialSubject!;
+    }
+    if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+      _messageController.text = widget.initialMessage!;
+    }
   }
 
   Future<void> _sendFeedback() async {

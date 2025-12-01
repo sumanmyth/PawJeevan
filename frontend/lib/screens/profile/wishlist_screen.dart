@@ -4,6 +4,7 @@ import '../../providers/store_provider.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../store/adoption/pet_detail_screen.dart';
+import '../store/products/product_detail_screen.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -136,7 +137,10 @@ class _WishlistScreenState extends State<WishlistScreen> with SingleTickerProvid
           return ProductCard(
             product: product,
             onTap: () {
-              Navigator.pushNamed(context, '/store/product/${product.slug}');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: product.slug)),
+              );
             },
           );
         },

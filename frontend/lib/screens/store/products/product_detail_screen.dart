@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../../../services/store_service.dart';
 import '../../../models/store/product_detail_model.dart';
 import '../../../widgets/custom_app_bar.dart';
@@ -7,6 +6,9 @@ import '../../pet/widgets/full_screen_image.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/store_provider.dart';
 import '../../../utils/currency.dart';
+import '../../../utils/helpers.dart';
+import '../checkout_screen.dart';
+import '../../../models/store/cart_model.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String slug;
@@ -78,7 +80,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
         borderRadius: BorderRadius.circular(6),
       ),
       alignment: Alignment.center,
-      child: Text(initials(), style: TextStyle(color: txtColor, fontWeight: FontWeight.bold)),
+      child: Text(initials(), style: const TextStyle(color: txtColor, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -116,17 +118,70 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
     }
   }
 
-  Future<void> _addToCart() async {
-    if (_product == null) return;
+  Future<bool> _addToCart() async {
+    if (_product == null) return false;
     setState(() => _adding = true);
     try {
       final ok = await _store.addToCart(productId: _product!.id, quantity: 1);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Added to cart' : 'Failed to add')));
+      showAppSnackBar(context, SnackBar(content: Text(ok ? 'Added to cart' : 'Failed to add')));
+      return ok;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      // Parse common server messages and show a friendlier message to the user
+      final raw = e.toString();
+      String friendly = 'Failed to add to cart. Please try again.';
+
+      // Example server message: "Only 0 items available" or "Only 3 items available"
+      final regex = RegExp(r"Only\s*(\d+)\s*items?\s*available", caseSensitive: false);
+      final m = regex.firstMatch(raw);
+      if (m != null) {
+        final available = int.tryParse(m.group(1) ?? '0') ?? 0;
+        if (available == 0) {
+          friendly = 'Sorry — this product is currently out of stock.';
+        } else {
+          friendly = 'Only $available left in stock. Please reduce quantity or try again.';
+        }
+      } else if (raw.toLowerCase().contains('out of stock') || raw.toLowerCase().contains('not enough') || raw.toLowerCase().contains('stock')) {
+        friendly = 'Sorry — not enough stock available for this item.';
+      } else if (raw.toLowerCase().contains('authentication') || raw.toLowerCase().contains('token')) {
+        friendly = 'Please sign in to add items to your cart.';
+      }
+
+      showAppSnackBar(context, SnackBar(content: Text(friendly), behavior: SnackBarBehavior.floating));
+      return false;
     } finally {
       setState(() => _adding = false);
     }
+  }
+
+  Future<void> _buyNow() async {
+    if (_product == null) return;
+    // If product is out of stock, show friendly message and don't proceed
+    if (_product!.stock <= 0) {
+      showAppSnackBar(
+        context,
+        const SnackBar(
+          content: Text('Sorry — this product is currently out of stock.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    // Build a temporary Cart with this single product (Buy Now flow)
+    final cartItem = CartItem(
+      id: _product!.id,
+      productId: _product!.id,
+      productSlug: _product!.slug,
+      productName: _product!.name,
+      productPrice: _product!.finalPrice,
+      quantity: 1,
+      imageUrl: _product!.primaryImage,
+    );
+
+    final tempCart = Cart(id: 0, items: [cartItem]);
+
+    if (!mounted) return;
+    // Navigate to the Checkout screen with the temp cart (does not add to server cart)
+    Navigator.push(context, MaterialPageRoute(builder: (_) => CheckoutScreen(initialCart: tempCart)));
   }
 
   @override
@@ -514,6 +569,67 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
                             ],
 
                             const SizedBox(height: 12),
+                            // Buy Now button (full width) placed above the Save + Add to cart row
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(color: const Color(0xFF7C3AED).withOpacity(0.25), blurRadius: 14, offset: const Offset(0, 8)),
+                                    ],
+                                    borderRadius: BorderRadius.circular(28),
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(28),
+                                      onTap: _adding ? null : _buyNow,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 18.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            // circular icon badge
+                                            Container(
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.18),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))],
+                                              ),
+                                              child: const Center(
+                                                child: Icon(Icons.payment, color: Colors.white, size: 18),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            const Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text('Buy Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                                SizedBox(height: 2),
+                                                Text('Fast checkout', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                              ],
+                                            ),
+                                            const Spacer(),
+                                            const Icon(Icons.chevron_right, color: Colors.white70),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             // Save + Add to cart row
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -563,10 +679,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
                                                       final nowSaved = !saved;
                                                       // toggle in background (persist)
                                                       provider.toggleProductFavorite(_product!.id);
-                                                      // avoid stacking snackbars
-                                                      final messenger = ScaffoldMessenger.of(context);
-                                                      messenger.hideCurrentSnackBar(reason: SnackBarClosedReason.dismiss);
-                                                      messenger.showSnackBar(
+                                                      // show snack immediately (hide any current)
+                                                      showAppSnackBar(
+                                                        context,
                                                         SnackBar(
                                                           content: Text(nowSaved ? 'Saved' : 'Removed from saved'),
                                                           duration: const Duration(milliseconds: 1200),
@@ -574,13 +689,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> with TickerPr
                                                         ),
                                                       );
                                                     },
-                                              icon: Icon(saved ? Icons.favorite : Icons.favorite_border, color: const Color(0xFF7C3AED)),
-                                              label: const Text('Save', style: TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.w600)),
+                                              icon: Icon(saved ? Icons.favorite : Icons.favorite_border, color: saved ? Colors.white : const Color(0xFF7C3AED), size: 20),
+                                              label: Text('Save', style: TextStyle(color: saved ? Colors.white : const Color(0xFF7C3AED), fontWeight: FontWeight.w600, fontSize: 16)),
                                               style: OutlinedButton.styleFrom(
-                                                side: const BorderSide(color: Color(0xFF7C3AED)),
+                                                side: saved ? BorderSide.none : const BorderSide(color: Color(0xFF7C3AED)),
                                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                                backgroundColor: saved ? const Color(0xFF7C3AED).withOpacity(0.06) : Colors.transparent,
+                                                fixedSize: const Size(140, 56),
+                                                backgroundColor: saved ? const Color(0xFF7C3AED) : Colors.transparent,
                                               ),
                                             ),
                                           );

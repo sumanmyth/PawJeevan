@@ -15,6 +15,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
 import '../../screens/store/products/product_detail_screen.dart';
+import '../../screens/store/cart_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -138,10 +139,7 @@ class _HomeTabState extends State<HomeTab> {
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {
-              Helpers.showInstantSnackBar(
-                context,
-                const SnackBar(content: Text('Cart - Coming soon!')),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()));
             },
           ),
         ],
@@ -542,9 +540,9 @@ class _FeaturedProductCard extends StatelessWidget {
             children: [
               Container(
                 height: 120,
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(124, 58, 237, 0.1),
-                  borderRadius: const BorderRadius.vertical(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(124, 58, 237, 0.1),
+                  borderRadius: BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
                 ),
@@ -580,7 +578,7 @@ class _FeaturedProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      product != null ? '${kCurrencySymbol}${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
+                      product != null ? '$kCurrencySymbol${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
                       style: const TextStyle(
                         color: _kPrimaryPurple,
                         fontWeight: FontWeight.bold,

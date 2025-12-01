@@ -174,6 +174,84 @@ class StoreService {
     }
   }
 
+  /// Fetch current user's cart
+  Future<Map<String, dynamic>?> fetchCart() async {
+    try {
+      final response = await _api.get(ApiConstants.cart);
+      if (response.statusCode == 200) return response.data;
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching cart: $e');
+      rethrow;
+    }
+  }
+
+  /// Update a cart item quantity
+  Future<bool> updateCartItem({required int itemId, required int quantity}) async {
+    try {
+      final data = {'item_id': itemId, 'quantity': quantity};
+      final response = await _api.post('${ApiConstants.cart}update_item/', data: data);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('Error updating cart item: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove an item from the cart
+  Future<bool> removeFromCart({required int itemId}) async {
+    try {
+      final data = {'item_id': itemId};
+      final response = await _api.post('${ApiConstants.cart}remove_item/', data: data);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('Error removing cart item: $e');
+      rethrow;
+    }
+  }
+
+  /// Clear the cart
+  Future<bool> clearCart() async {
+    try {
+      final response = await _api.post('${ApiConstants.cart}clear/');
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('Error clearing cart: $e');
+      rethrow;
+    }
+  }
+
+  /// Create an order / checkout
+  /// Returns the created order data (Map) on success, otherwise null
+  Future<Map<String, dynamic>?> createOrder({required Map<String, dynamic> payload}) async {
+    try {
+      final response = await _api.post(ApiConstants.orders, data: payload);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data is Map<String, dynamic>) return Map<String, dynamic>.from(response.data);
+        return response.data as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error creating order: $e');
+      return null;
+    }
+  }
+
+  /// Fetch orders for current user
+  Future<List<Map<String, dynamic>>> fetchOrders() async {
+    try {
+      final response = await _api.get(ApiConstants.orders);
+      if (response.statusCode == 200) {
+        final data = response.data is List ? response.data : (response.data['results'] ?? []);
+        return List<Map<String, dynamic>>.from(data as List<dynamic>);
+      }
+      return <Map<String, dynamic>>[];
+    } catch (e) {
+      debugPrint('Error fetching orders: $e');
+      rethrow;
+    }
+  }
+
   /// Fetch single adoption listing by ID
   Future<AdoptionListing?> fetchAdoptionById(int id) async {
     try {

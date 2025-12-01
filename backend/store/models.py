@@ -3,6 +3,7 @@ Store models: Category, Brand, Product, Review, Cart, Order, Wishlist
 """
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 from users.models import User
 
 
@@ -209,6 +210,9 @@ class CartItem(models.Model):
     """Items in shopping cart"""
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # Snapshot fields to keep record if product changes later
+    product_name = models.CharField(max_length=200, blank=True)
+    product_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)])
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -218,12 +222,30 @@ class CartItem(models.Model):
         unique_together = ['cart', 'product']
     
     def __str__(self):
-        return f"{self.quantity}x {self.product.name}"
+        name = self.product_name or (self.product.name if self.product else 'Item')
+        return f"{self.quantity}x {name}"
     
     @property
     def subtotal(self):
         """Calculate item subtotal"""
-        return self.product.final_price * self.quantity
+        # Guard against None values when rendering admin inlines or unsaved forms
+        price = None
+        if self.product_price is not None:
+            price = self.product_price
+        elif self.product is not None:
+            try:
+                price = self.product.final_price
+            except Exception:
+                price = Decimal('0')
+        else:
+            price = Decimal('0')
+
+        qty = self.quantity or 0
+        try:
+            return price * qty
+        except Exception:
+            # Fallback to Decimal multiplication to avoid TypeErrors
+            return Decimal(str(price or 0)) * Decimal(str(qty))
 
 
 class Order(models.Model):
@@ -266,7 +288,12 @@ class Order(models.Model):
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
+    # Optional fields
+    coupon_code = models.CharField(max_length=50, blank=True)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    currency = models.CharField(max_length=10, default='NPR')
+
     payment_method = models.CharField(max_length=50, default='pending')
     payment_status = models.CharField(
         max_length=20, 
@@ -274,12 +301,17 @@ class Order(models.Model):
         default='pending'
     )
     transaction_id = models.CharField(max_length=100, blank=True)
+    payment_gateway = models.CharField(max_length=100, blank=True)
     
     # Order status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     # Tracking
     tracking_number = models.CharField(max_length=100, blank=True)
+    delivery_instructions = models.TextField(blank=True)
+    billing_email = models.EmailField(blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
     
     notes = models.TextField(blank=True)
     
@@ -298,6 +330,8 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     product_name = models.CharField(max_length=200)
+    product_sku = models.CharField(max_length=100, blank=True)
+    product_meta = models.JSONField(null=True, blank=True)
     product_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     
@@ -309,7 +343,12 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         """Calculate item subtotal"""
-        return self.product_price * self.quantity
+        price = self.product_price if self.product_price is not None else Decimal('0')
+        qty = self.quantity or 0
+        try:
+            return price * qty
+        except Exception:
+            return Decimal(str(price or 0)) * Decimal(str(qty))
 
 
 class Wishlist(models.Model):

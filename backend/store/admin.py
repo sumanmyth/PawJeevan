@@ -64,12 +64,25 @@ class ReviewAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['product', 'product_name', 'product_price', 'quantity', 'subtotal']
+    readonly_fields = ['product', 'product_name', 'product_sku', 'product_price', 'quantity', 'subtotal', 'product_meta_display']
+    fields = ['product', 'product_name', 'product_sku', 'product_price', 'quantity', 'subtotal', 'product_meta_display']
+
+    def product_meta_display(self, obj):
+        if not obj.product_meta:
+            return ''
+        try:
+            import json
+            pretty = json.dumps(obj.product_meta, indent=2)
+            return format_html('<pre style="white-space:pre-wrap">{}</pre>', conditional_escape(pretty))
+        except Exception:
+            return str(obj.product_meta)
+    product_meta_display.short_description = 'Product Meta'
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = [f.name for f in Order._meta.fields]
+    # Show a compact set of important fields in the list view
+    list_display = ['order_number', 'user', 'status', 'payment_status', 'total', 'created_at']
     list_filter = ['status', 'payment_status', 'delivery_method']
     search_fields = ['order_number', 'user__email', 'tracking_number']
     readonly_fields = ['order_number', 'created_at']
@@ -78,9 +91,34 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    # include model fields; keep custom count methods if present
-    list_display = [f.name for f in Cart._meta.fields]
-    search_fields = ['user__username']
+    # Show useful cart summary fields
+    list_display = ['id', 'user', 'items_count_display', 'total_price_display', 'created_at', 'updated_at']
+    search_fields = ['user__username', 'user__email']
+    inlines = []
+
+    def items_count_display(self, obj):
+        try:
+            return obj.items_count
+        except Exception:
+            return 0
+    items_count_display.short_description = 'Items Count'
+
+    def total_price_display(self, obj):
+        try:
+            return obj.total_price
+        except Exception:
+            return 0
+    total_price_display.short_description = 'Total Price'
+
+
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0
+    fields = ['product', 'product_name', 'product_price', 'quantity', 'subtotal', 'created_at']
+    readonly_fields = ['subtotal', 'created_at']
+
+# Attach cart item inline to CartAdmin
+CartAdmin.inlines = [CartItemInline]
 
 
 @admin.register(Wishlist)

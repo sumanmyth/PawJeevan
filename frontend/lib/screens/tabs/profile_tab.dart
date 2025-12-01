@@ -12,6 +12,8 @@ import '../pet/my_pets_screen.dart';
 import '../settings/settings_screen.dart';
 import '../profile/user_profile_screen.dart';
 import '../profile/wishlist_screen.dart';
+import '../store/cart_screen.dart';
+import '../store/orders_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -319,14 +321,22 @@ class _ProfileTabState extends State<ProfileTab> {
                     title: 'Shopping',
                     items: [
                       _MenuItem(
+                        icon: Icons.shopping_cart,
+                        title: 'Cart',
+                        subtitle: 'View your cart',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CartScreen()),
+                          );
+                        },
+                      ),
+                      _MenuItem(
                         icon: Icons.shopping_bag,
                         title: 'My Orders',
                         subtitle: 'Track your orders',
                         onTap: () {
-                          Helpers.showInstantSnackBar(
-                            context,
-                            const SnackBar(content: Text('Orders - Coming soon!')),
-                          );
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()));
                         },
                       ),
                       _MenuItem(
