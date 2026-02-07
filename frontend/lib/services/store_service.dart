@@ -19,8 +19,9 @@ class StoreService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (petType != null && petType != 'all')
+      if (petType != null && petType != 'all') {
         queryParams['pet_type'] = petType;
+      }
       if (status != null) queryParams['status'] = status;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
@@ -63,18 +64,21 @@ class StoreService {
   }) async {
     try {
       final queryParams = <String, dynamic>{'page': page};
-      if (petType != null && petType != 'all')
+      if (petType != null && petType != 'all') {
         queryParams['pet_type'] = petType;
+      }
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category'] = categoryId;
-      if (categoryIds != null && categoryIds.isNotEmpty)
+      if (categoryIds != null && categoryIds.isNotEmpty) {
         queryParams['category__in'] = categoryIds.join(',');
+      }
       if (weightMin != null) queryParams['weight_min'] = weightMin;
       if (weightMax != null) queryParams['weight_max'] = weightMax;
       if (priceMin != null) queryParams['price_min'] = priceMin;
       if (priceMax != null) queryParams['price_max'] = priceMax;
-      if (isFeatured != null)
+      if (isFeatured != null) {
         queryParams['is_featured'] = isFeatured ? '1' : '0';
+      }
 
       final response = await _api.get(
         ApiConstants.products,
@@ -267,8 +271,9 @@ class StoreService {
     try {
       final response = await _api.post(ApiConstants.orders, data: payload);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (response.data is Map<String, dynamic>)
+        if (response.data is Map<String, dynamic>) {
           return Map<String, dynamic>.from(response.data);
+        }
         return response.data as Map<String, dynamic>?;
       }
       return null;
@@ -288,7 +293,7 @@ class StoreService {
   }) async {
     try {
       final data = <String, dynamic>{
-        'product': productId,
+        'product_id': productId,
         'rating': rating,
       };
       if (title != null) data['title'] = title;
@@ -296,8 +301,9 @@ class StoreService {
 
       final response = await _api.post(ApiConstants.reviews, data: data);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (response.data is Map<String, dynamic>)
+        if (response.data is Map<String, dynamic>) {
           return Map<String, dynamic>.from(response.data);
+        }
         return response.data as Map<String, dynamic>?;
       }
       return null;
@@ -323,8 +329,9 @@ class StoreService {
       final response =
           await _api.patch('${ApiConstants.reviews}$reviewId/', data: data);
       if (response.statusCode == 200) {
-        if (response.data is Map<String, dynamic>)
+        if (response.data is Map<String, dynamic>) {
           return Map<String, dynamic>.from(response.data);
+        }
         return response.data as Map<String, dynamic>?;
       }
       return null;
@@ -410,9 +417,9 @@ class StoreService {
               if (it == null) continue;
               dynamic prod;
               if (it is Map) {
-                if (it.containsKey('product'))
+                if (it.containsKey('product')) {
                   prod = it['product'];
-                else if (it.containsKey('product_id'))
+                } else if (it.containsKey('product_id'))
                   prod = it['product_id'];
                 else
                   prod = null;
@@ -515,9 +522,9 @@ class StoreService {
             if (it == null) continue;
             dynamic prod;
             if (it is Map) {
-              if (it.containsKey('product'))
+              if (it.containsKey('product')) {
                 prod = it['product'];
-              else if (it.containsKey('product_id'))
+              } else if (it.containsKey('product_id'))
                 prod = it['product_id'];
               else
                 prod = null;
@@ -695,18 +702,24 @@ class StoreService {
       if (breed != null) formData.fields.add(MapEntry('breed', breed));
       if (age != null) formData.fields.add(MapEntry('age', age.toString()));
       if (gender != null) formData.fields.add(MapEntry('gender', gender));
-      if (description != null)
+      if (description != null) {
         formData.fields.add(MapEntry('description', description));
-      if (healthStatus != null)
+      }
+      if (healthStatus != null) {
         formData.fields.add(MapEntry('health_status', healthStatus));
-      if (vaccinationStatus != null)
+      }
+      if (vaccinationStatus != null) {
         formData.fields.add(MapEntry('vaccination_status', vaccinationStatus));
-      if (isNeutered != null)
+      }
+      if (isNeutered != null) {
         formData.fields.add(MapEntry('is_neutered', isNeutered.toString()));
-      if (contactPhone != null)
+      }
+      if (contactPhone != null) {
         formData.fields.add(MapEntry('contact_phone', contactPhone));
-      if (contactEmail != null)
+      }
+      if (contactEmail != null) {
         formData.fields.add(MapEntry('contact_email', contactEmail));
+      }
       if (location != null) formData.fields.add(MapEntry('location', location));
       if (status != null) formData.fields.add(MapEntry('status', status));
 

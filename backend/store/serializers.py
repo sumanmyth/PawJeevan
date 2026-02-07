@@ -76,6 +76,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source="user.username", read_only=True)
     # Include a compact product representation so clients can render name/image without extra fetch
     product = ProductListSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source="product",
+        write_only=True
+    )
     helpful_given = serializers.SerializerMethodField()
 
     class Meta:

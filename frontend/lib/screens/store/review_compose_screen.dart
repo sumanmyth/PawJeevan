@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/store_service.dart';
-// removed unused imports: custom_app_bar and helpers
+import '../../utils/helpers.dart';
 
 class ReviewComposeScreen extends StatefulWidget {
   final int productId;
@@ -42,8 +42,9 @@ class _ReviewComposeScreenState extends State<ReviewComposeScreen> {
     super.initState();
     if (widget.initialRating != null) _rating = widget.initialRating!;
     if (widget.initialTitle != null) _titleCtl.text = widget.initialTitle!;
-    if (widget.initialComment != null)
+    if (widget.initialComment != null) {
       _commentCtl.text = widget.initialComment!;
+    }
   }
 
   Future<void> _submit() async {
@@ -72,13 +73,11 @@ class _ReviewComposeScreenState extends State<ReviewComposeScreen> {
         Navigator.of(context).pop(true);
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to submit review')));
+        Helpers.showSnackBar(context, 'Failed to submit review');
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      Helpers.showSnackBar(context, 'Error: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -132,11 +131,11 @@ class _ReviewComposeScreenState extends State<ReviewComposeScreen> {
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey.shade900 : Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
-                              color: const Color.fromRGBO(0, 0, 0, 0.12),
+                              color: Color.fromRGBO(0, 0, 0, 0.12),
                               blurRadius: 30,
-                              offset: const Offset(0, 12),
+                              offset: Offset(0, 12),
                             ),
                           ],
                         ),

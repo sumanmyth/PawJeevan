@@ -135,11 +135,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
         if (userId != null) {
           final can = await _store.isProductVerifiedPurchase(_product!.id);
           final has = await _store.hasUserReviewedProduct(_product!.id, userId);
-          if (mounted)
+          if (mounted) {
             setState(() {
               _canReview = can;
               _hasReviewed = has;
             });
+          }
         }
       }
     } catch (e) {
@@ -298,9 +299,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                       itemBuilder: (context, index) {
                                         final img =
                                             count > 0 ? imgs[index] : null;
-                                        if (img == null)
+                                        if (img == null) {
                                           return Container(
                                               color: Colors.grey[200]);
+                                        }
                                         final heroTag =
                                             'product_photo_${_product!.id}_$index';
                                         return GestureDetector(
@@ -326,8 +328,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                               height: double.infinity,
                                               loadingBuilder: (context, child,
                                                   loadingProgress) {
-                                                if (loadingProgress == null)
+                                                if (loadingProgress == null) {
                                                   return child;
+                                                }
                                                 return const Center(
                                                   child:
                                                       CircularProgressIndicator(
@@ -487,12 +490,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                           ),
                                         );
                                       },
-                                      child: const Text('View all'),
                                       style: TextButton.styleFrom(
                                           padding: EdgeInsets.zero,
                                           minimumSize: const Size(40, 24),
                                           tapTargetSize:
                                               MaterialTapTargetSize.shrinkWrap),
+                                      child: const Text('View all'),
                                     ),
                                   ],
                                 ),
@@ -522,8 +525,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                             Builder(builder: (context) {
                               final authProv =
                                   Provider.of<AuthProvider>(context);
-                              if (!authProv.isAuthenticated)
+                              if (!authProv.isAuthenticated) {
                                 return const SizedBox.shrink();
+                              }
                               if (!_canReview) return const SizedBox.shrink();
                               if (_hasReviewed) {
                                 return Container(
@@ -551,8 +555,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                       ),
                                     );
                                     if (res == true) {
-                                      if (mounted)
+                                      if (mounted) {
                                         setState(() => _hasReviewed = true);
+                                      }
                                       await _load();
                                       showAppSnackBar(
                                           context,

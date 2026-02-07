@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/store_service.dart';
+import '../../utils/helpers.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 
@@ -35,8 +36,7 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
       _reviews = await _store.fetchReviewsForProduct(widget.productId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load reviews: $e')));
+        Helpers.showSnackBar(context, 'Failed to load reviews: $e');
       }
       _reviews = [];
     } finally {
@@ -56,16 +56,16 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
         setState(() {
           _reviews[index]['helpful_count'] = count;
           _reviews[index]['helpful_given'] = marked;
-          if (marked)
+          if (marked) {
             _voted.add(reviewId);
-          else
+          } else {
             _voted.remove(reviewId);
+          }
         });
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to toggle helpful: $e')));
+      Helpers.showSnackBar(context, 'Failed to toggle helpful: $e');
     }
   }
 
@@ -81,7 +81,9 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
 
   Widget _buildFilterChips() {
     final counts = <int, int>{};
-    for (var i = 1; i <= 5; i++) counts[i] = 0;
+    for (var i = 1; i <= 5; i++) {
+      counts[i] = 0;
+    }
     for (var r in _reviews) {
       final rating = r['rating'] is int
           ? r['rating'] as int
@@ -193,8 +195,8 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                 ElevatedButton.icon(
                   onPressed: () {
                     if (!auth.isAuthenticated) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Please login to mark helpful')));
+                      Helpers.showSnackBar(
+                          context, 'Please login to mark helpful');
                       return;
                     }
                     _markHelpful(r['id'] as int, idx);
@@ -237,8 +239,8 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                   _buildFilterChips(),
                   if (visible.isEmpty)
                     Expanded(
-                      child: ListView(children: [
-                        const SizedBox(height: 40),
+                      child: ListView(children: const [
+                        SizedBox(height: 40),
                         Center(child: Text('No reviews found.'))
                       ]),
                     )

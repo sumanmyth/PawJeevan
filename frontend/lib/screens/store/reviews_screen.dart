@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/constants.dart';
+import '../../utils/helpers.dart';
 import '../../services/store_service.dart';
 import 'products/product_detail_screen.dart';
 // simple inline stars renderer
@@ -41,7 +42,22 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         _reviews = [];
       } else {
         final userId = auth.user!.id;
-        _reviews = await _store.fetchUserReviews(userId: userId);
+        // Fetch reviews then filter so only reviews authored by the
+        // currently authenticated user are shown in this screen.
+        final fetched = await _store.fetchUserReviews(userId: userId);
+        _reviews = fetched.where((r) {
+          final u = r['user'];
+          if (u == null) return false;
+          if (u is int) return u == userId;
+          if (u is Map) {
+            final idVal = u['id'] ?? u['pk'] ?? u['user_id'];
+            final parsed =
+                idVal is int ? idVal : int.tryParse(idVal?.toString() ?? '');
+            return parsed == userId;
+          }
+          final parsed = int.tryParse(u.toString());
+          return parsed == userId;
+        }).toList();
         // Also load eligible purchased products for quick compose
         _eligibleProducts =
             await _store.getEligibleProductsForReview(userId: userId);
@@ -62,9 +78,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load reviews: $e')),
-      );
+      Helpers.showSnackBar(context, 'Failed to load reviews: $e');
       _reviews = [];
     } finally {
       setState(() {
@@ -81,15 +95,13 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
     if (created == true) {
       await _loadReviews();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Review submitted')));
+      Helpers.showSnackBar(context, 'Review submitted');
     }
   }
 
   Future<void> _showEligiblePicker() async {
     if (_eligibleProducts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('No eligible purchased products found')));
+      Helpers.showSnackBar(context, 'No eligible purchased products found');
       return;
     }
     await showModalBottomSheet(
@@ -143,10 +155,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 ),
                               );
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Product details not available')));
+                              Helpers.showSnackBar(
+                                  context, 'Product details not available');
                             }
                           },
                           leading: Builder(builder: (context) {
@@ -155,9 +165,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                             if (thumb != null) {
                               if (thumb is String) {
                                 final s = thumb.toString();
-                                if (s.startsWith('http'))
+                                if (s.startsWith('http')) {
                                   url = s;
-                                else if (s.contains('http')) {
+                                } else if (s.contains('http')) {
                                   final idx = s.indexOf('http');
                                   url = s.substring(idx);
                                 }
@@ -276,15 +286,15 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       // Try fetching by id first (some backends only support list queries by id),
       // fall back to slug-style detail if needed.
       var det = await _store.fetchProductById(productId);
-      if (det == null) {
-        det = await _store.fetchProductDetail(productId.toString());
-      }
+      det ??= await _store.fetchProductDetail(productId.toString());
       if (det == null) return;
       String? candidate;
-      if (det.primaryImage != null && det.primaryImage!.isNotEmpty)
+      if (det.primaryImage != null && det.primaryImage!.isNotEmpty) {
         candidate = det.primaryImage;
-      if ((candidate == null || candidate.isEmpty) && det.images.isNotEmpty)
+      }
+      if ((candidate == null || candidate.isEmpty) && det.images.isNotEmpty) {
         candidate = det.images.first.image;
+      }
       if (candidate != null && candidate.isNotEmpty) {
         // normalize relative paths
         String url = candidate;
@@ -393,7 +403,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       _populateProductCache(pid);
     }
 
-    Widget _buildStars(int rating) {
+    Widget buildStars(int rating) {
       final stars = List<Widget>.generate(5, (i) {
         return Icon(
           i < rating ? Icons.star : Icons.star_border,
@@ -510,9 +520,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       // compute product id for composer
                       int? pid;
                       try {
-                        if (product is Map)
+                        if (product is Map) {
                           pid = product['id'] ?? product['product_id'];
-                        else if (product is int) pid = product;
+                        } else if (product is int) pid = product;
                       } catch (e) {
                         pid = null;
                       }
@@ -533,8 +543,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       if (edited == true) {
                         await _loadReviews();
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Review updated')));
+                        Helpers.showSnackBar(context, 'Review updated');
                       }
                     },
                     icon: const Icon(Icons.edit, size: 20),
@@ -564,7 +573,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // rating stars
-                  _buildStars(rating),
+                  buildStars(rating),
                   const SizedBox(height: 8),
                   // optional review title
                   if (title.isNotEmpty)
