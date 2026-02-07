@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
+import '../ai/breed_detection_screen.dart';
 
 class AiTab extends StatelessWidget {
   const AiTab({super.key});
@@ -41,43 +42,73 @@ class AiTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // AI Features
-          const _AIFeatureCard(
+          _AIFeatureCard(
             icon: Icons.camera_alt,
             title: 'Breed Detection',
             description: 'Identify your pet\'s breed from a photo',
             accentColor: Colors.blue,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BreedDetectionScreen()),
+              );
+            },
           ),
           const SizedBox(height: 12),
 
-          const _AIFeatureCard(
+          _AIFeatureCard(
             icon: Icons.medical_services,
             title: 'Disease Detection',
             description: 'Check for common pet health issues',
             accentColor: Colors.red,
+            onTap: () {
+              Helpers.showInstantSnackBar(
+                context,
+                const SnackBar(content: Text('Disease Detection - Coming soon!')),
+              );
+            },
           ),
           const SizedBox(height: 12),
 
-          const _AIFeatureCard(
+          _AIFeatureCard(
             icon: Icons.restaurant,
             title: 'Diet Recommendations',
             description: 'Get personalized nutrition advice',
             accentColor: Colors.green,
+            onTap: () {
+              Helpers.showInstantSnackBar(
+                context,
+                const SnackBar(content: Text('Diet Recommendations - Coming soon!')),
+              );
+            },
           ),
           const SizedBox(height: 12),
 
-          const _AIFeatureCard(
+          _AIFeatureCard(
             icon: Icons.chat,
             title: 'AI Pet Assistant',
             description: 'Chat with our AI pet care expert',
             accentColor: Colors.orange,
+            onTap: () {
+              Helpers.showInstantSnackBar(
+                context,
+                const SnackBar(content: Text('AI Pet Assistant - Coming soon!')),
+              );
+            },
           ),
           const SizedBox(height: 12),
 
-          const _AIFeatureCard(
+          _AIFeatureCard(
             icon: Icons.photo_filter,
             title: 'Photo Enhancer',
             description: 'Enhance your pet photos',
             accentColor: Colors.pink,
+            onTap: () {
+              Helpers.showInstantSnackBar(
+                context,
+                const SnackBar(content: Text('Photo Enhancer - Coming soon!')),
+              );
+            },
           ),
         ],
       ),
@@ -90,12 +121,14 @@ class _AIFeatureCard extends StatelessWidget {
   final String title;
   final String description;
   final Color accentColor;
+  final VoidCallback? onTap;
 
   const _AIFeatureCard({
     required this.icon,
     required this.title,
     required this.description,
     required this.accentColor,
+    this.onTap,
   });
 
   @override
@@ -109,12 +142,7 @@ class _AIFeatureCard extends StatelessWidget {
     final accentBackgroundColor = accentColor.withOpacity(0.1);
     
     return InkWell(
-      onTap: () {
-        Helpers.showInstantSnackBar(
-          context,
-          SnackBar(content: Text('$title - Coming soon!')),
-        );
-      },
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),

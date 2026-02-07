@@ -170,6 +170,12 @@ class Review(models.Model):
     is_verified_purchase = models.BooleanField(default=False)
     
     helpful_count = models.IntegerField(default=0)
+    # Track which users marked this review as helpful to prevent duplicate votes
+    helpful_users = models.ManyToManyField(
+        User,
+        related_name='helpful_reviews',
+        blank=True,
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

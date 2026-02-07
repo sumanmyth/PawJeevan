@@ -14,6 +14,7 @@ import '../profile/user_profile_screen.dart';
 import '../profile/wishlist_screen.dart';
 import '../store/cart_screen.dart';
 import '../store/orders_screen.dart';
+import '../store/reviews_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -39,7 +40,7 @@ class _ProfileTabState extends State<ProfileTab> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final auth = context.read<AuthProvider>();
       final userId = auth.user?.id;
@@ -61,7 +62,8 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _pickAndUploadAvatar() async {
     try {
-      final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final image = await _picker.pickImage(
+          source: ImageSource.gallery, imageQuality: 85);
       if (image == null) return;
       if (!mounted) return;
 
@@ -78,13 +80,16 @@ class _ProfileTabState extends State<ProfileTab> {
 
       if (!mounted) return;
       if (ok) {
-        Helpers.showInstantSnackBar(context, const SnackBar(content: Text('Profile picture updated')));
+        Helpers.showInstantSnackBar(
+            context, const SnackBar(content: Text('Profile picture updated')));
       } else {
-        Helpers.showInstantSnackBar(context, SnackBar(content: Text(auth.error ?? 'Failed to update avatar')));
+        Helpers.showInstantSnackBar(context,
+            SnackBar(content: Text(auth.error ?? 'Failed to update avatar')));
       }
     } catch (e) {
       if (!mounted) return;
-      Helpers.showInstantSnackBar(context, SnackBar(content: Text('Error: $e')));
+      Helpers.showInstantSnackBar(
+          context, SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _avatarUploading = false);
     }
@@ -99,13 +104,13 @@ class _ProfileTabState extends State<ProfileTab> {
 
     // Calculate the required top padding (Status bar + AppBar height)
     // This ensures content starts below the app bar even though body is extended
-      final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       // FIX: This allows the background to flow behind the rounded AppBar corners
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
-      
+
       appBar: CustomAppBar(
         title: 'Profile',
         actions: [
@@ -121,7 +126,8 @@ class _ProfileTabState extends State<ProfileTab> {
         ],
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
         // FIX: Added 'topPadding + 24' so the content isn't hidden behind the AppBar
         padding: EdgeInsets.only(bottom: 110, top: topPadding + 24),
         child: Column(
@@ -185,24 +191,31 @@ class _ProfileTabState extends State<ProfileTab> {
                           CircleAvatar(
                             radius: 50,
                             backgroundColor: Colors.white,
-                            backgroundImage: (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
+                            backgroundImage: (user?.avatarUrl != null &&
+                                    user!.avatarUrl!.isNotEmpty)
                                 ? NetworkImage(user.avatarUrl!)
                                 : null,
-                            child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
-                                ? const Icon(Icons.person, size: 50, color: Color(0xFF7C3AED))
+                            child: (user?.avatarUrl == null ||
+                                    user!.avatarUrl!.isEmpty)
+                                ? const Icon(Icons.person,
+                                    size: 50, color: Color(0xFF7C3AED))
                                 : null,
                           ),
                           Positioned(
                             bottom: 0,
                             right: 0,
                             child: InkWell(
-                              onTap: _avatarUploading ? null : _pickAndUploadAvatar,
+                              onTap: _avatarUploading
+                                  ? null
+                                  : _pickAndUploadAvatar,
                               borderRadius: BorderRadius.circular(18),
                               child: Container(
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: _avatarUploading ? Colors.grey : Colors.white,
+                                  color: _avatarUploading
+                                      ? Colors.grey
+                                      : Colors.white,
                                   shape: BoxShape.circle,
                                   boxShadow: const [
                                     BoxShadow(
@@ -215,9 +228,11 @@ class _ProfileTabState extends State<ProfileTab> {
                                 child: _avatarUploading
                                     ? const Padding(
                                         padding: EdgeInsets.all(8.0),
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       )
-                                    : const Icon(Icons.camera_alt, color: Color(0xFF7C3AED)),
+                                    : const Icon(Icons.camera_alt,
+                                        color: Color(0xFF7C3AED)),
                               ),
                             ),
                           ),
@@ -252,7 +267,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                   ? () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                          builder: (_) => UserProfileScreen(
+                                              userId: user.id),
                                         ),
                                       )
                                   : null,
@@ -267,7 +283,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                   ? () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                          builder: (_) => UserProfileScreen(
+                                              userId: user.id),
                                         ),
                                       )
                                   : null,
@@ -282,7 +299,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                   ? () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => UserProfileScreen(userId: user.id),
+                                          builder: (_) => UserProfileScreen(
+                                              userId: user.id),
                                         ),
                                       )
                                   : null,
@@ -310,7 +328,8 @@ class _ProfileTabState extends State<ProfileTab> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const MyPetsScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const MyPetsScreen()),
                           );
                         },
                       ),
@@ -327,7 +346,8 @@ class _ProfileTabState extends State<ProfileTab> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CartScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const CartScreen()),
                           );
                         },
                       ),
@@ -336,7 +356,10 @@ class _ProfileTabState extends State<ProfileTab> {
                         title: 'My Orders',
                         subtitle: 'Track your orders',
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const OrdersScreen()));
                         },
                       ),
                       _MenuItem(
@@ -352,6 +375,18 @@ class _ProfileTabState extends State<ProfileTab> {
                           );
                         },
                       ),
+                      _MenuItem(
+                        icon: Icons.rate_review,
+                        title: 'Reviews',
+                        subtitle: 'Your product and pet reviews',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const ReviewsScreen()),
+                          );
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -364,7 +399,8 @@ class _ProfileTabState extends State<ProfileTab> {
                         if (!mounted) return;
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                              builder: (_) => const LoginScreen()),
                           (route) => false,
                         );
                       },
@@ -410,39 +446,39 @@ class _StatItem extends StatelessWidget {
           return Container(
             padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
             decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 255, 255, 0.15),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color.fromRGBO(255, 255, 255, 0.2),
-            width: 1.5,
-          ),
+              color: const Color.fromRGBO(255, 255, 255, 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color.fromRGBO(255, 255, 255, 0.2),
+                width: 1.5,
+              ),
             ),
             child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
-              style: const TextStyle(
-                color: Color(0xE6FFFFFF),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  style: const TextStyle(
+                    color: Color(0xE6FFFFFF),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -549,7 +585,9 @@ class _MenuItem extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+            Icon(Icons.arrow_forward_ios,
+                size: 16,
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
           ],
         ),
       ),

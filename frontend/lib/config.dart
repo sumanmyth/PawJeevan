@@ -11,7 +11,11 @@ class ConfigService {
     /// Uses `ApiConstants.baseUrl` to locate the API.
     static Future<void> init() async {
         try {
-            final dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+            final dio = Dio(BaseOptions(
+                baseUrl: ApiConstants.baseUrl,
+                connectTimeout: const Duration(seconds: 5),
+                receiveTimeout: const Duration(seconds: 5),
+            ));
             final resp = await dio.get('/api/config/google/');
             final data = resp.data;
             if (data is Map && data['google_client_id'] != null) {

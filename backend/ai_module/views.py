@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import time
+import os
 
 from .models import (
     BreedDetection, DiseaseDetection, DietRecommendation,
@@ -14,6 +15,9 @@ from .serializers import (
     BreedDetectionSerializer, DiseaseDetectionSerializer, DietRecommendationSerializer,
     ChatSessionSerializer, ChatMessageSerializer, PhotoEnhancementSerializer
 )
+
+# Import the breed detector ML service
+from .breed_detector import detect_breed_from_image, load_models, is_models_loaded
 
 
 class BreedDetectionViewSet(viewsets.ModelViewSet):
@@ -35,34 +39,50 @@ class BreedDetectionViewSet(viewsets.ModelViewSet):
         if "image" not in request.FILES:
             return Response({"error": "No image provided"}, status=400)
 
+        # Save the uploaded image
         det = BreedDetection.objects.create(user=request.user, image=request.FILES["image"])
 
-        # TODO: integrate real ML model
-        mock = {
-            "detected_breed": "Golden Retriever",
-            "confidence": 0.89,
-            "alternative_breeds": [
-                {"breed": "Labrador Retriever", "confidence": 0.72},
-                {"breed": "Yellow Labrador", "confidence": 0.65},
-            ],
-            "model_version": "v1.0-mock",
-        }
-        det.detected_breed = mock["detected_breed"]
-        det.confidence = mock["confidence"]
-        det.alternative_breeds = mock["alternative_breeds"]
-        det.model_version = mock["model_version"]
+        # Get the absolute path to the saved image
+        img_path = det.image.path
+
+        # Run ML breed detection
+        try:
+            result = detect_breed_from_image(img_path)
+            
+            if result["success"]:
+                det.detected_breed = result["detected_breed"]
+                det.confidence = result["confidence"]
+                det.alternative_breeds = result["alternative_breeds"]
+                det.model_version = result.get("model_version", "ResNet50-v1.0")
+            else:
+                # Detection failed (no dog/human found)
+                det.detected_breed = "Unknown"
+                det.confidence = 0.0
+                det.alternative_breeds = []
+                det.model_version = "ResNet50-v1.0"
+                
+        except Exception as e:
+            # Fallback if ML model fails
+            det.detected_breed = "Error"
+            det.confidence = 0.0
+            det.alternative_breeds = []
+            det.model_version = "error"
+            result = {"success": False, "error": str(e)}
+
         det.processing_time = time.time() - start
         det.save()
 
         ser = self.get_serializer(det)
-        return Response(
-            {
-                **ser.data,
-                "message": "TODO: Integrate actual breed detection ML model",
-                "note": "Currently returning mock data for demonstration",
-            },
-            status=201,
-        )
+        response_data = {**ser.data}
+        
+        # Add extra info about detection
+        if result.get("success"):
+            response_data["is_dog"] = result.get("is_dog", False)
+            response_data["is_human"] = result.get("is_human", False)
+        else:
+            response_data["error"] = result.get("error", "Detection failed")
+            
+        return Response(response_data, status=201)
 
 
 class DiseaseDetectionViewSet(viewsets.ModelViewSet):

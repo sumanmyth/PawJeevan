@@ -26,14 +26,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ["id", "image", "is_primary", "alt_text"]
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source="user.username", read_only=True)
-
-    class Meta:
-        model = Review
-        fields = "__all__"
-        read_only_fields = ["user", "is_verified_purchase", "helpful_count"]
-
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
@@ -78,6 +70,29 @@ class ProductListSerializer(serializers.ModelSerializer):
             return None
         url = primary.image.url
         return request.build_absolute_uri(url) if request else url
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source="user.username", read_only=True)
+    # Include a compact product representation so clients can render name/image without extra fetch
+    product = ProductListSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source="product",
+        write_only=True
+    )
+    helpful_given = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = "__all__"
+        read_only_fields = ["user", "is_verified_purchase", "helpful_count", "helpful_given"]
+
+    def get_helpful_given(self, obj):
+        request = self.context.get('request')
+        if not request or not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return False
+        return obj.helpful_users.filter(id=request.user.id).exists()
 
 
 class CartItemSerializer(serializers.ModelSerializer):
