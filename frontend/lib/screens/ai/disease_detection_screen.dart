@@ -321,7 +321,7 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen> {
                   style: TextStyle(color: cs.onSurfaceVariant)),
               const SizedBox(height: 8),
               DropdownButtonFormField<PetModel?>(
-                value: _selectedPet,
+                initialValue: _selectedPet,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),

@@ -1,4 +1,5 @@
 /// Model for disease detection results
+library;
 
 class DiseaseDetectionResult {
   final int? id;

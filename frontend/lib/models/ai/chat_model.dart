@@ -1,4 +1,5 @@
 /// Models for AI chat functionality
+library;
 
 class ChatSession {
   final int id;
