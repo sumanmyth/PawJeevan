@@ -376,7 +376,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 200,
+                    height: 220,
                     child: Builder(builder: (ctx) {
                       final storeProvider = ctx.watch<StoreProvider>();
                       final featuredList = List<Product>.from(storeProvider.featuredProducts);
@@ -502,87 +502,191 @@ class _FeaturedProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     
     return Container(
       width: 160,
       margin: const EdgeInsets.only(right: 12, bottom: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
+      child: Card(
+        clipBehavior: Clip.hardEdge,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
-           onTap: () {
-             if (product != null) {
-               Navigator.push(
-                 context,
-                 MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: product!.slug)),
-               );
-             } else {
-               Helpers.showInstantSnackBar(
-                 context,
-                 const SnackBar(content: Text('Product - Coming soon!')),
-               );
-             }
-           },
-          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (product != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProductDetailScreen(slug: product!.slug)),
+              );
+            } else {
+              Helpers.showInstantSnackBar(
+                context,
+                const SnackBar(content: Text('Product - Coming soon!')),
+              );
+            }
+          },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 120,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(124, 58, 237, 0.1),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                ),
-                child: (product != null && product!.primaryImage != null && product!.primaryImage!.isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                        child: Image.network(
-                          product!.primaryImage!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: 120,
-                          errorBuilder: (ctx, err, stack) => const Center(
-                            child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
+              // Image Section - Expanded to fill available space
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    (product != null && product!.primaryImage != null && product!.primaryImage!.isNotEmpty)
+                        ? Image.network(
+                            product!.primaryImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Container(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200,
+                              child: const Center(
+                                child: Icon(Icons.shopping_bag, size: 40, color: _kPrimaryPurple),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.grey.shade800
+                                : Colors.grey.shade200,
+                            child: const Center(
+                              child: Icon(Icons.shopping_bag, size: 40, color: _kPrimaryPurple),
+                            ),
+                          ),
+                    // Favorite Button
+                    if (product != null)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Consumer<StoreProvider>(
+                          builder: (context, provider, child) {
+                            final isFavorite = provider.isProductFavorite(product!.id);
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+                                color: isFavorite ? Colors.red : Colors.white,
+                                iconSize: 18,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                onPressed: () {
+                                  provider.toggleProductFavorite(product!.id);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    // Discount Badge
+                    if (product != null && product!.hasDiscount)
+                      Positioned(
+                        top: 6,
+                        left: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _kPrimaryPurple.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '-${product!.discountPercent}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
-                      )
-                    : const Center(
-                        child: Icon(Icons.pets, size: 50, color: _kPrimaryPurple),
                       ),
+                  ],
+                ),
               ),
+              // Content Section - Compact
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Name
                     Text(
                       product?.name ?? 'Product',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 12,
                         color: colorScheme.onSurface,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      product != null ? '$kCurrencySymbol${product!.finalPrice.toStringAsFixed(2)}' : '${kCurrencySymbol}9.99',
-                      style: const TextStyle(
-                        color: _kPrimaryPurple,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 2),
+                    // Rating
+                    if (product?.averageRating != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 12, color: Colors.amber),
+                          const SizedBox(width: 2),
+                          Text(
+                            product!.averageRating!.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
+                    const SizedBox(height: 4),
+                    // Price and Stock Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // Price
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '$kCurrencySymbol${product?.finalPrice.toStringAsFixed(0) ?? '0'}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (product != null && product!.hasDiscount) ...[
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    '$kCurrencySymbol${product!.price.toStringAsFixed(0)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      decoration: TextDecoration.lineThrough,
+                                      decorationColor: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        // Stock Status
+                        if (product != null)
+                          Text(
+                            product!.stock > 0 ? 'In stock' : 'Out',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: product!.stock > 0 ? Colors.greenAccent.shade400 : Colors.redAccent.shade200,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
