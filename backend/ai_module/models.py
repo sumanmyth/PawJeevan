@@ -16,6 +16,10 @@ class BreedDetection(models.Model):
     confidence = models.FloatField(null=True, blank=True, help_text="Confidence percentage")
     alternative_breeds = models.JSONField(default=list, blank=True, help_text="List of alternative breeds with confidence")
     
+    # Detection type flags
+    is_dog = models.BooleanField(default=True, help_text="Whether a dog was detected")
+    is_human = models.BooleanField(default=False, help_text="Whether a human face was detected")
+    
     # Model information
     model_version = models.CharField(max_length=50, default='v1.0')
     processing_time = models.FloatField(null=True, blank=True, help_text="Time taken in seconds")
