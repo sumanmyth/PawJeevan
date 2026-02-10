@@ -16,6 +16,9 @@ import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
 import '../../screens/store/products/product_detail_screen.dart';
 import '../../screens/store/cart_screen.dart';
+import '../../screens/ai/breed_detection_screen.dart';
+import '../../screens/ai/chat_screen.dart';
+import '../../screens/common/main_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -300,41 +303,74 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Row(
+                  Row(
                     children: [
                       Expanded(
                         child: _QuickActionCard(
                           icon: Icons.shopping_cart,
                           label: 'Shop',
                           color: Colors.blue,
+                          onTap: () {
+                            // Navigate to Store tab (index 1)
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MainScreen(initialIndex: 1),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _QuickActionCard(
                           icon: Icons.camera_alt,
                           label: 'Scan Pet',
                           color: Colors.green,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BreedDetectionScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Row(
+                  Row(
                     children: [
                       Expanded(
                         child: _QuickActionCard(
                           icon: Icons.chat,
                           label: 'AI Chat',
                           color: Colors.orange,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AIChatScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _QuickActionCard(
                           icon: Icons.group,
                           label: 'Community',
                           color: Colors.pink,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MainScreen(initialIndex: 3),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -454,17 +490,19 @@ class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final VoidCallback? onTap;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
+      onTap: onTap ?? () {
         Helpers.showInstantSnackBar(
           context,
           SnackBar(content: Text('$label - Coming soon!')),
