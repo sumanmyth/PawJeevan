@@ -1,0 +1,312 @@
+{
+  "size_categories": {
+    "toy": {
+      "weight_range": "1-5 kg",
+      "base_calories_per_kg": 40,
+      "feeding_frequency": "3-4 times daily",
+      "portion_note": "Small frequent meals to avoid hypoglycemia",
+      "breeds": ["Affenpinscher","Chihuahua","Chinese_crested","English_toy_spaniel","Italian_greyhound","Japanese_chin","Maltese","Papillon","Pekingese","Pomeranian","Silky_terrier","Yorkshire_terrier","Havanese"]
+    },
+    "small": {
+      "weight_range": "5-10 kg",
+      "base_calories_per_kg": 35,
+      "feeding_frequency": "2-3 times daily",
+      "portion_note": "Moderate portions with high-quality protein",
+      "breeds": ["Australian_terrier","Basenji","Bedlington_terrier","Bichon_frise","Border_terrier","Boston_terrier","Brussels_griffon","Cairn_terrier","Cavalier_king_charles_spaniel","Cocker_spaniel","Dachshund","Dandie_dinmont_terrier","Finnish_spitz","French_bulldog","Glen_of_imaal_terrier","Kerry_blue_terrier","Lakeland_terrier","Lhasa_apso","Lowchen","Manchester_terrier","Miniature_schnauzer","Norfolk_terrier","Norwich_terrier","Parson_russell_terrier","Petit_basset_griffon_vendeen","Poodle","Scottish_terrier","Smooth_fox_terrier","Tibetan_spaniel","Welsh_terrier","West_highland_white_terrier","Wire_fox_terrier"]
+    },
+    "medium": {
+      "weight_range": "10-25 kg",
+      "base_calories_per_kg": 30,
+      "feeding_frequency": "2 times daily",
+      "portion_note": "Balanced meals with appropriate protein-fat ratio",
+      "breeds": ["Airedale_terrier","American_eskimo_dog","American_foxhound","American_staffordshire_terrier","American_water_spaniel","Australian_cattle_dog","Australian_shepherd","Beagle","Bearded_collie","Beauceron","Belgian_malinois","Belgian_sheepdog","Belgian_tervuren","Border_collie","Boykin_spaniel","Brittany","Bull_terrier","Bulldog","Canaan_dog","Cardigan_welsh_corgi","Chinese_shar-pei","Chow_chow","Clumber_spaniel","Collie","Curly-coated_retriever","Dalmatian","English_cocker_spaniel","English_setter","English_springer_spaniel","Entlebucher_mountain_dog","Field_spaniel","Flat-coated_retriever","German_pinscher","Icelandic_sheepdog","Ibizan_hound","Irish_red_and_white_setter","Irish_setter","Irish_terrier","Irish_water_spaniel","Keeshond","Norwegian_buhund","Norwegian_elkhound","Norwegian_lundehund","Nova_scotia_duck_tolling_retriever","Pembroke_welsh_corgi","Pharaoh_hound","Plott","Pointer","Portuguese_water_dog","Vizsla","Whippet","Wirehaired_pointing_griffon","Xoloitzcuintli"]
+    },
+    "large": {
+      "weight_range": "25-45 kg",
+      "base_calories_per_kg": 25,
+      "feeding_frequency": "2 times daily",
+      "portion_note": "Controlled portions to prevent obesity; joint-support supplements recommended",
+      "breeds": ["Afghan_hound","Akita","Alaskan_malamute","Anatolian_shepherd_dog","Bernese_mountain_dog","Black_and_tan_coonhound","Black_russian_terrier","Bloodhound","Bluetick_coonhound","Borzoi","Bouvier_des_flandres","Boxer","Briard","Chesapeake_bay_retriever","Cane_corso","Doberman_pinscher","German_shepherd_dog","German_shorthaired_pointer","German_wirehaired_pointer","Giant_schnauzer","Golden_retriever","Gordon_setter","Greyhound","Irish_wolfhound","Komondor","Kuvasz","Labrador_retriever","Leonberger","Old_english_sheepdog","Otterhound","Rhodesian_ridgeback","Rottweiler","Weimaraner","Welsh_springer_spaniel"]
+    },
+    "giant": {
+      "weight_range": "45+ kg",
+      "base_calories_per_kg": 20,
+      "feeding_frequency": "2 times daily (smaller frequent meals preferred)",
+      "portion_note": "Slow-feeder bowls recommended; avoid exercise after meals to prevent bloat",
+      "breeds": ["Bullmastiff","Dogue_de_bordeaux","Great_dane","Great_pyrenees","Greater_swiss_mountain_dog","Irish_wolfhound","Mastiff","Neapolitan_mastiff","Newfoundland","Saint_bernard","Tibetan_mastiff"]
+    }
+  },
+  "breed_specific_diets": {
+    "Affenpinscher": {
+      "diet_tips": "High-quality small-breed kibble. Prone to dental issues, include dental chews.",
+      "recommended_foods": ["Small-breed dry food", "Lean chicken", "Sweet potato", "Blueberries"],
+      "foods_to_avoid": ["Grapes", "Chocolate", "Onions", "Fatty scraps"],
+      "health_notes": "Prone to patellar luxation; maintain lean weight.",
+      "supplements": ["Omega-3 fatty acids", "Dental health chews"]
+    },
+    "Afghan_hound": {
+      "diet_tips": "High-protein diet for lean athletic build. Needs quality fats for coat health.",
+      "recommended_foods": ["Salmon-based kibble", "Lean lamb", "Brown rice", "Eggs"],
+      "foods_to_avoid": ["Corn fillers", "Soy", "Artificial preservatives"],
+      "health_notes": "Deep-chested; feed smaller meals to prevent bloat. Sensitive stomach.",
+      "supplements": ["Biotin for coat", "Omega-3", "Glucosamine"]
+    },
+    "Airedale_terrier": {
+      "diet_tips": "Active breed needs protein-rich diet. Moderate fat for energy.",
+      "recommended_foods": ["Chicken and rice formula", "Beef", "Carrots", "Green beans"],
+      "foods_to_avoid": ["Wheat", "Corn", "Artificial colors"],
+      "health_notes": "Prone to hip dysplasia; keep weight controlled.",
+      "supplements": ["Joint support", "Probiotics"]
+    },
+    "Akita": {
+      "diet_tips": "Rice-based diet suits well due to Japanese heritage. High-protein, moderate fat.",
+      "recommended_foods": ["Fish-based kibble", "Rice", "Sweet potato", "Salmon"],
+      "foods_to_avoid": ["Soy", "Corn", "Artificial additives"],
+      "health_notes": "Prone to hypothyroidism and bloat. Monitor portion sizes carefully.",
+      "supplements": ["Fish oil", "Glucosamine", "Probiotics"]
+    },
+    "Alaskan_malamute": {
+      "diet_tips": "High-protein, high-fat diet for energy. Reduce calories in warm weather.",
+      "recommended_foods": ["Salmon", "Chicken", "Brown rice", "Pumpkin", "Eggs"],
+      "foods_to_avoid": ["Grains with fillers", "Dairy in large amounts"],
+      "health_notes": "Prone to obesity if under-exercised. Monitor weight closely.",
+      "supplements": ["Fish oil", "Joint supplements", "Vitamin E"]
+    },
+    "Australian_shepherd": {
+      "diet_tips": "Very active breed needs calorie-dense, high-protein food.",
+      "recommended_foods": ["Active-breed formula", "Chicken", "Lamb", "Sweet potato", "Spinach"],
+      "foods_to_avoid": ["Low-quality fillers", "Excessive grains"],
+      "health_notes": "High energy needs; adjust portions based on activity level.",
+      "supplements": ["Omega-3", "Joint support", "B vitamins"]
+    },
+    "Beagle": {
+      "diet_tips": "Prone to overeating; strict portion control essential. High-fiber diet helps.",
+      "recommended_foods": ["Weight management kibble", "Lean turkey", "Green beans", "Carrots", "Apple slices"],
+      "foods_to_avoid": ["High-calorie treats", "Table scraps", "Fatty foods"],
+      "health_notes": "Very food-motivated; use puzzle feeders. Watch for obesity.",
+      "supplements": ["Fiber supplement", "L-carnitine", "Probiotics"]
+    },
+    "Bernese_mountain_dog": {
+      "diet_tips": "Large breed formula with controlled calcium for joint health.",
+      "recommended_foods": ["Large breed kibble", "Chicken", "Fish", "Pumpkin", "Oats"],
+      "foods_to_avoid": ["High-calcium puppy food (adults)", "Fatty table scraps"],
+      "health_notes": "Prone to bloat and joint issues. Slow feeder recommended.",
+      "supplements": ["Glucosamine", "Chondroitin", "Omega-3"]
+    },
+    "Border_collie": {
+      "diet_tips": "Extremely active; needs high-calorie, protein-rich food.",
+      "recommended_foods": ["Performance formula", "Chicken", "Beef", "Brown rice", "Blueberries"],
+      "foods_to_avoid": ["Low-energy foods", "Excessive carbs"],
+      "health_notes": "Adjust food based on activity. Working dogs need 20-30% more calories.",
+      "supplements": ["B-complex vitamins", "Omega-3", "CoQ10"]
+    },
+    "Boxer": {
+      "diet_tips": "Sensitive stomach; grain-free or limited ingredient diet often best.",
+      "recommended_foods": ["Limited ingredient kibble", "Chicken", "Sweet potato", "Peas"],
+      "foods_to_avoid": ["Wheat", "Soy", "Corn", "Artificial preservatives"],
+      "health_notes": "Prone to allergies and bloat. Feed 2 smaller meals.",
+      "supplements": ["Probiotics", "Digestive enzymes", "Taurine"]
+    },
+    "Bulldog": {
+      "diet_tips": "Prone to obesity; low-calorie, high-fiber diet. Avoid overfeeding.",
+      "recommended_foods": ["Weight control formula", "Lean protein", "Pumpkin", "Green beans"],
+      "foods_to_avoid": ["Fatty foods", "High-calorie treats", "Dairy"],
+      "health_notes": "Brachycephalic - use wide shallow bowls. Prone to allergies.",
+      "supplements": ["Joint support", "Probiotics", "Omega-3 for skin"]
+    },
+    "Cavalier_king_charles_spaniel": {
+      "diet_tips": "Heart-healthy diet with taurine. Moderate portions.",
+      "recommended_foods": ["Heart-health formula", "Fish", "Lean chicken", "Blueberries", "Spinach"],
+      "foods_to_avoid": ["High-sodium foods", "Fatty scraps"],
+      "health_notes": "Prone to heart disease (MVD). Low-sodium diet important.",
+      "supplements": ["Taurine", "L-carnitine", "Omega-3", "CoQ10"]
+    },
+    "Chihuahua": {
+      "diet_tips": "Tiny stomach; needs calorie-dense, small-kibble food. Frequent small meals.",
+      "recommended_foods": ["Toy breed formula", "Chicken", "Turkey", "Sweet potato"],
+      "foods_to_avoid": ["Large kibble", "Rawhide", "Bones"],
+      "health_notes": "Prone to hypoglycemia; never skip meals. Dental care important.",
+      "supplements": ["Dental chews", "Calcium (puppies)", "Omega-3"]
+    },
+    "Dachshund": {
+      "diet_tips": "Weight management critical due to long back. Low-calorie, high-fiber.",
+      "recommended_foods": ["Weight management formula", "Lean turkey", "Green beans", "Carrots"],
+      "foods_to_avoid": ["High-calorie treats", "Fatty foods"],
+      "health_notes": "Obesity causes severe back problems (IVDD). Keep very lean.",
+      "supplements": ["Glucosamine", "Chondroitin", "Fiber"]
+    },
+    "Dalmatian": {
+      "diet_tips": "UNIQUE: Low-purine diet essential. Avoid organ meats and high-purine proteins.",
+      "recommended_foods": ["Low-purine kibble", "Eggs", "Chicken breast", "Rice", "Vegetables"],
+      "foods_to_avoid": ["Organ meats", "Sardines", "Anchovies", "Beef liver", "Yeast"],
+      "health_notes": "Prone to urinary stones. Ensure ample fresh water intake.",
+      "supplements": ["Cranberry extract", "Potassium citrate"]
+    },
+    "Doberman_pinscher": {
+      "diet_tips": "High-protein for lean muscle. Heart-healthy diet with taurine.",
+      "recommended_foods": ["High-protein kibble", "Chicken", "Fish", "Sweet potato", "Spinach"],
+      "foods_to_avoid": ["Grain-heavy foods", "Artificial additives"],
+      "health_notes": "Prone to DCM (heart disease). Taurine supplementation important.",
+      "supplements": ["Taurine", "L-carnitine", "Omega-3", "CoQ10"]
+    },
+    "French_bulldog": {
+      "diet_tips": "Prone to allergies; limited ingredient or novel protein diets work best.",
+      "recommended_foods": ["Limited ingredient kibble", "Duck", "Venison", "Sweet potato", "Pumpkin"],
+      "foods_to_avoid": ["Chicken (common allergen)", "Wheat", "Soy", "Dairy"],
+      "health_notes": "Brachycephalic - slow feeder bowls. Prone to obesity and gas.",
+      "supplements": ["Probiotics", "Digestive enzymes", "Omega-3 for skin"]
+    },
+    "German_shepherd_dog": {
+      "diet_tips": "High-protein diet for muscle. Sensitive stomach common.",
+      "recommended_foods": ["Sensitive stomach formula", "Lamb", "Fish", "Brown rice", "Pumpkin"],
+      "foods_to_avoid": ["Corn", "Soy", "Wheat", "Artificial colors"],
+      "health_notes": "Prone to EPI and hip dysplasia. Digestive health is key.",
+      "supplements": ["Probiotics", "Digestive enzymes", "Glucosamine", "Fish oil"]
+    },
+    "Golden_retriever": {
+      "diet_tips": "Prone to obesity; measure portions carefully. High-quality protein essential.",
+      "recommended_foods": ["Weight management formula", "Chicken", "Fish", "Brown rice", "Carrots", "Apples"],
+      "foods_to_avoid": ["High-calorie treats", "Table scraps", "Fatty foods"],
+      "health_notes": "Cancer-prone breed; antioxidant-rich diet beneficial.",
+      "supplements": ["Omega-3", "Turmeric/Curcumin", "Glucosamine", "Vitamin E"]
+    },
+    "Great_dane": {
+      "diet_tips": "Giant breed formula with controlled growth rate. NEVER over-supplement calcium.",
+      "recommended_foods": ["Giant breed kibble", "Chicken", "Beef", "Rice", "Pumpkin"],
+      "foods_to_avoid": ["High-calcium supplements", "High-fat foods", "Raw diet (puppies)"],
+      "health_notes": "Very prone to bloat. Feed 2-3 smaller meals. No exercise 1hr after eating.",
+      "supplements": ["Glucosamine", "Chondroitin", "Probiotics"]
+    },
+    "Husky": {
+      "diet_tips": "Surprisingly efficient metabolism; needs less food than expected for size.",
+      "recommended_foods": ["High-protein kibble", "Fish", "Chicken", "Sweet potato", "Eggs"],
+      "foods_to_avoid": ["Excessive carbs", "Low-quality fillers"],
+      "health_notes": "May self-regulate eating. Increase food in cold weather/high activity.",
+      "supplements": ["Fish oil", "Zinc for coat", "Vitamin E"]
+    },
+    "Labrador_retriever": {
+      "diet_tips": "VERY prone to obesity (POMC gene). Strict portion control is critical.",
+      "recommended_foods": ["Weight management formula", "Lean chicken", "Fish", "Green beans", "Carrots", "Apples"],
+      "foods_to_avoid": ["High-calorie treats", "Fatty foods", "Table scraps"],
+      "health_notes": "Always hungry due to genetics. Use puzzle feeders and slow-feeder bowls.",
+      "supplements": ["Omega-3", "Glucosamine", "L-carnitine", "Fiber"]
+    },
+    "Maltese": {
+      "diet_tips": "Small-breed formula. Prone to picky eating; consistent schedule important.",
+      "recommended_foods": ["Toy breed kibble", "Lean chicken", "Fish", "Rice", "Pumpkin"],
+      "foods_to_avoid": ["Artificial dyes", "Excessive treats", "Dairy"],
+      "health_notes": "Prone to tear staining; diet can affect this. Dental care important.",
+      "supplements": ["Omega-3 for coat", "Probiotics", "Dental chews"]
+    },
+    "Poodle": {
+      "diet_tips": "High-quality protein for muscle and coat. Varies by size (toy/mini/standard).",
+      "recommended_foods": ["Breed-size appropriate kibble", "Salmon", "Chicken", "Sweet potato", "Blueberries"],
+      "foods_to_avoid": ["Corn", "Wheat", "Low-quality by-products"],
+      "health_notes": "Prone to bloat (standard). Skin sensitivities common.",
+      "supplements": ["Omega-3 for coat", "Biotin", "Probiotics"]
+    },
+    "Rottweiler": {
+      "diet_tips": "Large breed formula with joint support. High protein, moderate fat.",
+      "recommended_foods": ["Large breed kibble", "Beef", "Chicken", "Fish", "Brown rice", "Pumpkin"],
+      "foods_to_avoid": ["High-fat foods", "Excessive treats"],
+      "health_notes": "Prone to obesity and joint problems. Maintain lean body weight.",
+      "supplements": ["Glucosamine", "Chondroitin", "Fish oil", "Taurine"]
+    },
+    "Saint_bernard": {
+      "diet_tips": "Giant breed formula. Slow controlled growth for puppies. Bloat prevention.",
+      "recommended_foods": ["Giant breed kibble", "Chicken", "Lamb", "Rice", "Vegetables"],
+      "foods_to_avoid": ["High-fat foods", "Excessive calcium", "Large single meals"],
+      "health_notes": "Very prone to bloat and joint issues. Feed 2-3 smaller meals on raised bowls.",
+      "supplements": ["Glucosamine", "Chondroitin", "Omega-3", "Probiotics"]
+    },
+    "Shih_tzu": {
+      "diet_tips": "Small breed formula. Prone to dental issues; kibble size matters.",
+      "recommended_foods": ["Small breed kibble", "Lean chicken", "Fish", "Sweet potato"],
+      "foods_to_avoid": ["Hard bones", "Fatty table scraps", "Dairy"],
+      "health_notes": "Brachycephalic; use flat bowls. Monitor weight carefully.",
+      "supplements": ["Omega-3 for coat", "Dental chews", "Probiotics"]
+    },
+    "Yorkshire_terrier": {
+      "diet_tips": "Tiny breed; calorie-dense small kibble. Frequent meals to prevent hypoglycemia.",
+      "recommended_foods": ["Toy breed formula", "Lean chicken", "Turkey", "Pumpkin", "Blueberries"],
+      "foods_to_avoid": ["Large kibble", "Rawhide", "Fatty foods"],
+      "health_notes": "Prone to liver shunts and dental disease. High-quality protein essential.",
+      "supplements": ["Omega-3 for coat", "Liver support", "Dental chews"]
+    }
+  },
+  "age_adjustments": {
+    "puppy": {
+      "age_range": "0-1 years",
+      "calorie_multiplier": 1.5,
+      "feeding_frequency": "3-4 times daily",
+      "notes": "Higher protein and fat for growth. DHA for brain development. Puppy-specific formula.",
+      "supplements": ["DHA", "Calcium (balanced)", "Puppy multivitamin"]
+    },
+    "young_adult": {
+      "age_range": "1-3 years",
+      "calorie_multiplier": 1.1,
+      "feeding_frequency": "2 times daily",
+      "notes": "Transition to adult food. Maintain high activity diet.",
+      "supplements": ["Omega-3", "Probiotics"]
+    },
+    "adult": {
+      "age_range": "3-7 years",
+      "calorie_multiplier": 1.0,
+      "feeding_frequency": "2 times daily",
+      "notes": "Maintenance diet. Monitor weight and adjust portions.",
+      "supplements": ["Multivitamin", "Omega-3"]
+    },
+    "senior": {
+      "age_range": "7-10 years",
+      "calorie_multiplier": 0.9,
+      "feeding_frequency": "2 times daily (smaller portions)",
+      "notes": "Reduced calories, increased fiber. Joint support becomes important.",
+      "supplements": ["Glucosamine", "Chondroitin", "Omega-3", "Fiber", "Probiotics"]
+    },
+    "geriatric": {
+      "age_range": "10+ years",
+      "calorie_multiplier": 0.8,
+      "feeding_frequency": "2-3 smaller meals daily",
+      "notes": "Senior formula. Easy-to-digest food. Monitor kidney and liver health.",
+      "supplements": ["Senior multivitamin", "Joint support", "Cognitive support (MCTs)", "Fiber"]
+    }
+  },
+  "weight_guidelines": {
+    "underweight": {
+      "condition": "More than 10% below ideal",
+      "calorie_adjustment": 1.2,
+      "notes": "Gradually increase calories by 10-20%. Check for underlying health issues.",
+      "food_tips": ["Add calorie-dense toppers", "More frequent meals", "High-quality protein sources"]
+    },
+    "ideal": {
+      "condition": "Within healthy range",
+      "calorie_adjustment": 1.0,
+      "notes": "Maintain current diet. Monitor with regular weigh-ins.",
+      "food_tips": ["Continue current balanced diet", "Regular treats in moderation"]
+    },
+    "overweight": {
+      "condition": "10-20% above ideal",
+      "calorie_adjustment": 0.85,
+      "notes": "Reduce calories by 15%. Increase exercise gradually. Switch to weight management food.",
+      "food_tips": ["Weight management formula", "Replace treats with vegetables", "Use puzzle feeders", "Measure portions precisely"]
+    },
+    "obese": {
+      "condition": "More than 20% above ideal",
+      "calorie_adjustment": 0.7,
+      "notes": "Consult vet for weight loss plan. Reduce calories by 30%. Slow gradual weight loss.",
+      "food_tips": ["Prescription weight loss diet", "No table scraps", "Green beans as treat substitute", "Supervised feeding only"]
+    }
+  },
+  "general_foods_to_never_feed": [
+    "Chocolate",
+    "Grapes and Raisins",
+    "Onions and Garlic",
+    "Xylitol (artificial sweetener)",
+    "Alcohol",
+    "Caffeine",
+    "Macadamia nuts",
+    "Avocado (pit and skin)",
+    "Cooked bones",
+    "Raw yeast dough"
+  ]
+}

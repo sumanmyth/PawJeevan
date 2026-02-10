@@ -61,7 +61,10 @@ class ApiConstants {
 
   // AI endpoints
   static const String breedDetection = '/api/ai/breed-detection/';
-  static const String chatbot = '/api/ai/chat-sessions/';
+  static const String dietRecommendations = '/api/ai/diet-recommendations/';
+  static const String diseaseDetection = '/api/ai/disease-detection/';
+  static const String chatSessions = '/api/ai/chat-sessions/';
+  static const String chatbot = '/api/ai/chat-sessions/';  // Alias
 
   // Notifications endpoint
   static const String notifications = '/api/users/notifications/';
