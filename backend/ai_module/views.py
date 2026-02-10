@@ -54,12 +54,16 @@ class BreedDetectionViewSet(viewsets.ModelViewSet):
                 det.confidence = result["confidence"]
                 det.alternative_breeds = result["alternative_breeds"]
                 det.model_version = result.get("model_version", "ResNet50-v1.0")
+                det.is_dog = result.get("is_dog", False)
+                det.is_human = result.get("is_human", False)
             else:
                 # Detection failed (no dog/human found)
                 det.detected_breed = "Unknown"
                 det.confidence = 0.0
                 det.alternative_breeds = []
                 det.model_version = "ResNet50-v1.0"
+                det.is_dog = False
+                det.is_human = False
                 
         except Exception as e:
             # Fallback if ML model fails

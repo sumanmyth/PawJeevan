@@ -479,14 +479,36 @@ class _BreedDetectionScreenState extends State<BreedDetectionScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      item.createdAt != null
-                          ? _formatDate(item.createdAt!)
-                          : '',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: item.isHuman == true
+                                ? Colors.blue.withOpacity(0.15)
+                                : Colors.green.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            item.isHuman == true ? '👤 Human' : '🐕 Dog',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: item.isHuman == true ? Colors.blue : Colors.green,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          item.createdAt != null
+                              ? _formatDate(item.createdAt!)
+                              : '',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -564,6 +586,7 @@ class _BreedDetectionScreenState extends State<BreedDetectionScreen> {
             ),
             const SizedBox(height: 12),
             _buildDetailRow('Confidence', item.confidencePercent),
+            _buildDetailRow('Type', item.isHuman == true ? '👤 Human face (resembles breed)' : '🐕 Dog detected'),
             if (item.processingTime != null)
               _buildDetailRow('Processing Time', '${item.processingTime!.toStringAsFixed(2)}s'),
             _buildDetailRow('Model', item.modelVersion),
