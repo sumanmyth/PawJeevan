@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -24,6 +23,29 @@ class _BreedDetectionScreenState extends State<BreedDetectionScreen> {
   BreedDetectionResult? _result;
   bool _isLoading = false;
   String? _error;
+
+  // History
+  List<BreedDetectionResult> _history = [];
+  bool _historyLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _historyLoading = true);
+    try {
+      final history = await _aiService.getBreedDetectionHistory();
+      if (mounted) {
+        setState(() {
+          _history = history.where((h) => h.isSuccessful).toList();
+        });
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _historyLoading = false);
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -77,6 +99,8 @@ class _BreedDetectionScreenState extends State<BreedDetectionScreen> {
       setState(() {
         _result = result;
       });
+      // Refresh history after new detection
+      _loadHistory();
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
@@ -284,10 +308,330 @@ class _BreedDetectionScreenState extends State<BreedDetectionScreen> {
               if (_result!.alternativeBreeds.isNotEmpty)
                 _buildAlternativesCard(),
             ],
+
+            // Detection History
+            const SizedBox(height: 24),
+            _buildHistorySection(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildHistorySection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.history, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Text(
+              'Detection History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const Spacer(),
+            if (_history.isNotEmpty)
+              TextButton(
+                onPressed: _loadHistory,
+                child: const Text('Refresh'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_historyLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_history.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.pets, size: 40, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No detections yet',
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Upload a photo to detect a breed!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ...(_history.map((item) => _buildHistoryItem(item, isDark))),
+      ],
+    );
+  }
+
+  Future<void> _deleteHistoryItem(BreedDetectionResult item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Detection'),
+        content: const Text('Are you sure you want to delete this breed detection?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && item.id != null) {
+      try {
+        await _aiService.deleteBreedDetection(item.id!);
+        setState(() => _history.removeWhere((h) => h.id == item.id));
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete')),
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildHistoryItem(BreedDetectionResult item, bool isDark) {
+    final theme = Theme.of(context);
+    return Dismissible(
+      key: ValueKey(item.id ?? item.hashCode),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        await _deleteHistoryItem(item);
+        return false; // we handle removal ourselves
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      child: Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _showHistoryDetail(item),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: item.imageUrl != null
+                    ? Image.network(
+                        item.imageUrl!,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 56,
+                          height: 56,
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: Icon(Icons.pets, color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: Icon(Icons.pets, color: theme.colorScheme.onSurfaceVariant),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.formattedBreed,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.createdAt != null
+                          ? _formatDate(item.createdAt!)
+                          : '',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Confidence badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C3AED).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  item.confidencePercent,
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFFB794F4) : const Color(0xFF7C3AED),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+    );
+  }
+
+  void _showHistoryDetail(BreedDetectionResult item) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, controller) => ListView(
+          controller: controller,
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            if (item.imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  item.imageUrl!,
+                  height: 250,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 250,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: const Center(child: Icon(Icons.broken_image, size: 48)),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            Text(
+              item.formattedBreed,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildDetailRow('Confidence', item.confidencePercent),
+            if (item.processingTime != null)
+              _buildDetailRow('Processing Time', '${item.processingTime!.toStringAsFixed(2)}s'),
+            _buildDetailRow('Model', item.modelVersion),
+            if (item.createdAt != null)
+              _buildDetailRow('Date', _formatDate(item.createdAt!)),
+            if (item.alternativeBreeds.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Alternative Breeds',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...item.alternativeBreeds.map((alt) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(alt.formattedBreed)),
+                        Text(
+                          alt.confidencePercent,
+                          style: TextStyle(
+                            color: theme.brightness == Brightness.dark
+                                ? const Color(0xFFB794F4)
+                                : const Color(0xFF7C3AED),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final h = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+    final ampm = date.hour >= 12 ? 'PM' : 'AM';
+    return '${months[date.month - 1]} ${date.day}, ${date.year} at $h:${date.minute.toString().padLeft(2, '0')} $ampm';
   }
 
   Widget _buildResultCard() {

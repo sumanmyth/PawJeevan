@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../utils/helpers.dart';
 import '../ai/breed_detection_screen.dart';
+import '../ai/chat_screen.dart' show AIChatScreen;
+import '../ai/diet_recommendation_screen.dart';
+import '../ai/disease_detection_screen.dart';
 
 class AiTab extends StatelessWidget {
   const AiTab({super.key});
@@ -62,9 +65,9 @@ class AiTab extends StatelessWidget {
             description: 'Check for common pet health issues',
             accentColor: Colors.red,
             onTap: () {
-              Helpers.showInstantSnackBar(
+              Navigator.push(
                 context,
-                const SnackBar(content: Text('Disease Detection - Coming soon!')),
+                MaterialPageRoute(builder: (_) => const DiseaseDetectionScreen()),
               );
             },
           ),
@@ -76,9 +79,10 @@ class AiTab extends StatelessWidget {
             description: 'Get personalized nutrition advice',
             accentColor: Colors.green,
             onTap: () {
-              Helpers.showInstantSnackBar(
+              Navigator.push(
                 context,
-                const SnackBar(content: Text('Diet Recommendations - Coming soon!')),
+                MaterialPageRoute(
+                    builder: (_) => const DietRecommendationScreen()),
               );
             },
           ),
@@ -90,9 +94,9 @@ class AiTab extends StatelessWidget {
             description: 'Chat with our AI pet care expert',
             accentColor: Colors.orange,
             onTap: () {
-              Helpers.showInstantSnackBar(
+              Navigator.push(
                 context,
-                const SnackBar(content: Text('AI Pet Assistant - Coming soon!')),
+                MaterialPageRoute(builder: (_) => const AIChatScreen()),
               );
             },
           ),

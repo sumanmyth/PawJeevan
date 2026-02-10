@@ -1,4 +1,5 @@
 /// Model for breed detection results from the AI API
+library;
 
 class BreedDetectionResult {
   final int? id;
